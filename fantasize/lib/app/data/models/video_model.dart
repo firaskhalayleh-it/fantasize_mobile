@@ -1,8 +1,5 @@
-import 'package:get/get.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 
-// Model for storing video details
+
 class VideoModel {
   final int videoId;
   final String videoPath;
