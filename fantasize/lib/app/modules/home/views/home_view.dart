@@ -1,3 +1,4 @@
+import 'package:fantasize/app/modules/cart/views/cart_view.dart';
 import 'package:fantasize/app/modules/categories/views/categories_view.dart';
 import 'package:fantasize/app/modules/explore/views/explore_view.dart';
 import 'package:fantasize/app/modules/favorites/views/favorites_view.dart';
@@ -19,7 +20,7 @@ class HomeView extends StatelessWidget {
     CategoriesView(), // Categories Page
     ExploreView(), // Explore Page
     FavoritesView(), // Favorites Page
-    Center(child: Text('Cart Page')), // Cart Page
+    CartView(), // Cart Page
   ];
 
   // A function to load the image based on the file type (SVG or normal image)

@@ -99,7 +99,14 @@ class ProductDetailsView extends StatelessWidget {
                         ),
                       ),
                       Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
+                          Text(
+                            '${product.avgRating} (${product.reviews?.length ?? 0} reviews)',
+                            style: TextStyle(color: Colors.blue),
+                          ),
+                          SizedBox(width: 8),
                           Row(
                             children: List.generate(5, (index) {
                               return Icon(
@@ -109,11 +116,6 @@ class ProductDetailsView extends StatelessWidget {
                                 color: Color(0xFFFFD33C),
                               );
                             }),
-                          ),
-                          SizedBox(width: 8),
-                          Text(
-                            '${product.avgRating} (${product.reviews?.length ?? 0} reviews)',
-                            style: TextStyle(color: Colors.blue),
                           ),
                         ],
                       ),

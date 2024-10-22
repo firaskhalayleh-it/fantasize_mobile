@@ -64,6 +64,7 @@ class ProductsController extends GetxController
       userProfilePicture.value =
           user.value!.userProfilePicture!.entityName.toString();
     }
+    
   }
 
   void fetchProducts(int categoryId, int subCategoryId) async {

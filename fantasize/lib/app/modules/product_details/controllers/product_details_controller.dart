@@ -178,7 +178,7 @@ class ProductDetailsController extends GetxController {
         },
       );
       isLiked.value = true;
-      Get.snackbar('Success', 'Product added to favorites');
+      Get.snackbar('Success', 'Product added to favorites',overlayBlur: 3.0);
     } else {
       // Remove product from favorites
       url = Uri.parse(

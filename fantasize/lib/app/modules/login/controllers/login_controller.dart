@@ -64,7 +64,6 @@ class LoginController extends GetxController {
                   ['fileType'], // Lowercase 'u'
             ));
 
-        // Navigate to home page since the token is valid
         Get.offNamed('/home');
       } else {
         // Token is expired, navigate to login
@@ -126,7 +125,7 @@ class LoginController extends GetxController {
         Get.offNamed('/home');
       } else {
         errorMessage.value = 'Login failed. Please check your credentials.';
-        Get.snackbar('Login Failed', 'Please check your credentials.');
+        Get.snackbar('Login Failed', '${response.body}');
       }
     } catch (e) {
       errorMessage.value = 'An error occurred. Please try again later.';

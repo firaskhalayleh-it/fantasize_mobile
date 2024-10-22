@@ -1,5 +1,9 @@
 import 'package:get/get.dart';
 
+import '../modules/address/bindings/address_binding.dart';
+import '../modules/address/views/address_view.dart';
+import '../modules/cart/bindings/cart_binding.dart';
+import '../modules/cart/views/cart_view.dart';
 import '../modules/categories/bindings/categories_binding.dart';
 import '../modules/categories/views/categories_view.dart';
 import '../modules/explore/bindings/explore_binding.dart';
@@ -10,6 +14,8 @@ import '../modules/home/bindings/home_binding.dart';
 import '../modules/home/views/home_view.dart';
 import '../modules/login/bindings/login_binding.dart';
 import '../modules/login/views/login_view.dart';
+import '../modules/payment_method/bindings/payment_method_binding.dart';
+import '../modules/payment_method/views/payment_method_view.dart';
 import '../modules/product_details/bindings/product_details_binding.dart';
 import '../modules/product_details/views/product_details_view.dart';
 import '../modules/products/bindings/products_binding.dart';
@@ -20,6 +26,8 @@ import '../modules/signup/bindings/signup_binding.dart';
 import '../modules/signup/views/signup_view.dart';
 import '../modules/splash/bindings/splash_binding.dart';
 import '../modules/splash/views/splash_view.dart';
+import '../modules/user_info/bindings/user_info_binding.dart';
+import '../modules/user_info/views/user_info_view.dart';
 
 part 'app_routes.dart';
 
@@ -76,8 +84,28 @@ class AppPages {
     ),
     GetPage(
       name: _Paths.FAVORITES,
-      page: () =>  FavoritesView(),
+      page: () => FavoritesView(),
       binding: FavoritesBinding(),
+    ),
+    GetPage(
+      name: _Paths.CART,
+      page: () => const CartView(),
+      binding: CartBinding(),
+    ),
+    GetPage(
+      name: _Paths.PAYMENT_METHOD,
+      page: () => const PaymentMethodView(),
+      binding: PaymentMethodBinding(),
+    ),
+    GetPage(
+      name: _Paths.USER_INFO,
+      page: () => const UserInfoView(),
+      binding: UserInfoBinding(),
+    ),
+    GetPage(
+      name: _Paths.ADDRESS,
+      page: () => const AddressView(),
+      binding: AddressBinding(),
     ),
   ];
 }
