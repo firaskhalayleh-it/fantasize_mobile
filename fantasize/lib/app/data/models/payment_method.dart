@@ -34,7 +34,7 @@ class PaymentMethod extends GetxController {
   factory PaymentMethod.fromJson(Map<String, dynamic> json) {
     return PaymentMethod(
       paymentMethodID: json['PaymentMethodID'],
-      user: json['User'] != null ? User.fromJson(json['User']) : null,
+      // user: json['User'] != null ? User.fromJson(json['User']) : null,
       // orders: json['Orders'] != null
       //     ? (json['Orders'] as List).map((i) => Orders.fromJson(i)).toList()
       //     : null,
@@ -44,8 +44,8 @@ class PaymentMethod extends GetxController {
       expirationDate: DateTime.parse(json['ExpirationDate']),
       cvv: json['CVV'],
       cardType: json['CardType'],
-      createdAt: DateTime.parse(json['CreatedAt']),
-      updatedAt: DateTime.parse(json['UpdatedAt']),
+      // createdAt: DateTime.parse(json['CreatedAt']),
+      // updatedAt: DateTime.parse(json['UpdatedAt']),
     );
   }
 
@@ -53,16 +53,14 @@ class PaymentMethod extends GetxController {
   Map<String, dynamic> toJson() {
     return {
       'PaymentMethodID': paymentMethodID,
-      'User': user?.toJson(),
+      // 'User': user?.toJson(),
       // 'Orders': orders?.map((e) => e.toJson()).toList(),
       'Method': method,
       'CardholderName': cardholderName,
       'CardNumber': cardNumber,
-      'ExpirationDate': expirationDate?.toIso8601String(),
+      'ExpiryDate': expirationDate?.toIso8601String(),
       'CVV': cvv,
       'CardType': cardType,
-      'CreatedAt': createdAt?.toIso8601String(),
-      'UpdatedAt': updatedAt?.toIso8601String(),
     };
   }
 }

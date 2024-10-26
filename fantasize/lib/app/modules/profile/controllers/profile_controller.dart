@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -25,11 +26,12 @@ class ProfileController extends GetxController {
         String userId = decodedToken['payload']['userId']; // Extract user ID
 
         // Send the token as a cookie in the request
-        var cookieHeader = 'authToken=$token'; // Name of the cookie as 'authToken'
+        var cookieHeader =
+            'authToken=$token'; // Name of the cookie as 'authToken'
 
         // Fetch user data from the API
         final response = await http.get(
-          Uri.parse('${Strings().apiUrl}/getusers/$userId'),
+          Uri.parse('${Strings().apiUrl}/get_user_detail/$userId'),
           headers: {
             'Content-Type': 'application/json',
             'Cookie': cookieHeader, // Send the token as a cookie
@@ -37,14 +39,16 @@ class ProfileController extends GetxController {
         );
 
         // Debugging: Print the response status and body
-      
+
         if (response.statusCode == 200) {
           var jsonData = json.decode(response.body);
+          print(response.body);
+
           var fetchedUser = User.fromJson(jsonData);
 
-         
           // Update the user data in the controller
           user.value = fetchedUser;
+          print(user.value!.paymentMethods);
         } else {
           Get.snackbar('Error', 'Failed to load user data');
         }
@@ -57,6 +61,44 @@ class ProfileController extends GetxController {
     } finally {
       isLoading(false);
     }
+  }
+
+  NavigateToUserInfo() {
+    Get.toNamed('/user-info');
+  }
+
+  NavigateToPaymentMethod() {
+    Get.toNamed('/payment-method');
+  }
+
+
+  showResetPasswordDialog(){
+    Get.defaultDialog(
+      title: 'Reset Password',
+      content: Column(
+        children: [
+          Text('Enter your email address to reset your password'),
+          TextField(
+            decoration: InputDecoration(hintText: 'Email'),
+          ),
+        ],
+      ),
+      actions: [
+        ElevatedButton(
+          onPressed: () {
+            Get.back();
+          },
+          child: Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            Get.back();
+            Get.snackbar('Success', 'Password reset email sent');
+          },
+          child: Text('Reset Password'),
+        ),
+      ],
+    );
   }
 
   // Function to log out the user

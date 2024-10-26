@@ -136,4 +136,8 @@ class ProductsController extends GetxController
     fetchProducts(subCategoryIds[index],
         subCategoryIds[index]); // Fetch products for the new tab
   }
+
+  
+
+
 }

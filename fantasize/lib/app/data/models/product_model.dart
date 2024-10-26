@@ -1,4 +1,5 @@
 import 'package:fantasize/app/data/models/customization_model.dart';
+import 'package:fantasize/app/data/models/ordered_option.dart';
 import 'package:fantasize/app/data/models/resources_model.dart';
 import 'package:fantasize/app/data/models/reviews_model.dart';
 import 'package:fantasize/app/data/models/subcategory_model.dart';
@@ -96,3 +97,23 @@ class Product {
     }
   }
 }
+class OrderedCustomization {
+  int orderedCustomizationId;
+  List<OrderedOption> selectedOptions;
+
+  OrderedCustomization({
+    required this.orderedCustomizationId,
+    required this.selectedOptions,
+  });
+
+  factory OrderedCustomization.fromJson(Map<String, dynamic> json) {
+    return OrderedCustomization(
+      orderedCustomizationId: json['OrderedCustomizationID'],
+      selectedOptions: (json['SelectedOptions'] as List)
+          .map((optionJson) => OrderedOption.fromJson(optionJson))
+          .toList(),
+    );
+  }
+}
+
+

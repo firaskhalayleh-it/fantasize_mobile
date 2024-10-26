@@ -47,21 +47,24 @@ class ProfileView extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     // Profile Picture
-                   Hero(tag: 'profile', child:  CircleAvatar(
-                      radius: 50,
-                      backgroundImage:
-                          controller.user.value!.userProfilePicture != null
-                              ? NetworkImage(
-                                  '${Strings().resourceUrl}/${controller.user.value!.userProfilePicture!.entityName}',
-                                )
-                              : const AssetImage('assets/images/profile.jpg')
-                                  as ImageProvider,
-                    ),),
+                    Hero(
+                      tag: 'profile',
+                      child: CircleAvatar(
+                        radius: 50,
+                        backgroundImage:
+                            controller.user.value!.userProfilePicture != null
+                                ? NetworkImage(
+                                    '${Strings().resourceUrl}/${controller.user.value!.userProfilePicture!.entityName}',
+                                  )
+                                : const AssetImage('assets/images/profile.jpg')
+                                    as ImageProvider,
+                      ),
+                    ),
                     const SizedBox(height: 10),
 
                     // User Name
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.center ,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
                           controller.user.value!.username,
@@ -73,19 +76,38 @@ class ProfileView extends StatelessWidget {
                         const SizedBox(height: 5),
 
                         // Edit Profile Button (Optional)
-                        IconButton(
-                          icon: const Icon(Icons.edit, color: Colors.black),
-                          onPressed: () {
-                            
-                          },
-                        ),
                       ],
                     ),
                     // Personal Information Section
                     BuildSection().buildSection('Personal Information', [
-                      BuildListTile().buildListTile('User Info', Icons.person),
-                      BuildListTile()
-                          .buildListTile('Change Password', Icons.lock),
+                      ListTile(
+                        title: TextButton(
+                            onPressed: () {
+                              controller.NavigateToUserInfo();
+                            },
+                            child: Text(
+                              'Edit Personal Information',
+                              textAlign: TextAlign.start,
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                              ),
+                            )),
+                      ),
+                      TextButton(
+                          onPressed: () {
+                            controller.showResetPasswordDialog();
+                          },
+                          child: Text(
+                            'Change Password',
+                            textAlign: TextAlign.start,
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
+                          ))
                     ]),
 
                     // Address Information Section
@@ -97,10 +119,23 @@ class ProfileView extends StatelessWidget {
                           BuildListTile().buildListTile(
                             '${method.cardType} - ${method.cardNumber}',
                             Icons.credit_card,
+                            trailing: IconButton(
+                                onPressed: () {}, icon: Icon(Icons.edit)),
                           )
                       else
                         const ListTile(
                             title: Text('No payment methods added yet')),
+                      const SizedBox(height: 10),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                        ),
+                        onPressed: () => controller.NavigateToPaymentMethod(),
+                        child: const Text(
+                          'Add Payment Method',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
                     ]),
 
                     // Addresses
@@ -111,6 +146,10 @@ class ProfileView extends StatelessWidget {
                           BuildListTile().buildListTile(
                             '${address.addressLine}, ${address.city}, ${address.country}',
                             Icons.home,
+                            trailing: IconButton(
+                              icon: const Icon(Icons.edit),
+                              onPressed: () {},
+                            ),
                           )
                       else
                         const ListTile(title: Text('No addresses added yet')),

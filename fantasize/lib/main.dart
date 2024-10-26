@@ -15,6 +15,7 @@ void main() {
           scaffoldBackgroundColor: Colors.white,
           appBarTheme: AppBarTheme(
             centerTitle: true,
+            surfaceTintColor: Colors.white,
             color: Colors.white,
             elevation: 0,
             iconTheme: IconThemeData(color: Colors.black),

@@ -1,23 +1,51 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class UserInfoController extends GetxController {
-  //TODO: Implement UserInfoController
+ RxBool isEditingUserName = false.obs;
+  RxBool isEditingEmail = false.obs;
+  RxBool isEditingPhone = false.obs;
+  RxString dateOfBirth = ''.obs;
 
-  final count = 0.obs;
+
+  TextEditingController userNameController = TextEditingController();
+  TextEditingController emailController = TextEditingController();
+  TextEditingController phoneController = TextEditingController();
+
+
+
+
+
+
   @override
   void onInit() {
     super.onInit();
   }
 
-  @override
-  void onReady() {
-    super.onReady();
+  void toggleEditingUserName() {
+    isEditingUserName.value = !isEditingUserName.value;
+    update();
   }
 
-  @override
-  void onClose() {
-    super.onClose();
+  void toggleEditingEmail() {
+    isEditingEmail.value = !isEditingEmail.value;
+    update();
   }
 
-  void increment() => count.value++;
+  void toggleEditingPhone() {
+    isEditingPhone.value = !isEditingPhone.value;
+    update();
+  }
+
+  void changeDateOfBirth(String newDate) {
+    dateOfBirth.value = newDate;
+    update();
+  }
+
+  void setDateOfBirth(String newDate) {
+    dateOfBirth.value = newDate;
+    update();
+  }
+
+
 }

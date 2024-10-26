@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg_provider/flutter_svg_provider.dart';
 import 'package:get/get.dart';
 import 'package:fantasize/app/modules/product_details/controllers/product_details_controller.dart';
+import 'widgets/floating_price_button.dart'; // Import your new widget
 
 class ProductDetailsView extends StatelessWidget {
   final ProductDetailsController controller =
@@ -14,7 +15,25 @@ class ProductDetailsView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      bottomNavigationBar: Obx(() {
+        if (controller.product.value != null) {
+          return FloatingPriceButton(
+            price: controller.product.value!.price,
+            onAddToCart: () {
+              controller.addToCart(
+                controller.product.value!,
+                controller.convertCustomizationsToOrderedOptions(
+                    controller.product.value!.customizations),
+                controller.quantity.value,
+              );
+            },
+          );
+        } else {
+          return SizedBox.shrink();
+        }
+      }),
       appBar: AppBar(
+        foregroundColor: Colors.white,
         leading: IconButton(
           onPressed: () {
             Get.back();
@@ -99,13 +118,7 @@ class ProductDetailsView extends StatelessWidget {
                         ),
                       ),
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          Text(
-                            '${product.avgRating} (${product.reviews?.length ?? 0} reviews)',
-                            style: TextStyle(color: Colors.blue),
-                          ),
                           SizedBox(width: 8),
                           Row(
                             children: List.generate(5, (index) {
@@ -116,6 +129,10 @@ class ProductDetailsView extends StatelessWidget {
                                 color: Color(0xFFFFD33C),
                               );
                             }),
+                          ),
+                          Text(
+                            '${product.avgRating} (${product.reviews?.length ?? 0} reviews)',
+                            style: TextStyle(color: Colors.blue),
                           ),
                         ],
                       ),
@@ -140,7 +157,40 @@ class ProductDetailsView extends StatelessWidget {
                       SizedBox(height: 16),
 
                       // Customization Section
-
+                      Obx(() => Row(
+                            children: [
+                              IconButton(
+                                  icon: Icon(Icons.remove),
+                                  color: Colors.white,
+                                  style: ButtonStyle(
+                                      backgroundColor: WidgetStatePropertyAll(
+                                          Colors.redAccent)),
+                                  onPressed: () {
+                                    controller.decrementQuantity();
+                                  }),
+                              SizedBox(
+                                width: 10,
+                              ),
+                              Text(
+                                controller.quantity.value.toString(),
+                                style:
+                                    TextStyle(fontFamily: 'Jost', fontSize: 18),
+                              ),
+                              SizedBox(
+                                width: 10,
+                              ),
+                              IconButton(
+                                icon: Icon(Icons.add),
+                                color: Colors.white,
+                                style: ButtonStyle(
+                                    backgroundColor: WidgetStatePropertyAll(
+                                        Colors.redAccent)),
+                                onPressed: () {
+                                  controller.incrementQuantity();
+                                },
+                              ),
+                            ],
+                          )),
                       Column(
                         mainAxisAlignment: MainAxisAlignment.start,
                         crossAxisAlignment: CrossAxisAlignment.start,

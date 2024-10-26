@@ -89,7 +89,7 @@ class AppPages {
     ),
     GetPage(
       name: _Paths.CART,
-      page: () => const CartView(),
+      page: () =>  CartView(),
       binding: CartBinding(),
     ),
     GetPage(
@@ -102,10 +102,10 @@ class AppPages {
       page: () => const UserInfoView(),
       binding: UserInfoBinding(),
     ),
-    GetPage(
-      name: _Paths.ADDRESS,
-      page: () => const AddressView(),
-      binding: AddressBinding(),
-    ),
+    // GetPage(
+    //   name: _Paths.ADDRESS,
+    //   page: () => const AddressView(),
+    //   binding: AddressBinding(),
+    // ),
   ];
 }
