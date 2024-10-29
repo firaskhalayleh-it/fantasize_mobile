@@ -17,6 +17,13 @@ class Customization {
       options: optionList,
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'CustomizationID': customizationId,
+      'option': options.map((option) => option.toJson()).toList(),
+    };
+  }
 }
 
 class Option {
@@ -41,6 +48,14 @@ class Option {
       optionValues: valueList,
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'type': type,
+      'optionValues': optionValues.map((value) => value.toJson()).toList(),
+    };
+  }
 }
 
 class OptionValue {
@@ -57,5 +72,12 @@ class OptionValue {
       value: json['value'],
       isSelected: json['isSelected'],
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'value': value,
+      'isSelected': isSelected,
+    };
   }
 }

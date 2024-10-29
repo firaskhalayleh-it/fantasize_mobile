@@ -1,3 +1,4 @@
+import 'package:fantasize/app/data/models/package_model.dart';
 import 'package:fantasize/app/data/models/user_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -22,11 +23,13 @@ class ProductsController extends GetxController
   RxInt subCategoryId = 0.obs;
   RxList<String> subCategoryNames = <String>[].obs;
   List subCategoryIds = [];
+  int categoryId = 0;
+  var packageList = <Package>[].obs; 
 
   @override
   void onInit() {
     var arguments = Get.arguments;
-    int categoryId = arguments[0];
+    categoryId = arguments[0];
     subCategoryId.value = arguments[1]; // Get the selected subCategory ID
     subCategoryIds = arguments[2];
     subCategoryNames.value = List<String>.from(arguments[3]);
@@ -64,7 +67,6 @@ class ProductsController extends GetxController
       userProfilePicture.value =
           user.value!.userProfilePicture!.entityName.toString();
     }
-    
   }
 
   void fetchProducts(int categoryId, int subCategoryId) async {
@@ -122,7 +124,8 @@ class ProductsController extends GetxController
   void NavigateToProductDetails(int index) {
     productList[index].productId;
     if (productList[index].productId != null) {
-      Get.toNamed('/product-details', arguments: [productList[index].productId]);
+      Get.toNamed('/product-details',
+          arguments: [productList[index].productId]);
     } else {
       Get.snackbar('Error', 'Product ID is null');
     }
@@ -132,12 +135,44 @@ class ProductsController extends GetxController
   void changeTabBarIndex(int index) {
     tabBarIndex.value = index;
     subCategoryId.value = subCategoryIds[index];
-    tabController.animateTo(index);
-    fetchProducts(subCategoryIds[index],
-        subCategoryIds[index]); // Fetch products for the new tab
+    if (subCategoryNames[index] == "Packages") {
+      fetchPackages(categoryId, subCategoryId.value);
+    } else {
+      fetchProducts(categoryId, subCategoryId.value);
+    }
   }
 
-  
+  void fetchPackages(int categoryId, int subCategoryId) async {
+    try {
+      isLoading(true);
+      String? token = await _secureStorage.read(key: 'jwt_token');
+      if (token == null) {
+        Get.snackbar('Error', 'No token available');
+        isLoading(false);
+        return;
+      }
 
-
+      final response = await http.get(
+        Uri.parse('${Strings().apiUrl}/$categoryId/$subCategoryId/packages'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'cookie': 'authToken=$token',
+        },
+      );
+      
+      if (response.statusCode == 200) {
+        List data = json.decode(response.body);
+        var packages = data.map((json) => Package.fromJson(json)).toList();
+        packageList.assignAll(packages);
+      } else {
+        Get.snackbar('Error', 'Failed to load packages');
+      }
+    } catch (e) {
+      Get.snackbar('Error', 'Failed to fetch packages: $e');
+    } finally {
+      isLoading(false);
+    }
+  }
 }

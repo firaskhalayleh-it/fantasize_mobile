@@ -12,4 +12,13 @@ class SubCategory {
       isActive: json['IsActive'],
     );
   }
+
+
+  Map<String, dynamic> toJson() {
+    return {
+      'SubCategoryID': subCategoryId,
+      'Name': name,
+      'IsActive': isActive,
+    };
+  }
 }

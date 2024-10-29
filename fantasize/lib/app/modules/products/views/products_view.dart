@@ -1,3 +1,4 @@
+import 'package:fantasize/app/modules/products/views/widgets/package_card.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:fantasize/app/modules/products/controllers/products_controller.dart';
@@ -23,14 +24,44 @@ class ProductsView extends StatelessWidget {
             child: Obx(() {
               if (controller.isLoading.value) {
                 return Center(child: CircularProgressIndicator());
-              } else if (controller.productList.isEmpty) {
-                return Center(child: Text("No products available."));
-              } else {
+              } else if (controller.tabBarIndex.value ==
+                  controller.subCategoryNames.indexOf("Packages")) {
+                // Display packages
                 return GridView.builder(
                   padding: const EdgeInsets.all(10),
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
-                    childAspectRatio: 0.658,
+                    childAspectRatio: 0.65,
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 10,
+                  ),
+                  itemCount: controller.packageList.length,
+                  itemBuilder: (context, index) {
+                    final package = controller.packageList[index];
+                    if (controller.packageList.isEmpty) {
+                      return Container(
+                        color: Colors.grey[200],
+                        child: Center(
+                          child: Text("No packages available"),
+                        ),
+                      );
+                    }
+                    return InkWell(
+                      onTap: () {
+                        Get.toNamed('/package-details',
+                            arguments: package.packageId);
+                      },
+                      child: PackageCard(package: package),
+                    );
+                  },
+                );
+              } else {
+                // Display products
+                return GridView.builder(
+                  padding: const EdgeInsets.all(10),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    childAspectRatio: 0.65,
                     crossAxisSpacing: 10,
                     mainAxisSpacing: 10,
                   ),
@@ -38,9 +69,12 @@ class ProductsView extends StatelessWidget {
                   itemBuilder: (context, index) {
                     final product = controller.productList[index];
                     return InkWell(
-                      onTap: () => controller.NavigateToProductDetails(index),
-                        child:
-                            ProductCard(product: product)); // Use ProductCard
+                      onTap: () {
+                        Get.toNamed('/product-details',
+                            arguments: [product.productId]);
+                      },
+                      child: ProductCard(product: product),
+                    );
                   },
                 );
               }

@@ -17,4 +17,11 @@ class OrderedCustomization {
           .toList(),
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'OrderedCustomizationID': orderedCustomizationId,
+      'SelectedOptions': selectedOptions.map((option) => option.toJson()).toList(),
+    };
+  }
 }

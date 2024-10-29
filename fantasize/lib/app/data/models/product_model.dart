@@ -34,6 +34,10 @@ class Product {
     this.subCategory, // SubCategory is optional
   });
 
+
+
+
+
   // Factory constructor with enhanced error handling and logging
   factory Product.fromJson(Map<String, dynamic>? json) {
     if (json == null || json['ProductID'] == null || json['ProductID'] == 0) {
@@ -91,10 +95,32 @@ class Product {
             ? SubCategory.fromJson(json['SubCategory'])
             : null,
       );
+
+
+      
+
     } catch (e) {
       debugPrint('Error parsing product JSON for product ${json['Name']}: $e');
       throw Exception('Failed to parse Product: ${json['Name'] ?? ''}');
     }
+  }
+
+  // Method to convert a Product instance to JSON
+  Map<String, dynamic> toJson() {
+    return {
+      'ProductID': productId,
+      'Name': name,
+      'Description': description,
+      'Price': price,
+      'Quantity': quantity,
+      'Status': status,
+      'Material': material,
+      'AvgRating': avgRating,
+      'Review': reviews.map((review) => review.toJson()).toList(),
+      'Resource': resources.map((resource) => resource.toJson()).toList(),
+      'Customization': customizations.map((customization) => customization.toJson()).toList(),
+      'SubCategory': subCategory?.toJson(),
+    };
   }
 }
 class OrderedCustomization {

@@ -1,15 +1,16 @@
 // lib/app/modules/product_details/views/widgets/floating_price_button.dart
 
+import 'package:fantasize/app/modules/package_details/controllers/package_details_controller.dart';
 import 'package:fantasize/app/modules/product_details/controllers/product_details_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-class FloatingPriceButton extends StatelessWidget {
+class FloatingPriceButtonPackage extends StatelessWidget {
   final String price;
   final VoidCallback onAddToCart;
 
 
-  const FloatingPriceButton({
+  const FloatingPriceButtonPackage({
     Key? key,
     required this.price,
     required this.onAddToCart,
@@ -17,7 +18,7 @@ class FloatingPriceButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-  ProductDetailsController controller = Get.find<ProductDetailsController>();
+  PackageDetailsController controller = Get.find<PackageDetailsController>();
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,

@@ -1,4 +1,7 @@
+// lib/app/data/models/order_model.dart
+
 import 'package:fantasize/app/data/models/order_product_model.dart';
+import 'package:fantasize/app/data/models/order_package_model.dart';
 
 class Order {
   final int orderId;
@@ -10,6 +13,7 @@ class Order {
   final DateTime createdAt;
   final DateTime updatedAt;
   final List<OrderProduct> ordersProducts;
+  final List<OrderPackage> ordersPackages; 
 
   Order({
     required this.orderId,
@@ -21,6 +25,7 @@ class Order {
     required this.createdAt,
     required this.updatedAt,
     required this.ordersProducts,
+    required this.ordersPackages,
   });
 
   factory Order.fromJson(Map<String, dynamic> json) {
@@ -35,6 +40,9 @@ class Order {
       updatedAt: DateTime.parse(json['UpdatedAt']),
       ordersProducts: (json['OrdersProducts'] as List)
           .map((e) => OrderProduct.fromJson(e))
+          .toList(),
+      ordersPackages: (json['OrdersPackages'] as List)
+          .map((e) => OrderPackage.fromJson(e))
           .toList(),
     );
   }

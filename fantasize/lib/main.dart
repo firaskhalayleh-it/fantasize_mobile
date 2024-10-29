@@ -1,8 +1,6 @@
 import 'package:fantasize/app/modules/login/bindings/login_binding.dart';
 import 'package:flutter/material.dart';
-
 import 'package:get/get.dart';
-
 import 'app/routes/app_pages.dart';
 
 void main() {

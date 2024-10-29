@@ -14,6 +14,8 @@ import '../modules/home/bindings/home_binding.dart';
 import '../modules/home/views/home_view.dart';
 import '../modules/login/bindings/login_binding.dart';
 import '../modules/login/views/login_view.dart';
+import '../modules/package_details/bindings/package_details_binding.dart';
+import '../modules/package_details/views/package_details_view.dart';
 import '../modules/payment_method/bindings/payment_method_binding.dart';
 import '../modules/payment_method/views/payment_method_view.dart';
 import '../modules/product_details/bindings/product_details_binding.dart';
@@ -89,7 +91,7 @@ class AppPages {
     ),
     GetPage(
       name: _Paths.CART,
-      page: () =>  CartView(),
+      page: () => CartView(),
       binding: CartBinding(),
     ),
     GetPage(
@@ -107,5 +109,10 @@ class AppPages {
     //   page: () => const AddressView(),
     //   binding: AddressBinding(),
     // ),
+    GetPage(
+      name: _Paths.PACKAGE_DETAILS,
+      page: () => const PackageDetailsView(),
+      binding: PackageDetailsBinding(),
+    ),
   ];
 }

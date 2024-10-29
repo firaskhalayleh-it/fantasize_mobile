@@ -21,4 +21,13 @@ class ResourcesModel {
       filePath: json['filePath'],
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'ResourceID': resourceId,
+      'entityName': entityName,
+      'fileType': fileType,
+      'filePath': filePath,
+    };
+  }
 }
