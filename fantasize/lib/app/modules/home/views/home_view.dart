@@ -41,7 +41,7 @@ class HomeView extends StatelessWidget {
                 homeController.currentIndexNavigationBar.value == 0
                     ? 'assets/icons/home1.svg' // Selected icon
                     : 'assets/icons/home.svg', // Default icon
-                30,
+                homeController.currentIndexNavigationBar.value == 0 ? 40 : 30,
               ),
               label: 'Home',
             ),
@@ -49,9 +49,9 @@ class HomeView extends StatelessWidget {
             CurvedNavigationBarItem(
               child: loadIcon(
                 homeController.currentIndexNavigationBar.value == 1
-                    ? 'assets/icons/categories1.svg' // Selected icon (SVG)
-                    : 'assets/icons/categories.png', // Default icon (PNG)
-                30,
+                    ? 'assets/icons/categories1.svg' 
+                    : 'assets/icons/categories.png', 
+                homeController.currentIndexNavigationBar.value == 1 ? 40 : 30,
               ),
               label: 'Categories',
             ),
@@ -59,9 +59,9 @@ class HomeView extends StatelessWidget {
             CurvedNavigationBarItem(
               child: loadIcon(
                 homeController.currentIndexNavigationBar.value == 2
-                    ? 'assets/icons/explore1.svg' // Selected icon
-                    : 'assets/icons/explore.svg', // Default icon
-                30,
+                    ? 'assets/icons/explore1.svg' 
+                    : 'assets/icons/explore.svg', 
+                homeController.currentIndexNavigationBar.value == 2 ? 40 : 30,
               ),
               label: 'Explore',
             ),
@@ -69,9 +69,10 @@ class HomeView extends StatelessWidget {
             CurvedNavigationBarItem(
               child: loadIcon(
                 homeController.currentIndexNavigationBar.value == 3
-                    ? 'assets/icons/favorites1.svg' // Selected icon
-                    : 'assets/icons/favorites.svg', // Default icon
-                30,
+                    ? 'assets/icons/favorites1.svg' 
+                    : 'assets/icons/favorites.svg', 
+
+                homeController.currentIndexNavigationBar.value == 3 ? 40 : 30,
               ),
               label: 'Favorites',
             ),
@@ -81,15 +82,14 @@ class HomeView extends StatelessWidget {
                 homeController.currentIndexNavigationBar.value == 4
                     ? 'assets/icons/cart1.svg' // Selected icon (SVG)
                     : 'assets/icons/cart.png', // Default icon (PNG)
-                30,
-              ),
+                homeController.currentIndexNavigationBar.value == 4 ? 40 : 30,),
               label: 'Cart',
             ),
           ],
           color: Colors.white, // Background color of the navigation bar
           buttonBackgroundColor: Colors.white, // Button background color
-          backgroundColor: Colors.black, // Background behind the nav bar
-          animationCurve: Curves.easeInOut, // Animation curve
+          backgroundColor: Colors.redAccent, // Background behind the nav bar
+          animationCurve: Curves.fastEaseInToSlowEaseOut, // Animation curve
           animationDuration: Duration(milliseconds: 600), // Animation duration
           onTap: (index) {
             print("Selected index: $index"); // Debugging statement

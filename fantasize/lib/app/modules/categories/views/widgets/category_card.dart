@@ -7,10 +7,10 @@ import 'package:get/get.dart';
 
 class CategoryCard extends StatelessWidget {
   final CategoryModel category;
-  final RxBool isExpanded = false.obs; // Reactive variable for expansion state
+  final RxBool isExpanded = false.obs;
 
   CategoryCard({required this.category});
-  CategoriesController controller = Get.find<CategoriesController>();
+  final CategoriesController controller = Get.find<CategoriesController>();
 
   @override
   Widget build(BuildContext context) {
@@ -28,8 +28,7 @@ class CategoryCard extends StatelessWidget {
                   image: DecorationImage(
                     image: category.imageUrl != null
                         ? NetworkImage(
-                            '${Strings().resourceUrl}/${category.imageUrl!}',
-                          )
+                            '${Strings().resourceUrl}/${category.imageUrl!}')
                         : AssetImage('assets/images/placeholder.jpeg')
                             as ImageProvider,
                     fit: BoxFit.cover,
@@ -37,7 +36,6 @@ class CategoryCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(10.0),
                 ),
               ),
-
               // Overlay Text (Category Name) and Dropdown Icon
               Positioned(
                 left: 15,
@@ -58,35 +56,32 @@ class CategoryCard extends StatelessWidget {
                   ),
                 ),
               ),
-
               // Dropdown Icon Button to expand/collapse subcategories
               Positioned(
                 right: -5,
                 bottom: -10,
                 child: Obx(() => AnimatedRotation(
-                    turns: isExpanded.value ? 0.5 : 0.0, // 180 degrees rotation
-                    duration: Duration(milliseconds: 300),
-                    child: IconButton(
-                    icon: isExpanded.value
-                      ? Image(
-                        image: Svg('assets/icons/category.svg'),
-                        colorBlendMode: BlendMode.srcIn,
-                        )
-                      : Image(
-                        image: Svg('assets/icons/category1.svg'),
-                        colorBlendMode: BlendMode.srcIn,
-                        ),
-                    onPressed: () {
-                      // Toggle expanded state
-                      isExpanded.value = !isExpanded.value;
-                    },
-                    iconSize: 30.0,
-                    ),
-                  )),
+                      turns: isExpanded.value ? 0.5 : 0.0,
+                      duration: Duration(milliseconds: 300),
+                      child: IconButton(
+                        icon: isExpanded.value
+                            ? Image(
+                                image: Svg('assets/icons/category.svg'),
+                                colorBlendMode: BlendMode.srcIn,
+                              )
+                            : Image(
+                                image: Svg('assets/icons/category1.svg'),
+                                colorBlendMode: BlendMode.srcIn,
+                              ),
+                        onPressed: () {
+                          isExpanded.value = !isExpanded.value;
+                        },
+                        iconSize: 30.0,
+                      ),
+                    )),
               ),
             ],
           ),
-
           // Animated Section for Subcategories
           Obx(() {
             return AnimatedSize(
@@ -95,26 +90,38 @@ class CategoryCard extends StatelessWidget {
               child: isExpanded.value
                   ? Padding(
                       padding: const EdgeInsets.symmetric(vertical: 10.0),
-                      child: Column(
-                        children: category.subCategories
-                                ?.asMap()
-                                .entries
-                                .map((entry) {
-                              int index = entry.key;
-                              var subCategory = entry.value;
-                              return ListTile(
-                                splashColor: Color(0xFFFF4C5E),
-                                leading: Icon(Icons.remove, color: Colors.red),
-                                title: Text(subCategory.name ?? ''),
-                                onTap: () {
-                                  // Navigate to subcategory page
-                                  controller.NavigateToSubCategories(
-                                    subCategory.subCategoryId ?? 0,
-                                  );
-                                },
-                              );
-                            }).toList() ??
-                            [],
+                      child: GridView.builder(
+                        physics: NeverScrollableScrollPhysics(),
+                        shrinkWrap: true,
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 10,
+                          mainAxisSpacing: 10,
+                          childAspectRatio: 3.0,
+                        ),
+                        itemCount: category.subCategories?.length ?? 0,
+                        itemBuilder: (context, index) {
+                          var subCategory = category.subCategories![index];
+                          return InkWell(
+                            onTap: () {
+                              controller.NavigateToSubCategories(
+                                  subCategory.subCategoryId ?? 0);
+                            },
+                            child: Card(
+                              color: Colors.white,
+                              child: Center(
+                                child: Text(
+                                  subCategory.name ?? '',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: Colors.red,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        },
                       ),
                     )
                   : SizedBox.shrink(),

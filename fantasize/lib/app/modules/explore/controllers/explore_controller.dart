@@ -125,7 +125,7 @@ class ExploreController extends GetxController {
     showHeartAnimation[index] = true;
     Future.delayed(Duration(seconds: 1), () {
       showHeartAnimation[index] = false;
-    });
+    }); 
   }
 
   // Check if the video is liked

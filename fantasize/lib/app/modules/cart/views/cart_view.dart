@@ -156,15 +156,15 @@ class CartView extends StatelessWidget {
             ),
           ),
         ),
-        Align(
-          alignment: Alignment.centerRight,
-          child: TextButton(
-            onPressed: () {
-              // Navigate to payment method management screen if needed
-            },
-            child: Text("Edit Card", style: TextStyle(color: Colors.blue)),
-          ),
-        ),
+        // Align(
+        //   alignment: Alignment.centerRight,
+        //   child: TextButton(
+        //     onPressed: () {
+        //       // Navigate to payment method management screen if needed
+        //     },
+        //     child: Text("Edit Card", style: TextStyle(color: Colors.blue)),
+        //   ),
+        // ),
       ],
     );
   }
@@ -230,15 +230,15 @@ class CartView extends StatelessWidget {
             ),
           ),
         ),
-        Align(
-          alignment: Alignment.centerRight,
-          child: TextButton(
-            onPressed: () {
-              // Navigate to address management screen if needed
-            },
-            child: Text("Edit Address", style: TextStyle(color: Colors.blue)),
-          ),
-        ),
+        // Align(
+        //   alignment: Alignment.centerRight,
+        //   child: TextButton(
+        //     onPressed: () {
+        //       // Navigate to address management screen if needed
+        //     },
+        //     child: Text("Edit Address", style: TextStyle(color: Colors.blue)),
+        //   ),
+        // ),
       ],
     );
   }

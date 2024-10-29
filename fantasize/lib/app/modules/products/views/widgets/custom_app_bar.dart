@@ -119,6 +119,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                   return Row(
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
+                      const SizedBox(width: 15),
                       _buildCategoryButton(
                         screenWidth: screenWidth,
                         text: productsController.subCategoryNames[index],
@@ -128,7 +129,6 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                               index); // Dynamically change tab
                         },
                       ),
-                      const SizedBox(width: 10),
                     ],
                   );
                 },
