@@ -12,6 +12,7 @@ class HomeTabView extends StatelessWidget {
     double screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
+      
       appBar: CustomAppBar(
         screenHeight: screenHeight,
         screenWidth: screenWidth,

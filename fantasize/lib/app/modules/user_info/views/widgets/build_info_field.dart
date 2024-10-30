@@ -11,6 +11,7 @@ class BuildInfoField {
     required TextEditingController controller,
     required bool isEditing,
     required VoidCallback onEditPressed,
+    required TextInputType inputType
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -29,6 +30,7 @@ class BuildInfoField {
               child: TextField(
                 controller: controller,
                 enabled: isEditing,
+                keyboardType: inputType,
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
                 ),

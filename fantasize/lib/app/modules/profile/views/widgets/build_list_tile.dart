@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
 class BuildListTile {
-  Widget buildListTile(String title, IconData icon, {Widget? trailing}) {
+  Widget buildListTile(String title, Widget icon, {Widget? trailing}) {
     return ListTile(
-      leading: Icon(icon),
+      leading: icon,
       title: Text(title),
       trailing: trailing,
       onTap: () {

@@ -3,12 +3,13 @@ import 'package:fantasize/app/data/models/notifications_model.dart';
 import 'package:fantasize/app/data/models/payment_method.dart';
 
 class User {
-  final String username;
+   String username;
   final String email;
   final String? dateOfBirth;
   final String? phoneNumber;
   final String? gender;
-  final UserProfilePicture? userProfilePicture; // Use the UserProfilePicture model
+  final UserProfilePicture?
+      userProfilePicture; // Use the UserProfilePicture model
   final List<PaymentMethod>? paymentMethods;
   final List<Address>? addresses;
   final List<NotificationModel>? notifications;
@@ -37,32 +38,29 @@ class User {
       userProfilePicture: json['UserProfilePicture'] != null
           ? UserProfilePicture.fromJson(json['UserProfilePicture'])
           : null, // Safely parse UserProfilePicture
-      paymentMethods: json['PaymentMethods'] != null && json['PaymentMethods'] is List
-          ? (json['PaymentMethods'] as List).map((e) => PaymentMethod.fromJson(e)).toList()
-          : [],
+      paymentMethods:
+          json['PaymentMethods'] != null && json['PaymentMethods'] is List
+              ? (json['PaymentMethods'] as List)
+                  .map((e) => PaymentMethod.fromJson(e))
+                  .toList()
+              : [],
       addresses: json['Addresses'] != null && json['Addresses'] is List
           ? (json['Addresses'] as List).map((e) => Address.fromJson(e)).toList()
           : [],
-      notifications: json['notifications'] != null && json['notifications'] is List
-          ? (json['notifications'] as List).map((e) => NotificationModel.fromJson(e)).toList()
-          : [],
+      notifications:
+          json['notifications'] != null && json['notifications'] is List
+              ? (json['notifications'] as List)
+                  .map((e) => NotificationModel.fromJson(e))
+                  .toList()
+              : [],
     );
   }
 
-  // Convert User object to JSON
-  Map<String, dynamic> toJson() {
-    return {
-      'Username': username,
-      'Email': email,
-      'dateofbirth': dateOfBirth,
-      'PhoneNumber': phoneNumber,
-      'Gender': gender,
-      'UserProfilePicture': userProfilePicture?.toJson(),
-      'PaymentMethods': paymentMethods?.map((e) => e.toJson()).toList(),
-      'Addresses': addresses?.map((e) => e.toJson()).toList(),
-      'notifications': notifications?.map((e) => e.toJson()).toList(),
-    };
-  }
+  Map<String, dynamic> toJson() => {
+        'username': username,
+        'email': email,
+        'UserProfilePicture': userProfilePicture?.toJson(),
+      };
 }
 
 class UserProfilePicture {

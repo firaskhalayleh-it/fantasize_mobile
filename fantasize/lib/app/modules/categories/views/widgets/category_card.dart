@@ -15,7 +15,7 @@ class CategoryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: EdgeInsets.symmetric(vertical: 10.0, horizontal: 15.0),
+      margin: EdgeInsets.symmetric(horizontal: 15.0),
       child: Column(
         children: [
           Stack(
@@ -82,7 +82,6 @@ class CategoryCard extends StatelessWidget {
               ),
             ],
           ),
-          // Animated Section for Subcategories
           Obx(() {
             return AnimatedSize(
               duration: Duration(milliseconds: 300),
@@ -90,39 +89,52 @@ class CategoryCard extends StatelessWidget {
               child: isExpanded.value
                   ? Padding(
                       padding: const EdgeInsets.symmetric(vertical: 10.0),
-                      child: GridView.builder(
-                        physics: NeverScrollableScrollPhysics(),
-                        shrinkWrap: true,
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 10,
-                          mainAxisSpacing: 10,
-                          childAspectRatio: 3.0,
-                        ),
-                        itemCount: category.subCategories?.length ?? 0,
-                        itemBuilder: (context, index) {
-                          var subCategory = category.subCategories![index];
-                          return InkWell(
-                            onTap: () {
-                              controller.NavigateToSubCategories(
-                                  subCategory.subCategoryId ?? 0);
-                            },
-                            child: Card(
-                              color: Colors.white,
-                              child: Center(
-                                child: Text(
-                                  subCategory.name ?? '',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    color: Colors.red,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                      child: category.subCategories?.isEmpty ?? true
+                          ? Center(
+                              child: Text(
+                                "No subcategories available",
+                                style: TextStyle(
+                                  color: Colors.red,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
                                 ),
                               ),
+                            )
+                          : GridView.builder(
+                              physics: NeverScrollableScrollPhysics(),
+                              shrinkWrap: true,
+                              gridDelegate:
+                                  SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                crossAxisSpacing: 10,
+                                mainAxisSpacing: 10,
+                                childAspectRatio: 3.0,
+                              ),
+                              itemCount: category.subCategories!.length,
+                              itemBuilder: (context, index) {
+                                var subCategory =
+                                    category.subCategories![index];
+                                return InkWell(
+                                    onTap: () {
+                                      controller.NavigateToSubCategories(
+                                          subCategory.subCategoryId ?? 0);
+                                    },
+                                    child: ListTile(
+                                      leading: Icon(
+                                        Icons.remove,
+                                        color: Colors.redAccent,
+                                      ),
+                                      title: Text(
+                                        subCategory.name ?? '',
+                                        style: TextStyle(
+                                          color: Colors.black,
+                                          fontWeight: FontWeight.bold,
+                                          fontFamily: 'Jost',
+                                        ),
+                                      ),
+                                    ));
+                              },
                             ),
-                          );
-                        },
-                      ),
                     )
                   : SizedBox.shrink(),
             );

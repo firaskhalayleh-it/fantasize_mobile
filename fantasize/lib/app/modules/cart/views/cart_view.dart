@@ -66,12 +66,12 @@ class CartView extends StatelessWidget {
                     leading: ClipRRect(
                       borderRadius: BorderRadius.circular(10),
                       child: Image.network(
-                      ImageHandler.getImageUrl(orderPackage.package.resources),
-                      width: 50,
-                      height: 50,
-                      fit: BoxFit.cover,
-                      
-                    ),
+                        ImageHandler.getImageUrl(
+                            orderPackage.package.resources),
+                        width: 50,
+                        height: 50,
+                        fit: BoxFit.cover,
+                      ),
                     ),
                     title: Text(orderPackage.package.name),
                     subtitle: Text(
@@ -108,6 +108,10 @@ class CartView extends StatelessWidget {
 
               // Checkout Button
               _buildCheckoutButton(),
+
+              SizedBox(
+                height: Get.size.height * 0.15,
+              )
             ],
           );
         }

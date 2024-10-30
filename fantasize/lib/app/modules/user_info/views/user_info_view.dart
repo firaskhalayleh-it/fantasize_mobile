@@ -49,43 +49,56 @@ class UserInfoView extends GetView<UserInfoController> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Center(
-              child: Text(
-                'Profile',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFFFF4C5E),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Center(
+                child: Text(
+                  'Profile',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFFFF4C5E),
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 24),
-            Obx(() => BuildInfoField().buildinfofield(
-                  label: 'User Name',
-                  controller: controller.userNameController,
-                  isEditing: controller.isEditingUserName.value,
-                  onEditPressed: controller.toggleEditingUserName,
-                )),
-            const SizedBox(height: 16),
-            Obx(() => BuildInfoField().buildinfofield(
-                  label: 'Email Address',
-                  controller: controller.emailController,
-                  isEditing: controller.isEditingEmail.value,
-                  onEditPressed: controller.toggleEditingEmail,
-                )),
-            const SizedBox(height: 16),
-            Obx(() => BuildInfoField().buildinfofield(
-                  label: 'Phone Number',
-                  controller: controller.phoneController,
-                  isEditing: controller.isEditingPhone.value,
-                  onEditPressed: controller.toggleEditingPhone,
-                )),
-            const SizedBox(height: 16),
-            Obx(() => BuildInfoField().buildDateField(context)),
-          ],
+              const SizedBox(height: 24),
+              Obx(() => BuildInfoField().buildinfofield(
+                    label: 'Username',
+                    controller: controller.userNameController,
+                    isEditing: controller.isEditingUserName.value,
+                    onEditPressed: controller.toggleEditingUserName,
+                    inputType: TextInputType.name
+                    
+                  )),
+              const SizedBox(height: 16),
+              Obx(() => BuildInfoField().buildinfofield(
+                    label: 'Email Address',
+                    controller: controller.emailController,
+                    isEditing: controller.isEditingEmail.value,
+                    onEditPressed: controller.toggleEditingEmail,
+                    inputType: TextInputType.emailAddress
+                  )),
+              const SizedBox(height: 16),
+              Obx(() => BuildInfoField().buildinfofield(
+                    label: 'Phone Number',
+                    controller: controller.phoneController,
+                    isEditing: controller.isEditingPhone.value,
+                    onEditPressed: controller.toggleEditingPhone,
+                    inputType: TextInputType.phone
+                  )),
+              Obx(() => BuildInfoField().buildinfofield(
+                    label: 'Gender',
+                    controller: controller.genderController,
+                    isEditing: controller.isEditingGender.value,
+                    onEditPressed: controller.toggleEditingGender,
+                    inputType: TextInputType.none
+                  )),
+              const SizedBox(height: 16),
+              Obx(() => BuildInfoField().buildDateField(context)),
+            ],
+          ),
         ),
       ),
     );

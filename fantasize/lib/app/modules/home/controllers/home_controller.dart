@@ -43,10 +43,8 @@ class HomeController extends GetxController
     loadUserData(); // Load user data from secure storage
   }
 
-  // Function to change the current index of TabBar
   void changeTabBarIndex(int index) {
-    tabController.animateTo(index); // Change the TabBar index
-    currentIndexTabBar.value = index; // Update the currentIndexTabBar
+    currentIndexTabBar.value = index; 
   }
 
   void changeNavigationBarIndex(int index) {

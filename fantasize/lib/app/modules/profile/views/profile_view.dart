@@ -48,36 +48,65 @@ class ProfileView extends StatelessWidget {
                   children: [
                     // Profile Picture
                     Hero(
-                      tag: 'profile',
-                      child: CircleAvatar(
-                        radius: 50,
-                        backgroundImage:
-                            controller.user.value!.userProfilePicture != null
-                                ? NetworkImage(
-                                    '${Strings().resourceUrl}/${controller.user.value!.userProfilePicture!.entityName}',
-                                  )
-                                : const AssetImage('assets/images/profile.jpg')
-                                    as ImageProvider,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
+                        tag: 'profile',
+                        child: Stack(
+                          children: [
+                            CircleAvatar(
+                              radius: 50,
+                              backgroundImage:
+                                  controller.user.value!.userProfilePicture !=
+                                          null
+                                      ? NetworkImage(
+                                          '${Strings().resourceUrl}/${controller.user.value!.userProfilePicture!.entityName}',
+                                        )
+                                      : const AssetImage(
+                                              'assets/images/profile.jpg')
+                                          as ImageProvider,
+                            ),
+                            InkWell(
+                              onTap: () {
+                                controller.pickImage();
+                              },
+                              child: Positioned(
+                                bottom: 0,
+                                right: 0,
+                                child: Container(
+                                  padding: const EdgeInsets.all(5),
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Colors.white,
+                                  ),
+                                  child: const Icon(
+                                    Icons.camera_alt,
+                                    color: Colors.redAccent,
+                                  ),
+                                ),
+                              ),
+                            ),
 
-                    // User Name
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          controller.user.value!.username,
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 5),
+                            // User Name
+                            Positioned(
+                              bottom: 0,
+                              left: 0,
+                              child: Container(
+                                padding: const EdgeInsets.all(5),
+                                decoration: BoxDecoration(
+                                  color: Colors.redAccent,
+                                  borderRadius: BorderRadius.circular(5),
+                                ),
+                                child: Text(
+                                  controller.user.value!.username,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        )),
 
-                        // Edit Profile Button (Optional)
-                      ],
-                    ),
                     // Personal Information Section
                     BuildSection().buildSection('Personal Information', [
                       ListTile(
@@ -118,7 +147,8 @@ class ProfileView extends StatelessWidget {
                             in controller.user.value!.paymentMethods!)
                           BuildListTile().buildListTile(
                             '${method.cardType} - ${method.cardNumber}',
-                            Icons.credit_card,
+                            controller.getCardIcon(method.cardNumber),
+                           
                             trailing: IconButton(
                                 onPressed: () {}, icon: Icon(Icons.edit)),
                           )
@@ -145,7 +175,7 @@ class ProfileView extends StatelessWidget {
                         for (var address in controller.user.value!.addresses!)
                           BuildListTile().buildListTile(
                             '${address.addressLine}, ${address.city}, ${address.country}',
-                            Icons.home,
+                            Icon(Icons.location_on),
                             trailing: IconButton(
                               icon: const Icon(Icons.edit),
                               onPressed: () {},
@@ -163,7 +193,7 @@ class ProfileView extends StatelessWidget {
                             in controller.user.value!.notifications!)
                           BuildListTile().buildListTile(
                             notification.template.toString(),
-                            Icons.notifications,
+                            Icon(Icons.notifications),
                           )
                       else
                         const ListTile(
@@ -175,19 +205,19 @@ class ProfileView extends StatelessWidget {
                     // Preferences Section
                     BuildSection().buildSection('Preferences', [
                       BuildListTile().buildListTile(
-                          'Currency', Icons.monetization_on,
+                          'Currency', Icon(Icons.monetization_on),
                           trailing: const Text('USD')),
-                      BuildListTile().buildListTile('Language', Icons.language,
+                      BuildListTile().buildListTile('Language',Icon( Icons.language),
                           trailing: const Text('EN')),
                     ]),
 
                     // Help and Support Section
                     BuildSection().buildSection('Help and Support', [
                       BuildListTile().buildListTile(
-                          controller.user.value!.email, Icons.email),
+                          controller.user.value!.email, Icon(Icons.email)),
                       BuildListTile().buildListTile(
                           controller.user.value!.phoneNumber ?? '',
-                          Icons.phone),
+                          Icon(Icons.phone)),
                     ]),
 
                     const SizedBox(height: 20),
