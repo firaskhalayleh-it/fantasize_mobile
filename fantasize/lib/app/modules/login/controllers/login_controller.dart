@@ -5,7 +5,7 @@ import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 import '../../../data/models/user_model.dart';
-import 'package:fantasize/app/global/strings.dart' ;
+import 'package:fantasize/app/global/strings.dart';
 
 class LoginController extends GetxController {
   var emailController = TextEditingController();
@@ -24,16 +24,15 @@ class LoginController extends GetxController {
     checkForToken(); // Check token when the app initializes
   }
 
-  
   // Function to toggle the visibility of the password field
   void toggleObscureText() {
-    obscureText.value = !obscureText.value; 
+    obscureText.value = !obscureText.value;
   }
-
 
   // Method to check for stored JWT token and navigate accordingly
   Future<void> checkForToken() async {
     String? token = await secureStorage.read(key: 'jwt_token');
+    String? userData = await secureStorage.read(key: 'user_data');
 
     if (token != null) {
       // Token exists, check if it's valid
@@ -64,6 +63,8 @@ class LoginController extends GetxController {
                   ['fileType'], // Lowercase 'u'
             ));
 
+        await secureStorage.write(
+            key: 'user_data', value: jsonEncode(user.value));
         Get.offNamed('/home');
       } else {
         // Token is expired, navigate to login
@@ -99,7 +100,6 @@ class LoginController extends GetxController {
         body: jsonEncode({'email': email, 'password': password}),
       );
 
-      
       if (response.statusCode == 200) {
         String jwtToken = response.body;
 
@@ -120,7 +120,13 @@ class LoginController extends GetxController {
         );
 
         await secureStorage.write(key: 'jwt_token', value: jwtToken);
-        await secureStorage.write(key: 'user_data', value: jsonEncode(user.value));
+      await secureStorage.write(
+          key: 'user_data', value: jsonEncode(user.value));
+      var userData = await secureStorage.read(key: 'user_data');
+      print('User: ${user.value!.username}');
+      print('Email: ${user.value!.email}');
+      print('Profile Picture: ${user.value!.userProfilePicture?.filePath}');
+      print('User Data: $userData');
 
         Get.offNamed('/home');
       } else {

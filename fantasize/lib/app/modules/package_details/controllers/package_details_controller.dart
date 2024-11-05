@@ -1,4 +1,5 @@
 import 'package:fantasize/app/data/models/customization_model.dart';
+import 'package:fantasize/app/data/models/ordered_customization.dart';
 import 'package:fantasize/app/data/models/ordered_option.dart';
 import 'package:fantasize/app/data/models/reviews_model.dart';
 import 'package:fantasize/app/modules/cart/controllers/cart_controller.dart';
@@ -15,6 +16,8 @@ import 'package:jwt_decoder/jwt_decoder.dart';
 
 class PackageDetailsController extends GetxController {
   final storage = FlutterSecureStorage();
+  List<OrderedCustomization> orderedCustomizations = [];
+  final Map<String, RxBool> _attachMessageVisibility = {};
   var package = Rxn<Package>();
   var isLoading = false.obs;
   var quantity = 1.obs;
@@ -24,19 +27,20 @@ class PackageDetailsController extends GetxController {
   var isEditing = false.obs;
   var reviewBeingEdited = Rxn<Review>();
   var TotalPrice = 0.0.obs;
+  final Map<String, TextEditingController> _textControllers = {};
 
+  // Map to store image paths for uploadPicture options
+  final Map<String, RxString> _uploadedImages = {};
   final cartController = Get.find<CartController>();
 
   @override
   void onInit() {
     super.onInit();
     var arguments = Get.arguments;
-
     if (arguments == null) {
       Get.snackbar('Error', 'No package ID provided.');
       return;
     }
-
     int packageId = arguments as int;
     fetchPackageDetails(packageId);
     checkIfLiked(packageId);
@@ -75,17 +79,21 @@ class PackageDetailsController extends GetxController {
         final data = json.decode(response.body);
 
         if (data != null && data is Map<String, dynamic>) {
+          // Parse package data
           package.value = Package.fromJson(data);
 
-          // make the video is the first item in the resources list
-          if (package.value!.resources.isNotEmpty) {
-            var videoIndex = package.value!.resources
-                .indexWhere((element) => element.fileType == 'video/mp4');
-            if (videoIndex != -1) {
-              var video = package.value!.resources.removeAt(videoIndex);
-              package.value!.resources.insert(0, video);
+          // Sort resources: videos first, images last
+          package.value!.resources.sort((a, b) {
+            if (a.fileType == 'video/mp4' && b.fileType != 'video/mp4') {
+              return -1; // Video comes before non-video
+            } else if (a.fileType != 'video/mp4' && b.fileType == 'video/mp4') {
+              return 1; // Non-video comes after video
             }
-          }
+            return 0; // No change if both are the same type
+          });
+
+          // Initialize ordered customizations after sorting
+          initializeOrderedCustomizations();
         } else {
           Get.snackbar('No Data', 'No package data found for this ID.');
         }
@@ -99,7 +107,6 @@ class PackageDetailsController extends GetxController {
     } catch (e) {
       Get.snackbar('Network Error',
           'Unable to fetch package details. Please try again later.');
-      print('Error fetching package details: $e');
     } finally {
       isLoading.value = false;
     }
@@ -269,6 +276,39 @@ class PackageDetailsController extends GetxController {
     isReviewFormVisible.value = !isReviewFormVisible.value;
   }
 
+  TextEditingController getTextController(
+      int customizationId, String optionName) {
+    final key = '$customizationId-$optionName';
+    if (!_textControllers.containsKey(key)) {
+      _textControllers[key] = TextEditingController();
+      // Listen to changes and update the option value
+      _textControllers[key]!.addListener(() {
+        updateSelectedOption(
+            customizationId, optionName, _textControllers[key]!.text);
+      });
+    }
+    return _textControllers[key]!;
+  }
+
+  // Method to get image path
+  RxString getUploadedImagePath(int customizationId, String optionName) {
+    final key = '$customizationId-$optionName';
+    if (!_uploadedImages.containsKey(key)) {
+      _uploadedImages[key] = ''.obs;
+    }
+    return _uploadedImages[key]!;
+  }
+
+  // Method to update image path
+  void updateUploadedImage(
+      int customizationId, String optionName, String imagePath) {
+    final key = '$customizationId-$optionName';
+    getUploadedImagePath(customizationId, optionName).value = imagePath;
+    // Update the OptionValue in orderedCustomizations
+    updateSelectedOption(customizationId, optionName, imagePath);
+  }
+  // handle the ordered customizations
+
   Future<void> deleteReview(int reviewId, int productId) async {
     String? token = await storage.read(key: 'jwt_token');
     var url = Uri.parse('${Strings().apiUrl}/reviews/$reviewId');
@@ -299,7 +339,7 @@ class PackageDetailsController extends GetxController {
     return TotalPrice.value;
   }
 
-   void showAddToCartDialog() {
+  void showAddToCartDialog() {
     Get.bottomSheet(
       Container(
         padding: EdgeInsets.all(20),
@@ -361,8 +401,8 @@ class PackageDetailsController extends GetxController {
   }
 
   // Function to handle adding a product to the cart
-  Future<void> addToCart(
-      Package package, List<OrderedOption> orderedOptions, int quantity) async {
+  Future<void> addToCart(Package package,
+      List<OrderedCustomization> orderedCustomizations, int quantity) async {
     try {
       String? token = await storage.read(key: 'jwt_token');
       var response = await http.post(
@@ -376,39 +416,182 @@ class PackageDetailsController extends GetxController {
           "packageId": package.packageId,
           "quantity": quantity,
           "orderedOptions":
-              orderedOptions.map((option) => option.toJson()).toList(),
+              orderedCustomizations.map((option) => option.toJson()).toList(),
         }),
       );
 
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+      print('Ordered options: ${json.encode(orderedCustomizations.map((option) => option.toJson()).toList())}');
+      debugPrint(response.statusCode.toString());
+      print('orderedCustomizations: ');
+      orderedCustomizations.forEach((element) {
+        print(element.toJson());
+      });
+
       if (response.statusCode == 200) {
-        Get.snackbar('Success', 'Product added to cart');
+        Get.snackbar('Success', 'package added to cart');
         showAddToCartDialog();
         cartController.fetchCart();
-      
       } else {
-        Get.snackbar('Error', 'Failed to add product to cart');
+        Get.snackbar('Error', 'Failed to add package to cart');
       }
     } catch (e) {
-      Get.snackbar('Error', 'Failed to add product to cart: $e');
+      Get.snackbar('Error', 'Failed to add package to cart: $e');
     }
   }
 
-  List<OrderedOption> convertCustomizationsToOrderedOptions(
+  List<OrderedCustomization> convertCustomizationsToOrderedCustomization(
       List<Customization> customizations) {
     return customizations.map((customization) {
-      return OrderedOption(
-        name: customization.options.first.name,
-        type: customization.options.first.type,
-        optionValues:
-            customization.options.first.optionValues.map((optionValue) {
-          return OrderedOptionValue(
-            name: optionValue.value,
-            value: optionValue.value,
-            isSelected: optionValue.isSelected,
+      return OrderedCustomization(
+        orderedCustomizationId: customization.customizationId,
+        selectedOptions: customization.options.map((option) {
+          return OrderedOption(
+            name: option.name,
+            type: option.type,
+            optionValues: option.optionValues.map((optionValue) {
+              return OrderedOptionValue(
+                name: optionValue.name,
+                value: optionValue.value,
+                isSelected: optionValue.isSelected,
+              );
+            }).toList(),
           );
         }).toList(),
       );
     }).toList();
+  }
+
+  void initializeOrderedCustomizations() {
+    if (package.value == null || package.value!.customizations.isEmpty) return;
+
+    // Use a Set to keep track of customization IDs we've already added
+    final Set<int> seenCustomizationIds = {};
+
+    orderedCustomizations =
+        package.value!.customizations.where((customization) {
+      if (seenCustomizationIds.contains(customization.customizationId)) {
+        return false; // If already seen, exclude it
+      } else {
+        seenCustomizationIds.add(customization.customizationId);
+        return true; // Include if not seen
+      }
+    }).map((customization) {
+      return OrderedCustomization(
+        orderedCustomizationId: customization.customizationId,
+        selectedOptions: customization.options.map((option) {
+          return OrderedOption(
+            name: option.name,
+            type: option.type,
+            optionValues: option.optionValues.map((value) {
+              return OrderedOptionValue(
+                name: value.name,
+                value: value.value,
+                isSelected: false, // Use RxBool for observability
+              );
+            }).toList(),
+          );
+        }).toList(),
+      );
+    }).toList();
+  }
+
+  // Method to get the visibility observable
+  RxBool getAttachMessageVisibility(int customizationId, String optionName) {
+    final key = '$customizationId-$optionName';
+    if (!_attachMessageVisibility.containsKey(key)) {
+      _attachMessageVisibility[key] = false.obs;
+    }
+    return _attachMessageVisibility[key]!;
+  }
+
+  // Method to toggle visibility
+  void toggleAttachMessageVisibility(int customizationId, String optionName) {
+    final key = '$customizationId-$optionName';
+    getAttachMessageVisibility(customizationId, optionName).toggle();
+  }
+  // Inside PackageDetailsController
+
+  void updateSelectedOption(
+      int customizationId, String optionName, String selectedValue) {
+    final customization = orderedCustomizations.firstWhere(
+      (c) => c.orderedCustomizationId == customizationId,
+      orElse: () =>
+          OrderedCustomization(orderedCustomizationId: -1, selectedOptions: []),
+    );
+
+    if (customization == null) return;
+
+    final option = customization.selectedOptions.firstWhere(
+      (o) => o.name == optionName,
+      orElse: () => OrderedOption(name: '', type: '', optionValues: []),
+    );
+
+    if (option == null) return;
+
+    if (option.type == 'attachMessage') {
+      // For text input, update the value directly
+      final optionValue = option.optionValues.first;
+      optionValue.value = selectedValue;
+    } else if (option.type == 'uploadPicture') {
+      // For image upload, update the fileName
+      final optionValue = option.optionValues.first;
+      optionValue.fileName = selectedValue; // selectedValue is image path
+    } else {
+      // For other types, handle selection
+      // Deselect all options first
+      for (var optionValue in option.optionValues) {
+        optionValue.isSelected.value = false;
+      }
+
+      // Select the specified option value
+      final selectedOptionValue = option.optionValues.firstWhere(
+        (optionValue) => optionValue.value == selectedValue,
+        orElse: () =>
+            OrderedOptionValue(name: '', value: '', isSelected: false),
+      );
+
+      if (selectedOptionValue != null) {
+        selectedOptionValue.isSelected.value = true;
+      }
+    }
+  }
+
+// Optional: Helper method to get the current value for text options
+  String getOptionValue(int customizationId, String optionName) {
+    final customization = orderedCustomizations.firstWhere(
+      (c) => c.orderedCustomizationId == customizationId,
+      orElse: () =>
+          OrderedCustomization(orderedCustomizationId: -1, selectedOptions: []),
+    );
+
+    if (customization == null) return '';
+
+    final option = customization.selectedOptions.firstWhere(
+      (o) => o.name == optionName,
+      orElse: () => OrderedOption(name: '', type: '', optionValues: []),
+    );
+
+    if (option == null) return '';
+
+    final optionValue = option.optionValues.first;
+    return optionValue.value;
+  }
+
+  bool isOptionSelected(int customizationId, String optionValue) {
+    final customization = orderedCustomizations.firstWhere(
+      (c) => c.orderedCustomizationId == customizationId,
+      orElse: () =>
+          OrderedCustomization(orderedCustomizationId: -1, selectedOptions: []),
+    );
+
+    if (customization == null)
+      return false; // Return false if customization is not found
+
+    // Check if any option value is selected
+    return customization.selectedOptions.any((o) => o.optionValues
+        .any((v) => v.value == optionValue && v.isSelected.value));
   }
 
   void navigateToCart() {

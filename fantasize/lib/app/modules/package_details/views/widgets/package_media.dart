@@ -1,5 +1,6 @@
 // lib/app/modules/package_details/views/widgets/package_media.dart
 
+import 'package:fantasize/app/modules/package_details/views/widgets/video_player_widget_package.dart';
 import 'package:flutter/material.dart';
 import 'package:fantasize/app/data/models/resources_model.dart';
 import 'package:fantasize/app/modules/product_details/views/widgets/video_player.dart';
@@ -12,6 +13,7 @@ class PackageMedia extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
     return Container(
       height: 300,
       child: ListView.builder(
@@ -22,7 +24,7 @@ class PackageMedia extends StatelessWidget {
           return Padding(
             padding: const EdgeInsets.all(8.0),
             child: resource.fileType == 'video/mp4'
-                ? VideoPlayerWidgetProduct(
+                ? VideoPlayerWidgetPackage(
                     videoUrl: '${Strings().resourceUrl}/${resource.entityName}',
                   )
                 : Image.network(

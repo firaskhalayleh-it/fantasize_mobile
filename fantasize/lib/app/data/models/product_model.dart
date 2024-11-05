@@ -61,6 +61,7 @@ class Product {
       var reviewList = (json['Review'] as List?)
               ?.map((reviewJson) {
                 if (reviewJson is Map<String, dynamic>) {
+                 
                   return Review.fromJson(reviewJson);
                 }
                 throw Exception('Error: Invalid review data: $reviewJson');
@@ -139,6 +140,13 @@ class OrderedCustomization {
           .map((optionJson) => OrderedOption.fromJson(optionJson))
           .toList(),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'OrderedCustomizationID': orderedCustomizationId,
+      'SelectedOptions': selectedOptions.map((option) => option.toJson()).toList(),
+    };
   }
 }
 

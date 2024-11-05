@@ -1,5 +1,6 @@
 import 'package:fantasize/app/data/models/customization_model.dart';
 import 'package:fantasize/app/data/models/package_product_model.dart';
+import 'package:fantasize/app/data/models/product_model.dart';
 import 'package:fantasize/app/data/models/resources_model.dart';
 import 'package:fantasize/app/data/models/reviews_model.dart';
 import 'package:fantasize/app/data/models/subcategory_model.dart';
@@ -31,6 +32,7 @@ class Package {
     this.resources = const [],
     this.customizations = const [],
     this.reviews = const [],
+    
   });
 
   // JSON deserialization

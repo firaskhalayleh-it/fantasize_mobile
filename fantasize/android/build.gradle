@@ -1,3 +1,15 @@
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        // Other classpath dependencies
+        classpath 'com.android.tools.build:gradle:7.0.4' // Use your current version
+        classpath 'com.google.gms:google-services:4.3.15' // Ensure this line is included
+    }
+}
+
 allprojects {
     repositories {
         google()

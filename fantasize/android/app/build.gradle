@@ -5,6 +5,7 @@ plugins {
     id "dev.flutter.flutter-gradle-plugin"
 }
 
+
 android {
     // Namespace is required for AGP 7.0+ to uniquely identify the package.
     namespace "com.fantasize.fantasize"
@@ -28,6 +29,7 @@ android {
         // Set minimum and target SDK versions based on Flutter settings.
         minSdk flutter.minSdkVersion
         targetSdk flutter.targetSdkVersion
+        buildToolsVersion "35.0.0"
 
         // Application versioning.
         versionCode flutter.versionCode
@@ -37,7 +39,6 @@ android {
     buildTypes {
         release {
             // Signing configuration for the release build.
-            // Note: Update this with actual release signing configurations.
             signingConfig signingConfigs.debug
 
             // Enable code shrinking and obfuscation for release builds.
@@ -64,3 +65,15 @@ flutter {
     // Specifies the location of the Flutter source files.
     source "../.."
 }
+
+dependencies {
+    // Import the Firebase BoM
+    implementation platform('com.google.firebase:firebase-bom:32.0.0') // Use the latest BoM version
+
+    // Add the Firebase Messaging dependency
+    implementation 'com.google.firebase:firebase-messaging'
+    // Other dependencies...
+}
+
+// Apply the Google Services plugin at the bottom
+apply plugin: 'com.google.gms.google-services'

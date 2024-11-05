@@ -1,6 +1,8 @@
+import 'package:get/get_rx/src/rx_types/rx_types.dart';
+
 class OrderedOption {
-  final String name;
-  final String type;
+  String name;
+  String type;
   final List<OrderedOptionValue> optionValues;
 
   OrderedOption({
@@ -9,15 +11,18 @@ class OrderedOption {
     required this.optionValues,
   });
 
-      factory OrderedOption.fromJson(Map<String, dynamic> json) {
-    return OrderedOption(
-      name: json['name'],
-      type: json['type'],
-      optionValues: (json['optionValues'] as List<dynamic>)
-          .map((valueJson) => OrderedOptionValue.fromJson(valueJson))
-          .toList(),
-    );
-  }
+ factory OrderedOption.fromJson(Map<String, dynamic> json) {
+  return OrderedOption(
+    name: json['name'] ?? '',
+    type: json['type'] ?? '',
+    optionValues: json['optionValues'] != null
+        ? (json['optionValues'] as List<dynamic>)
+            .map((valueJson) => OrderedOptionValue.fromJson(valueJson))
+            .toList()
+        : [],
+  );
+}
+
 
   Map<String, dynamic> toJson() {
     return {
@@ -30,20 +35,22 @@ class OrderedOption {
 
 class OrderedOptionValue {
   final String name;
-  final String value;
-  final bool isSelected;
+   String value;
+   RxBool isSelected;
+  String? fileName;
 
   OrderedOptionValue({
     required this.name,
     required this.value,
-    required this.isSelected,
-  });
-
-    factory OrderedOptionValue.fromJson(Map<String, dynamic> json) {
+    bool isSelected = false,
+    this.fileName = '',
+  }) : isSelected = RxBool(isSelected);
+  factory OrderedOptionValue.fromJson(Map<String, dynamic> json) {
     return OrderedOptionValue(
       name: json['name'],
       value: json['value'],
       isSelected: json['isSelected'],
+      fileName: json['fileName'],
     );
   }
 
@@ -51,7 +58,8 @@ class OrderedOptionValue {
     return {
       "name": name,
       "value": value,
-      "isSelected": isSelected,
+      "isSelected": isSelected.value,
+      "fileName": fileName ?? '',
     };
   }
 }

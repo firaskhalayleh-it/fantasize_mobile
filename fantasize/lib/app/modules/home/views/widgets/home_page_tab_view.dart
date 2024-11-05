@@ -1,3 +1,4 @@
+import 'package:fantasize/app/modules/home/views/widgets/all_tab/all_tab.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:fantasize/app/modules/home/controllers/home_controller.dart';
@@ -22,11 +23,16 @@ class HomeTabView extends StatelessWidget {
         controller: homeController.tabController, // Bind TabBarView to TabController
         children: List.generate(
           homeController.categories.length,
-          (index) => Center(
-            child: Text(
-              'Content for ${homeController.categories[index]['text']}',
-            ),
-          ),
+          (index) {
+            if(index == 0) {
+              return Center(
+                child: AllTab(),
+              );
+            }
+            return Center(
+              child: Text('Page ${index + 1}'),
+            );
+          }
         ),
       ),
     );

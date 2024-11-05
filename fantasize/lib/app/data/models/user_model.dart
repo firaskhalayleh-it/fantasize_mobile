@@ -3,7 +3,7 @@ import 'package:fantasize/app/data/models/notifications_model.dart';
 import 'package:fantasize/app/data/models/payment_method.dart';
 
 class User {
-   String username;
+  String username;
   final String email;
   final String? dateOfBirth;
   final String? phoneNumber;
@@ -30,8 +30,8 @@ class User {
   // Factory constructor to create User instance from JSON
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
-      username: json['Username'] ?? '',
-      email: json['Email'] ?? '',
+      username: json['Username'] ?? json['username'] ?? '',
+      email: json['Email'] ?? '' ?? json['email'],
       dateOfBirth: json['dateofbirth'],
       phoneNumber: json['PhoneNumber'],
       gender: json['Gender'],

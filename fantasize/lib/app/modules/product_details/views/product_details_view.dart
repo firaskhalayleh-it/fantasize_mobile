@@ -21,12 +21,7 @@ class ProductDetailsView extends StatelessWidget {
           return FloatingPriceButton(
             price: controller.product.value!.price,
             onAddToCart: () {
-              controller.addToCart(
-                controller.product.value!,
-                controller.convertCustomizationsToOrderedOptions(
-                    controller.product.value!.customizations),
-                controller.quantity.value,
-              );
+              controller.addToCart();
             },
           );
         } else {
@@ -219,7 +214,9 @@ class ProductDetailsView extends StatelessWidget {
                                                   fontWeight: FontWeight.bold),
                                             ),
                                           ),
-                                          CustomizationWidget(option: option)
+                                          CustomizationWidgets(
+                                            customizations: [customization],
+                                          ),
                                         ],
                                       )))
                               .toList(),
@@ -374,4 +371,3 @@ class ProductDetailsView extends StatelessWidget {
     );
   }
 }
-

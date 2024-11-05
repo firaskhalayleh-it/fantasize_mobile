@@ -1,59 +1,50 @@
+import 'package:fantasize/app/modules/home/views/widgets/all_tab/widgets/new_collection_subcategory.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:fantasize/app/modules/home/views/widgets/all_tab/widgets/home_offers.dart';
 
 class AllTab extends StatelessWidget {
   const AllTab({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-      itemCount: 1,
-      itemBuilder: (BuildContext context, int index) {
-        return Column(
-          children: [
-            // Image.asset(
-            //   'assets/images/placeholder.png',
-            //   width: screenWidth * 0.9,
-            //   height: screenHeight * 0.3,
-            // ),
-            const SizedBox(height: 10),
-            const Text(
-              'Product Name',
-              style: TextStyle(
-                color: Colors.black,
-                fontSize: 16,
-                fontFamily: 'Poppins',
-                fontWeight: FontWeight.bold,
-              ),
+    return SingleChildScrollView(
+      padding: EdgeInsets.all(8.0), // Optional: Adjust padding as needed
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Horizontally scrollable homeOffers section
+          SizedBox(
+            height: 400, // Set an appropriate height for homeOffers
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: 3, // Number of homeOffers you want to display
+              itemBuilder: (context, index) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  child: homeOffers, // Your homeOffers widget
+                );
+              },
             ),
-            const SizedBox(height: 5),
-            const Text(
-              'Product Description',
-              style: TextStyle(
-                color: Colors.black,
-                fontSize: 14,
-                fontFamily: 'Poppins',
-                fontWeight: FontWeight.w300,
-              ),
-            ),
-            const SizedBox(height: 5),
-            const Text(
-              'Product Price',
-              style: TextStyle(
-                color: Colors.black,
-                fontSize: 14,
-                fontFamily: 'Poppins',
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 5),
-            // ElevatedButton(
-            //   onPressed: () {},
-            //   child: const Text('Add to Cart'),
-            // ),
-            const SizedBox(height: 10),
-          ],
-        );
-      },
+          ),
+
+          // Spacer
+          SizedBox(height: 20),
+
+          // Non-scrollable newCollectionSubcategory section
+          Column(
+            children: List.generate(3, (index) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child:
+                    newCollectionSubcategory, // Your newCollectionSubcategory widget
+              );
+            }),
+          ),
+
+          // Add more widgets as needed
+        ],
+      ),
     );
   }
 }

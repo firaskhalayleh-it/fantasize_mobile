@@ -1,158 +1,321 @@
-import 'package:fantasize/app/data/models/customization_model.dart';
-import 'package:fantasize/app/global/strings.dart';
-import 'package:fantasize/app/modules/product_details/controllers/product_details_controller.dart';
+// lib/app/modules/product_details/views/widgets/product_customization_widget.dart
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:group_button/group_button.dart';
+import 'package:fantasize/app/data/models/customization_model.dart';
+import 'package:fantasize/app/modules/product_details/controllers/product_details_controller.dart';
+import 'package:fantasize/app/global/strings.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
-class CustomizationWidget extends StatelessWidget {
-  final Option option;
+class CustomizationWidgets extends StatelessWidget {
+  final List<Customization> customizations;
 
-  CustomizationWidget({required this.option});
+  const CustomizationWidgets({super.key, required this.customizations});
 
   @override
   Widget build(BuildContext context) {
+    // Ensure customizations are not null
+    final uniqueCustomizations = {
+      for (var customization in customizations)
+        customization.customizationId: customization
+    }.values.toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: uniqueCustomizations.expand<Widget>((customization) {
+        // Ensure options are not null
+        return (customization.options).map<Widget>((option) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildOptionTypeWidget(customization.customizationId, option),
+            ],
+          );
+        }).toList();
+      }).toList(),
+    );
+  }
+
+  Widget _buildOptionTypeWidget(int customizationId, Option option) {
     switch (option.type) {
       case 'button':
-        print('Button');
-        return _buildButtonOptions();
+        return _buildButtonOptions(customizationId, option);
       case 'color':
-        print('Color'); 
-        return _buildColorOptions();
+        return _buildColorOptions(customizationId, option);
       case 'image':
-        print('Image');
-        return _buildImageOptions();
-      case 'message':
-        print('Message');
-        return _buildMessageOption();
-      case 'options':
-        print('Options');
-        return _buildRadioOptions();
-      case 'text':
-        print('Text');
-        return _buildTextOption();
+        return _buildImageOptions(customizationId, option);
+      case 'uploadPicture':
+        return _buildUploadPictureOption(customizationId, option);
+      case 'attachMessage':
+        return _buildAttachMessageOption(customizationId, option);
       default:
         return Container();
     }
   }
 
-  // Button options
-  Widget _buildButtonOptions() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.start,
-      children: option.optionValues.map((optionValue) {
-        return Container(
-          margin: EdgeInsets.only(
-              right: 8.0), // Adds a margin of 8.0 on the left side
-          child: ElevatedButton(
+  Widget _buildButtonOptions(int customizationId, Option option) {
+    final ProductDetailsController controller = Get.find();
+
+    return Wrap(
+      spacing: 8.0,
+      children: (option.optionValues).map((optionValue) {
+        return Obx(() => ElevatedButton(
+              onPressed: () {
+                controller.updateSelectedOption(
+                  customizationId,
+                  option.name,
+                  optionValue.value,
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: controller.isOptionSelected(
+                  customizationId,
+                  optionValue.value,
+                )
+                    ? Colors.redAccent
+                    : Colors.grey,
+              ),
+              child: Text(
+                optionValue.value,
+                style: Theme.of(Get.context!).textTheme.bodyMedium,
+              ),
+            ));
+      }).toList(),
+    );
+  }
+
+  Widget _buildColorOptions(int customizationId, Option option) {
+    final ProductDetailsController controller = Get.find();
+
+    return Wrap(
+      spacing: 8.0,
+      children: (option.optionValues ).map((optionValue) {
+        return Obx(() => GestureDetector(
+              onTap: () {
+                controller.updateSelectedOption(
+                  customizationId,
+                  option.name,
+                  optionValue.value,
+                );
+              },
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: _parseColor(optionValue.value),
+                  border: Border.all(
+                    color: controller.isOptionSelected(
+                      customizationId,
+                      optionValue.value,
+                    )
+                        ? Colors.green
+                        : Colors.transparent,
+                    width: 2,
+                  ),
+                ),
+              ),
+            ));
+      }).toList(),
+    );
+  }
+
+  Widget _buildImageOptions(int customizationId, Option option) {
+    final ProductDetailsController controller = Get.find();
+
+    return Wrap(
+      spacing: 8.0,
+      children: (option.optionValues).map((optionValue) {
+        return Obx(() => GestureDetector(
+              onTap: () {
+                controller.updateSelectedOption(
+                  customizationId,
+                  option.name,
+                  optionValue.value,
+                );
+              },
+              child: Container(
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: controller.isOptionSelected(
+                      customizationId,
+                      optionValue.value,
+                    )
+                        ? Colors.green
+                        : Colors.transparent,
+                    width: 3,
+                  ),
+                  borderRadius: BorderRadius.circular(50),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(50),
+                  child: Image.network(
+                    '${Strings().resourceUrl}/${optionValue.fileName}',
+                    width: 80,
+                    height: 80,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Icon(Icons.image_not_supported);
+                    },
+                  ),
+                ),
+              ),
+            ));
+      }).toList(),
+    );
+  }
+
+  // Method for 'attachMessage'
+  Widget _buildAttachMessageOption(int customizationId, Option option) {
+    final controller = Get.find<ProductDetailsController>();
+    final textController =
+        controller.getTextController(customizationId, option.name);
+    final isVisible =
+        controller.getAttachMessageVisibility(customizationId, option.name);
+
+    return Obx(() {
+      final hasText = textController.text.isNotEmpty;
+      final buttonText = isVisible.value ? 'Done' : (hasText ? 'Edit' : 'Yes');
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ElevatedButton(
             onPressed: () {
-              // Handle button selection
+              // Toggle visibility
+              controller.toggleAttachMessageVisibility(
+                  customizationId, option.name);
             },
-            child: Text(
-              optionValue.value,
-              style: TextStyle(color: Colors.white),
-            ),
             style: ElevatedButton.styleFrom(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              backgroundColor:
-                  optionValue.isSelected ? Colors.red : Colors.grey,
+              backgroundColor: Colors.redAccent,
+            ),
+            child: Text(
+              buttonText,
+              style: TextStyle(fontFamily: 'Jost', color: Colors.white),
             ),
           ),
-        );
-      }).toList(),
-    );
-  }
-
-  // Color Options
- Widget _buildColorOptions() {
-  return Wrap(
-    spacing: 8,
-    children: option.optionValues.map((optionValue) {
-      return GestureDetector(
-        onTap: () {
-          // Set the selected color to the option's value (assumed to be the color or identifier)
-          Get.find<ProductDetailsController>().isSelectedColor.value = optionValue.value;
-        },
-        child: Obx(() {
-          return Container(
-            width: 30,
-            height: 30,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              
-              color: Color(_getColorFromHex(optionValue.value)),
-              border: Border.all(
-                color: Get.find<ProductDetailsController>().isSelectedColor.value == optionValue.value
-                    ? Colors.green
-                    : Colors.transparent,
-                width: 2,
+          if (isVisible.value)
+            Container(
+              margin: EdgeInsets.only(top: 8.0),
+              child: TextField(
+                controller: textController,
+                maxLines: 3, // Limit to 3 lines
+                decoration: InputDecoration(
+                  labelText: option.name,
+                  focusColor: Colors.redAccent,
+                  hoverColor: Colors.redAccent,
+                  alignLabelWithHint: true, // Align label for multiline
+                  border: OutlineInputBorder(
+                    borderRadius:
+                        BorderRadius.circular(10.0), // Rounded corners
+                    borderSide: BorderSide(
+                      color: Colors.redAccent,
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius:
+                        BorderRadius.circular(10.0), // Rounded corners
+                    borderSide: BorderSide(
+                      color: Colors.redAccent,
+                    ),
+                  ),
+                ),
               ),
             ),
-          );
-        }),
+        ],
       );
-    }).toList(),
-  );
-}
+    });
+  }
 
+  // Method for 'uploadPicture'
+  Widget _buildUploadPictureOption(int customizationId, Option option) {
+    final controller = Get.find<ProductDetailsController>();
+    final imagePathRx =
+        controller.getUploadedImagePath(customizationId, option.name);
 
-  // Image Options
-  Widget _buildImageOptions() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: option.optionValues.map((optionValue) {
-        return GestureDetector(
-          onTap: () {
-            // Handle image selection
-          },
-          child: Image.network(
-            '${Strings().resourceUrl}/${optionValue.value}',
-            width: 100,
-            height: 100,
+    return Obx(() {
+      final imagePath = imagePathRx.value;
+      final hasImage = imagePath.isNotEmpty;
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              // Upload/Change Picture Icon Button
+              IconButton(
+                icon: Icon(
+                  Icons.upload_file_rounded,
+                  color: Colors.white,
+                ),
+                style: ButtonStyle(
+                  backgroundColor: WidgetStateProperty.all(Colors.redAccent),
+                ),
+                onPressed: () async {
+                  final picker = ImagePicker();
+                  final image =
+                      await picker.pickImage(source: ImageSource.gallery);
+                  if (image != null) {
+                    controller.updateUploadedImage(
+                      customizationId,
+                      option.name,
+                      image.path,
+                    );
+                  }
+                },
+              ),
+              SizedBox(width: 8.0),
+              Text(
+                hasImage ? 'Change Picture' : 'Upload Picture',
+                style: TextStyle(fontFamily: 'Jost', color: Colors.black),
+              ),
+              // Delete Picture Icon Button (appears only if an image is uploaded)
+              if (hasImage)
+                IconButton(
+                  icon: Icon(
+                    Icons.delete,
+                    color: Colors.white,
+                  ),
+                  style: ButtonStyle(
+                    backgroundColor: WidgetStateProperty.all(Colors.redAccent),
+                  ),
+                  onPressed: () {
+                    // Clear the uploaded image
+                    controller.updateUploadedImage(
+                      customizationId,
+                      option.name,
+                      '',
+                    );
+                  },
+                ),
+            ],
           ),
-        );
-      }).toList(),
-    );
+          // Display the uploaded image if available
+          if (hasImage)
+            Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: Image.file(
+                File(imagePath),
+                width: 100,
+                height: 100,
+                errorBuilder: (context, error, stackTrace) {
+                  return Icon(Icons.image_not_supported);
+                },
+              ),
+            ),
+        ],
+      );
+    });
   }
 
-  // Message option
-  Widget _buildMessageOption() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text("Attach a Message?"),
-        Row(
-          children: [
-            ElevatedButton(onPressed: () {}, child: Text("Yes")),
-            ElevatedButton(onPressed: () {}, child: Text("No")),
-          ],
-        ),
-      ],
-    );
-  }
-
-  // Radio Button Options
-  Widget _buildRadioOptions() {
-    return GroupButton(
-      isRadio: true,
-      buttons: option.optionValues.map((value) => value.value).toList(),
-    );
-  }
-
-  // Text Option (for entering text)
-  Widget _buildTextOption() {
-    return TextField(
-      decoration: InputDecoration(
-        labelText: option.name,
-        border: OutlineInputBorder(),
-      ),
-    );
-  }
-
-  // Helper function to convert color string to hex color
-  int _getColorFromHex(String colorStr) {
-    return int.parse(colorStr.replaceAll("#", "0xFF"));
+  // Helper method to parse color strings safely
+  Color _parseColor(String colorString) {
+    try {
+      return Color(int.parse(colorString));
+    } catch (e) {
+      // Return a default color if parsing fails
+      return Colors.grey;
+    }
   }
 }

@@ -1,3 +1,5 @@
+import 'package:fantasize/app/data/models/resources_model.dart';
+
 class Customization {
   final int customizationId;
   final List<Option> options;
@@ -8,13 +10,21 @@ class Customization {
   });
 
   factory Customization.fromJson(Map<String, dynamic> json) {
-    var optionList = (json['option'] as List)
-        .map((optionJson) => Option.fromJson(optionJson))
-        .toList();
+    var optionsJson = json['option'];
+    List<Option> optionsList;
+
+    if (optionsJson is List) {
+      optionsList =
+          optionsJson.map((optionJson) => Option.fromJson(optionJson)).toList();
+    } else if (optionsJson is Map<String, dynamic>) {
+      optionsList = [Option.fromJson(optionsJson)];
+    } else {
+      optionsList = [];
+    }
 
     return Customization(
       customizationId: json['CustomizationID'],
-      options: optionList,
+      options: optionsList,
     );
   }
 
@@ -38,14 +48,23 @@ class Option {
   });
 
   factory Option.fromJson(Map<String, dynamic> json) {
-    var valueList = (json['optionValues'] as List)
-        .map((valueJson) => OptionValue.fromJson(valueJson))
-        .toList();
+    var optionValuesJson = json['optionValues'];
+    List<OptionValue> optionValuesList;
+
+    if (optionValuesJson is List) {
+      optionValuesList = optionValuesJson
+          .map((valueJson) => OptionValue.fromJson(valueJson))
+          .toList();
+    } else if (optionValuesJson is Map<String, dynamic>) {
+      optionValuesList = [OptionValue.fromJson(optionValuesJson)];
+    } else {
+      optionValuesList = [];
+    }
 
     return Option(
       name: json['name'],
       type: json['type'],
-      optionValues: valueList,
+      optionValues: optionValuesList,
     );
   }
 
@@ -60,24 +79,32 @@ class Option {
 
 class OptionValue {
   final String value;
-  late final bool isSelected;
+  final String name;
+  late bool isSelected;
+  String fileName;
 
   OptionValue({
     required this.value,
+    required this.name,
     required this.isSelected,
+    this.fileName = '',
   });
 
   factory OptionValue.fromJson(Map<String, dynamic> json) {
     return OptionValue(
+      name: json['name'],
       value: json['value'],
-      isSelected: json['isSelected'],
+      isSelected: json['isSelected'] ?? false,
+      fileName: json['fileName'] ?? '',
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
+      'name': name,
       'value': value,
       'isSelected': isSelected,
+      'fileName': fileName,
     };
   }
 }

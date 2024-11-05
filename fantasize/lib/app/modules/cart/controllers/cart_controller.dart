@@ -2,6 +2,7 @@ import 'package:fantasize/app/data/models/address_model.dart';
 import 'package:fantasize/app/data/models/order_model.dart';
 import 'package:fantasize/app/data/models/payment_method.dart';
 import 'package:fantasize/app/global/strings.dart';
+import 'package:fantasize/app/modules/home/controllers/home_controller.dart';
 import 'package:get/get.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
@@ -13,6 +14,8 @@ class CartController extends GetxController {
   var isLoading = false.obs;
   var addresses = <Address>[].obs;
   var paymentMethods = <PaymentMethod>[].obs;
+
+  var homeController = Get.put(HomeController());
 
   var selectedAddressId = Rxn<int>();
   var selectedPaymentMethodId = Rxn<int>();
@@ -42,11 +45,15 @@ class CartController extends GetxController {
         },
       );
 
+      print('Fetched items for cart: ${response.body}');
+      print('Status Code: ${response.statusCode}');
+
       if (response.statusCode == 200) {
         var jsonData = json.decode(response.body);
         cart.value = Order.fromJson(jsonData);
       } else if (response.statusCode == 404) {
         cart.value = null;
+        Get.snackbar('message', 'No items in cart');
       } else {
         Get.snackbar('Error', 'Failed to fetch cart');
       }

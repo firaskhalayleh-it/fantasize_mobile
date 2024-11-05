@@ -2,6 +2,7 @@
 
 import 'package:fantasize/app/data/models/reviews_model.dart';
 import 'package:fantasize/app/global/strings.dart';
+import 'package:fantasize/app/global/widgets/image_handler.dart';
 import 'package:fantasize/app/modules/package_details/views/widgets/floating_price_button.dart';
 import 'package:fantasize/app/modules/package_details/views/widgets/review_form.dart';
 import 'package:fantasize/app/modules/package_details/views/widgets/video_player_widget_package.dart';
@@ -22,11 +23,8 @@ class PackageDetailsView extends GetView<PackageDetailsController> {
       bottomNavigationBar: FloatingPriceButtonPackage(
           price: controller.package.value?.price?.toString() ?? '',
           onAddToCart: () {
-            controller.addToCart(
-                controller.package.value!,
-                controller.convertCustomizationsToOrderedOptions(
-                    controller.package.value!.customizations),
-                controller.quantity.value);
+            controller.addToCart(controller.package.value!,
+                controller.orderedCustomizations, controller.quantity.value);
           }),
       appBar: AppBar(
         foregroundColor: Colors.white,
@@ -159,7 +157,7 @@ class PackageDetailsView extends GetView<PackageDetailsController> {
                                   icon: Icon(Icons.remove),
                                   color: Colors.white,
                                   style: ButtonStyle(
-                                      backgroundColor: WidgetStatePropertyAll(
+                                      backgroundColor: WidgetStateProperty.all(
                                           Colors.redAccent)),
                                   onPressed: () {
                                     controller.decrementQuantity();
@@ -187,6 +185,97 @@ class PackageDetailsView extends GetView<PackageDetailsController> {
                               ),
                             ],
                           )),
+                      // Products Included in the Package
+                      if (package.packageProducts.isNotEmpty)
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SizedBox(height: 16),
+                            Text(
+                              'Products Included',
+                              style: TextStyle(
+                                fontSize: 22,
+                                fontFamily: 'Jost',
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            SizedBox(height: 8),
+                            Container(
+                              height: 100, // Adjust height as needed
+                              child: ListView.builder(
+                                scrollDirection: Axis.horizontal,
+                                itemCount: package.packageProducts.length,
+                                itemBuilder: (context, index) {
+                                  final packageProduct =
+                                      package.packageProducts[index];
+                                  final product = packageProduct.product;
+                                  return GestureDetector(
+                                    onTap: () {
+                                      print('Product tapped');
+                                      product.resources.isEmpty
+                                          ? print('No resources')
+                                          : product.resources
+                                              .forEach((element) {
+                                              print(element.entityName);
+                                            });
+
+                                      Get.toNamed('/product-details',
+                                          arguments: [product.productId]);
+                                    },
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.grey.withOpacity(0.2),
+                                            spreadRadius: 1,
+                                            blurRadius: 10,
+                                            offset: Offset(0, 1),
+                                          ),
+                                        ],
+                                        borderRadius: BorderRadius.circular(50),
+                                      ),
+                                      margin: EdgeInsets.only(right: 8),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.center,
+                                        children: [
+                                          Expanded(
+                                            child: product.resources != null &&
+                                                    product.resources.isNotEmpty
+                                                ? ClipRRect(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            10),
+                                                    child: Image.network(
+                                                      ImageHandler.getImageUrl(
+                                                          product.resources),
+                                                      fit: BoxFit.cover,
+                                                    ),
+                                                  )
+                                                : Container(
+                                                    color: Colors.grey[300],
+                                                    child: Icon(Icons.image),
+                                                  ),
+                                          ),
+                                          SizedBox(height: 8),
+                                          Text(
+                                            product.name,
+                                            style: TextStyle(
+                                              fontFamily: 'Jost',
+                                              fontSize: 16,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+
                       Column(
                         mainAxisAlignment: MainAxisAlignment.start,
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -194,33 +283,21 @@ class PackageDetailsView extends GetView<PackageDetailsController> {
                           controller.package.value!.customizations.isNotEmpty
                               ? Divider()
                               : Container(),
+                          // Only loop through customizations, not options
                           ...controller.package.value!.customizations
-                              .expand((customization) =>
-                                  customization.options.map((option) => Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.start,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Container(
-                                            margin: EdgeInsets.only(
-                                                left: 8.0, bottom: 8.0),
-                                            child: Text(
-                                              option.name,
-                                              style: TextStyle(
-                                                  fontFamily: 'Jost',
-                                                  fontSize: 14,
-                                                  color: Color(0xFF65635F),
-                                                  fontWeight: FontWeight.bold),
-                                            ),
-                                          ),
-                                          PackageCustomizationWidget(
-                                            customizations: controller
-                                                .package.value!.customizations,
-                                          )
-                                        ],
-                                      )))
-                              .toList(),
+                              .map((customization) {
+                            return Column(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                PackageCustomizationWidget(
+                                  customizations: [
+                                    customization
+                                  ], // Pass only the current customization
+                                ),
+                              ],
+                            );
+                          }).toList(),
                         ],
                       ),
 

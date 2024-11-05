@@ -13,17 +13,16 @@ class HomeController extends GetxController
   final FlutterSecureStorage secureStorage = const FlutterSecureStorage();
   late ExploreController exploreController;
 
-
   RxInt currentIndexNavigationBar = 0.obs; // Bottom Navigation Bar index
   RxInt currentIndexTabBar = RxInt(0); // TabBar index (only for Home)
   Rxn<User> user = Rxn<User>(); // User data fetched from secure storage
 
   // List of categories (for the TabBar in the Home page)
   List<Map<String, dynamic>> categories = [
-    {"icon": Icons.grid_view_rounded, "text": "All Categories"},
-    {"icon": Icons.person_outline, "text": "Man"},
-    {"icon": Icons.female, "text": "Women"},
-    {"icon": Icons.watch_outlined, "text": "Watches"},
+    {"icon": Icons.grid_view_rounded, "text": "All"},
+    {"icon": Icons.new_label, "text": "New Arrivals"},
+    {"icon": Icons.local_offer_rounded, "text": "Offers"},
+    {"icon": Icons.person, "text": "Recommended"},
   ];
 
   @override
@@ -31,7 +30,6 @@ class HomeController extends GetxController
     super.onInit();
     Get.lazyPut(() => ExploreController());
     exploreController = Get.find<ExploreController>();
-
 
     tabController = TabController(length: categories.length, vsync: this);
 
@@ -44,21 +42,31 @@ class HomeController extends GetxController
   }
 
   void changeTabBarIndex(int index) {
-    currentIndexTabBar.value = index; 
+    currentIndexTabBar.value = index;
   }
 
   void changeNavigationBarIndex(int index) {
     if (currentIndexNavigationBar.value == 2 && index != 2) {
       exploreController.disableAllControllers();
     }
-   
+
     currentIndexNavigationBar.value = index;
   }
 
   // Load user data from secure storage
   Future<void> loadUserData() async {
     String? userData = await secureStorage.read(key: 'user_data');
+    if (userData != null) {
+      user.value = User.fromJson(jsonDecode(userData));
+    }
 
+
+    if (user.value != null) {
+      print('Username: ${user.value!.username}');
+      print('Email: ${user.value!.email}');
+      print('Profile Picture: ${user.value!.userProfilePicture?.filePath}');
+    }
+  
     if (userData != null) {
       user.value = User.fromJson(jsonDecode(userData));
     }
@@ -66,7 +74,7 @@ class HomeController extends GetxController
 
   // Return the username of the user
   String getUserName() {
-    return user.value?.username ?? 'User';
+    return user.value?.username.isNotEmpty == true ? user.value!.username : 'User';
   }
 
   void goToProfile() {

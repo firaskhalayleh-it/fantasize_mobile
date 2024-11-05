@@ -8,7 +8,7 @@ class PackageProduct {
   final String productName;
   final int quantity;
   final Package package;
-  final Product product;
+   Product product;
 
   PackageProduct({
     required this.packageProductId,

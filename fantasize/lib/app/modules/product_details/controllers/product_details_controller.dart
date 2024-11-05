@@ -23,7 +23,18 @@ class ProductDetailsController extends GetxController {
   var currentUsername = ''.obs; // To store the username of the current user
   var isReviewFormVisible = false.obs; // To toggle the review form visibility
   var isSelectedColor = ''.obs; // To store the selected color
-  var quantity = 1.obs; // To store the quantity of the product
+  var quantity = 1.obs;
+  // To store the quantity of the product
+  List<OrderedCustomization> orderedCustomizations = [];
+
+  // List of ordered customizations
+  final Map<String, TextEditingController> _textControllers =
+      {}; // Define the _textControllers map
+  final Map<String, RxString> _uploadedImages =
+      {}; // Define the _uploadedImages map
+  final Map<String, RxBool> _attachMessageVisibility =
+      {}; // Define the _attachMessageVisibility map
+
   @override
   void onInit() {
     super.onInit();
@@ -66,8 +77,37 @@ class ProductDetailsController extends GetxController {
           .sort((a, b) => a.fileType == 'video/mp4' ? -1 : 1);
 
       product.value = fetchedProduct; // Assign fetched product
+
+      // **Add this line**
+      initializeOrderedCustomizations(); // Initialize ordered customizations
     } else {
       Get.snackbar('Error', 'Error fetching product details');
+    }
+  }
+
+  void initializeOrderedCustomizations() {
+    orderedCustomizations.clear();
+    if (product.value != null && product.value!.customizations.isNotEmpty) {
+      for (var customization in product.value!.customizations) {
+        var orderedCustomization = OrderedCustomization(
+          orderedCustomizationId: customization.customizationId,
+          selectedOptions: customization.options.map((option) {
+            return OrderedOption(
+              name: option.name,
+              type: option.type,
+              optionValues: option.optionValues.map((optionValue) {
+                return OrderedOptionValue(
+                  name: optionValue.name,
+                  value: optionValue.value,
+                  isSelected: false, // Initially not selected
+                  fileName: '',
+                );
+              }).toList(),
+            );
+          }).toList(),
+        );
+        orderedCustomizations.add(orderedCustomization);
+      }
     }
   }
 
@@ -297,38 +337,68 @@ class ProductDetailsController extends GetxController {
     );
   }
 
-  // Function to handle adding a product to the cart
-  Future<void> addToCart(
-      Product product, List<OrderedOption> orderedOptions, int quantity) async {
-    try {
-      String? token = await _secureStorage.read(key: 'jwt_token');
-      var response = await http.post(
-        Uri.parse('${Strings().apiUrl}/order'),
-        headers: {
-          'Content-Type': 'application/json',
-          'authorization': 'Bearer $token',
-          'cookie': 'authToken=$token',
-        },
-        body: json.encode({
-          "productId": product.productId,
-          "quantity": quantity,
-          "OrderedOptions":
-              orderedOptions.map((option) => option.toJson()).toList(),
-        }),
-      );
+  Future<void> addToCart() async {
+  try {
+    String? token = await _secureStorage.read(key: 'jwt_token');
 
-      if (response.statusCode == 200) {
-        Get.snackbar('Success', 'Product added to cart');
-        showAddToCartDialog();
-        cartController.fetchCart();
-      
-      } else {
-        Get.snackbar('Error', 'Failed to add product to cart');
-      }
-    } catch (e) {
-      Get.snackbar('Error', 'Failed to add product to cart: $e');
+    if (token == null) {
+      Get.snackbar('Error', 'User is not authenticated');
+      return;
     }
+
+    if (product.value?.productId == null || quantity.value == null) {
+      Get.snackbar('Error', 'Product ID or quantity is missing');
+      return;
+    }
+
+    // Serialize orderedOptions correctly
+    var orderedOptions = orderedCustomizations.map((customization) {
+      // Assuming customization.selectedOptions is a list with one element
+      var selectedOption = customization.selectedOptions[0];
+      return {
+        'name': selectedOption.name,
+        'type': selectedOption.type,
+        'optionValues': selectedOption.optionValues.map((v) => v.toJson()).toList(),
+      };
+    }).toList();
+
+    var requestBody = {
+      "productId": product.value!.productId,
+      "quantity": quantity.value,
+      "orderedOptions": orderedOptions,
+    };
+
+    // Print request body for debugging
+    print('Request Body: ${json.encode(requestBody)}');
+
+    // Send the request
+    var response = await http.post(
+      Uri.parse('${Strings().apiUrl}/order'),
+      headers: {
+        'Content-Type': 'application/json',
+        'authorization': 'Bearer $token',
+        'cookie': 'authToken=$token',
+        'Accept': 'application/json',
+      },
+      body: json.encode(requestBody),
+    );
+
+    print('Response Body: ${response.body}');
+    print('Status Code: ${response.statusCode}');
+
+    if (response.statusCode == 201) {
+      Get.snackbar('Success', 'Product added to cart');
+      showAddToCartDialog();
+      cartController.fetchCart();
+    } else {
+      var errorResponse = json.decode(response.body);
+      Get.snackbar('Error', 'Failed to add product to cart: ${errorResponse['message']}');
+    }
+  } catch (e) {
+    Get.snackbar('Error', 'Failed to add product to cart: $e');
   }
+}
+
 
   List<OrderedOption> convertCustomizationsToOrderedOptions(
       List<Customization> customizations) {
@@ -358,9 +428,112 @@ class ProductDetailsController extends GetxController {
     }
   }
 
- String calcTotalPrice() {
-  double totalPrice = (double.parse(product.value!.price) * quantity.value);
-  return totalPrice.toStringAsFixed(2); // Format to 2 decimal places
-}
+  void updateSelectedOption(
+      int customizationId, String optionName, String selectedValue) {
+    var orderedCustomization = orderedCustomizations.firstWhere(
+      (c) => c.orderedCustomizationId == customizationId,
+      orElse: () =>
+          OrderedCustomization(orderedCustomizationId: 0, selectedOptions: []),
+    );
 
+    if (orderedCustomization != null) {
+      var selectedOption = orderedCustomization.selectedOptions.firstWhere(
+        (o) => o.name == optionName,
+        orElse: () => OrderedOption(name: '', type: '', optionValues: []),
+      );
+
+      if (selectedOption != null) {
+        if (selectedOption.type == 'button' ||
+            selectedOption.type == 'color' ||
+            selectedOption.type == 'image') {
+          // For single selection options
+          for (var optionValue in selectedOption.optionValues) {
+            optionValue.isSelected.value = optionValue.value == selectedValue;
+          }
+        } else if (selectedOption.type == 'attachMessage') {
+          // For text input
+          var optionValue = selectedOption.optionValues.first;
+          optionValue.value = selectedValue;
+        } else if (selectedOption.type == 'uploadPicture') {
+          // For image upload
+          var optionValue = selectedOption.optionValues.first;
+          optionValue.fileName = selectedValue;
+        }
+      }
+    }
+  }
+
+  bool isOptionSelected(int customizationId, String selectedValue) {
+    var orderedCustomization = orderedCustomizations.firstWhere(
+      (c) => c.orderedCustomizationId == customizationId,
+      orElse: () =>
+          OrderedCustomization(orderedCustomizationId: 0, selectedOptions: []),
+    );
+
+    if (orderedCustomization != null) {
+      for (var selectedOption in orderedCustomization.selectedOptions) {
+        for (var optionValue in selectedOption.optionValues) {
+          if (optionValue.value == selectedValue &&
+              optionValue.isSelected.value) {
+            return true;
+          }
+        }
+      }
+    }
+
+    return false;
+  }
+
+  TextEditingController getTextController(
+      int customizationId, String optionName) {
+    final key = '$customizationId-$optionName';
+    if (!_textControllers.containsKey(key)) {
+      _textControllers[key] = TextEditingController();
+      _textControllers[key]!.addListener(() {
+        updateSelectedOption(
+            customizationId, optionName, _textControllers[key]!.text);
+      });
+    }
+    return _textControllers[key]!;
+  }
+
+  RxBool getAttachMessageVisibility(int customizationId, String optionName) {
+    final key = '$customizationId-$optionName';
+    if (!_attachMessageVisibility.containsKey(key)) {
+      _attachMessageVisibility[key] = false.obs;
+    }
+    return _attachMessageVisibility[key]!;
+  }
+
+  void toggleAttachMessageVisibility(int customizationId, String optionName) {
+    final key = '$customizationId-$optionName';
+    getAttachMessageVisibility(customizationId, optionName).toggle();
+  }
+
+  RxString getUploadedImagePath(int customizationId, String optionName) {
+    final key = '$customizationId-$optionName';
+    if (!_uploadedImages.containsKey(key)) {
+      _uploadedImages[key] = ''.obs;
+    }
+    return _uploadedImages[key]!;
+  }
+
+  void updateUploadedImage(
+      int customizationId, String optionName, String imagePath) {
+    final key = '$customizationId-$optionName';
+    getUploadedImagePath(customizationId, optionName).value = imagePath;
+    updateSelectedOption(customizationId, optionName, imagePath);
+  }
+
+  String calcTotalPrice() {
+    double totalPrice = (double.parse(product.value!.price) * quantity.value);
+    return totalPrice.toStringAsFixed(2); // Format to 2 decimal places
+  }
+
+  @override
+  void onClose() {
+    // Dispose of text controllers
+    _textControllers.values.forEach((controller) => controller.dispose());
+    super.onClose();
+  }
 }

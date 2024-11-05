@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "420303063186",
+    "project_id": "fantasize-e1869",
+    "storage_bucket": "fantasize-e1869.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:420303063186:android:3a9dd507512d3f8c58be4b",
+        "android_client_info": {
+          "package_name": "com.fantasize.fantasize"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAzF5dCu6Fd37kX9mGAD0X5ZzYB9oE6euU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
