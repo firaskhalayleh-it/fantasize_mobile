@@ -14,6 +14,8 @@ import '../modules/home/bindings/home_binding.dart';
 import '../modules/home/views/home_view.dart';
 import '../modules/login/bindings/login_binding.dart';
 import '../modules/login/views/login_view.dart';
+import '../modules/order_history/bindings/order_history_binding.dart';
+import '../modules/order_history/views/order_history_view.dart';
 import '../modules/package_details/bindings/package_details_binding.dart';
 import '../modules/package_details/views/package_details_view.dart';
 import '../modules/payment_method/bindings/payment_method_binding.dart';
@@ -104,15 +106,20 @@ class AppPages {
       page: () => const UserInfoView(),
       binding: UserInfoBinding(),
     ),
-    // GetPage(
-    //   name: _Paths.ADDRESS,
-    //   page: () => const AddressView(),
-    //   binding: AddressBinding(),
-    // ),
+    GetPage(
+      name: _Paths.ADDRESS,
+      page: () => AddressView(),
+      binding: AddressBinding(),
+    ),
     GetPage(
       name: _Paths.PACKAGE_DETAILS,
       page: () => const PackageDetailsView(),
       binding: PackageDetailsBinding(),
+    ),
+    GetPage(
+      name: _Paths.ORDER_HISTORY,
+      page: () => const OrderHistoryView(),
+      binding: OrderHistoryBinding(),
     ),
   ];
 }

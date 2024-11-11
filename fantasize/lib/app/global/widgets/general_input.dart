@@ -1,14 +1,25 @@
 import 'package:flutter/material.dart';
 
-class GeneralInput {
-  Widget build({
-    required String label,
-    required TextEditingController controller,
-    required TextInputType keyboardType,
-    bool obscureText = false,
-    required String? Function(String?)? validator,
-    Widget? PostfixIcon,
-  }) {
+class GeneralInput extends StatelessWidget {
+  final String label;
+  final TextEditingController controller;
+  final TextInputType keyboardType;
+  final bool obscureText;
+  final String? Function(String?)? validator;
+  final Widget? postfixIcon;
+
+  const GeneralInput({
+    Key? key,
+    required this.label,
+    required this.controller,
+    required this.keyboardType,
+    this.obscureText = false,
+    required this.validator,
+    this.postfixIcon,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
@@ -22,9 +33,9 @@ class GeneralInput {
           fontSize: 16,
           fontWeight: FontWeight.w400,
         ),
-        fillColor: Colors.black.withOpacity(0.03999999910593033),
+        fillColor: Colors.black.withOpacity(0.04),
         filled: true,
-        suffixIcon: PostfixIcon ?? null,
+        suffixIcon: postfixIcon,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide.none,

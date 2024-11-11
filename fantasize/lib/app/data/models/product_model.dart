@@ -1,4 +1,5 @@
 import 'package:fantasize/app/data/models/customization_model.dart';
+import 'package:fantasize/app/data/models/offer_model.dart';
 import 'package:fantasize/app/data/models/ordered_option.dart';
 import 'package:fantasize/app/data/models/resources_model.dart';
 import 'package:fantasize/app/data/models/reviews_model.dart';
@@ -14,6 +15,7 @@ class Product {
   final String status;
   final String material;
   final double avgRating;
+  final Offer? offer;
   final List<Review> reviews;
   final List<ResourcesModel> resources;
   final List<Customization> customizations;
@@ -31,12 +33,9 @@ class Product {
     required this.reviews,
     required this.resources,
     required this.customizations,
+    this.offer,
     this.subCategory, // SubCategory is optional
   });
-
-
-
-
 
   // Factory constructor with enhanced error handling and logging
   factory Product.fromJson(Map<String, dynamic>? json) {
@@ -48,37 +47,36 @@ class Product {
     try {
       debugPrint('Parsing Product JSON: ${json.toString()}');
 
-      var resourceList = (json['Resource'] as List?)
-              ?.map((resourceJson) {
-                if (resourceJson is Map<String, dynamic>) {
-                  return ResourcesModel.fromJson(resourceJson);
-                }
-                throw Exception('Error: Invalid resource data: $resourceJson');
-              })
-              .toList() ??
+      var resourceList = (json['Resource'] as List?)?.map((resourceJson) {
+            if (resourceJson is Map<String, dynamic>) {
+              return ResourcesModel.fromJson(resourceJson);
+            }
+            throw Exception('Error: Invalid resource data: $resourceJson');
+          }).toList() ??
           [];
 
-      var reviewList = (json['Review'] as List?)
-              ?.map((reviewJson) {
-                if (reviewJson is Map<String, dynamic>) {
-                 
-                  return Review.fromJson(reviewJson);
-                }
-                throw Exception('Error: Invalid review data: $reviewJson');
-              })
-              .toList() ??
+      var reviewList = (json['Review'] as List?)?.map((reviewJson) {
+            if (reviewJson is Map<String, dynamic>) {
+              return Review.fromJson(reviewJson);
+            }
+            throw Exception('Error: Invalid review data: $reviewJson');
+          }).toList() ??
           [];
 
-      var customizationList = (json['Customization'] as List?)
-              ?.map((customizationJson) {
+      var offer = json['Offer'] != null ? Offer.fromJson(json['Offer']) : null;
+
+      var customizationList =
+          (json['Customization'] as List?)?.map((customizationJson) {
                 if (customizationJson is Map<String, dynamic>) {
                   return Customization.fromJson(customizationJson);
                 }
                 throw Exception(
                     'Error: Invalid customization data: $customizationJson');
-              })
-              .toList() ??
-          [];
+              }).toList() ??
+              [];
+
+
+              
 
       return Product(
         productId: json['ProductID'],
@@ -91,15 +89,12 @@ class Product {
         avgRating: (json['AvgRating'] ?? 0.0).toDouble(),
         reviews: reviewList,
         resources: resourceList,
+        offer: offer,
         customizations: customizationList,
         subCategory: json['SubCategory'] != null
             ? SubCategory.fromJson(json['SubCategory'])
             : null,
       );
-
-
-      
-
     } catch (e) {
       debugPrint('Error parsing product JSON for product ${json['Name']}: $e');
       throw Exception('Failed to parse Product: ${json['Name'] ?? ''}');
@@ -117,13 +112,18 @@ class Product {
       'Status': status,
       'Material': material,
       'AvgRating': avgRating,
+      'Offer': offer?.toJson(),
       'Review': reviews.map((review) => review.toJson()).toList(),
       'Resource': resources.map((resource) => resource.toJson()).toList(),
-      'Customization': customizations.map((customization) => customization.toJson()).toList(),
+      'Customization': customizations
+          .map((customization) => customization.toJson())
+          .toList(),
       'SubCategory': subCategory?.toJson(),
+
     };
   }
 }
+
 class OrderedCustomization {
   int orderedCustomizationId;
   List<OrderedOption> selectedOptions;
@@ -145,9 +145,8 @@ class OrderedCustomization {
   Map<String, dynamic> toJson() {
     return {
       'OrderedCustomizationID': orderedCustomizationId,
-      'SelectedOptions': selectedOptions.map((option) => option.toJson()).toList(),
+      'SelectedOptions':
+          selectedOptions.map((option) => option.toJson()).toList(),
     };
   }
 }
-
-

@@ -1,4 +1,5 @@
 import 'package:fantasize/app/data/models/customization_model.dart';
+import 'package:fantasize/app/data/models/offer_model.dart';
 import 'package:fantasize/app/data/models/package_product_model.dart';
 import 'package:fantasize/app/data/models/product_model.dart';
 import 'package:fantasize/app/data/models/resources_model.dart';
@@ -13,6 +14,7 @@ class Package {
   final int quantity;
   final String status;
   final double avgRating;
+  Offer? offer;
   final SubCategory? subCategory;
   final List<PackageProduct> packageProducts;
   final List<ResourcesModel> resources;
@@ -28,11 +30,11 @@ class Package {
     required this.status,
     required this.avgRating,
     this.subCategory,
+    this.offer,
     this.packageProducts = const [],
     this.resources = const [],
     this.customizations = const [],
     this.reviews = const [],
-    
   });
 
   // JSON deserialization
@@ -52,6 +54,7 @@ class Package {
               ?.map((e) => PackageProduct.fromJson(e))
               .toList() ??
           [],
+      offer: json['Offer'] != null ? Offer.fromJson(json['Offer']) : null,
       resources: (json['Resource'] as List?)
               ?.map((e) => ResourcesModel.fromJson(e))
               .toList() ??
@@ -60,10 +63,9 @@ class Package {
               ?.map((e) => Customization.fromJson(e))
               .toList() ??
           [],
-      reviews: (json['Reviews'] as List?)
-              ?.map((e) => Review.fromJson(e))
-              .toList() ??
-          [],
+      reviews:
+          (json['Reviews'] as List?)?.map((e) => Review.fromJson(e)).toList() ??
+              [],
     );
   }
 
@@ -78,6 +80,7 @@ class Package {
       'Status': status,
       'AvgRating': avgRating,
       'SubCategory': subCategory?.toJson(),
+      'Offer': offer?.toJson(),
       'PackageProduct': packageProducts.map((e) => e.toJson()).toList(),
       'Resource': resources.map((e) => e.toJson()).toList(),
       'Customization': customizations.map((e) => e.toJson()).toList(),

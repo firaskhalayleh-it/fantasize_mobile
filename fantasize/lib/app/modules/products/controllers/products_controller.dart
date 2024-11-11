@@ -24,7 +24,7 @@ class ProductsController extends GetxController
   RxList<String> subCategoryNames = <String>[].obs;
   List subCategoryIds = [];
   int categoryId = 0;
-  var packageList = <Package>[].obs; 
+  var packageList = <Package>[].obs;
 
   @override
   void onInit() {
@@ -111,6 +111,12 @@ class ProductsController extends GetxController
         productList.assignAll(products);
       } else if (response.statusCode == 401) {
         Get.snackbar('Unauthorized', 'Invalid or missing token');
+      } else if (response.statusCode == 404) {
+        Get.snackbar('Error', 'No products found');
+        productList.clear();
+        packageList.clear();
+      } else if (response.statusCode == 500) {
+        Get.snackbar('Error', 'Internal server error');
       } else {
         Get.snackbar('Error', 'Failed to load products');
       }
@@ -161,7 +167,7 @@ class ProductsController extends GetxController
           'cookie': 'authToken=$token',
         },
       );
-      
+
       if (response.statusCode == 200) {
         List data = json.decode(response.body);
         var packages = data.map((json) => Package.fromJson(json)).toList();

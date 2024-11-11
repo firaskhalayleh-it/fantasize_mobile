@@ -286,8 +286,11 @@ class ProductDetailsView extends StatelessWidget {
                           child: Card(
                             child: ListTile(
                               leading: CircleAvatar(
-                                backgroundImage: NetworkImage(
-                                    '${Strings().resourceUrl}/${review.user!.userProfilePicture!.entityName}'),
+                                backgroundImage: NetworkImage(review
+                                            .user!.userProfilePicture !=
+                                        null
+                                    ? '${Strings().resourceUrl}/${review.user!.userProfilePicture!.entityName}'
+                                    : '${Strings().resourceUrl}/profile.jpg'),
                               ),
                               title: Text(review.user!.username),
                               subtitle: Column(

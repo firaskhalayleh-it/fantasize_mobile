@@ -1,3 +1,4 @@
+import 'package:fantasize/app/data/models/address_model.dart';
 import 'package:fantasize/app/modules/profile/controllers/profile_controller.dart';
 import 'package:fantasize/app/modules/profile/views/widgets/build_list_tile.dart';
 import 'package:fantasize/app/modules/profile/views/widgets/build_section.dart';
@@ -17,21 +18,19 @@ class ProfileView extends StatelessWidget {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: Container(
-            decoration: BoxDecoration(
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 20,
-                  offset: Offset(0, 1),
-                ),
-              ],
-            ),
-            child: Image(image: Svg('assets/icons/back_button.svg')),
+          style: ButtonStyle(
+            padding: WidgetStatePropertyAll(const EdgeInsets.all(0)),
+            elevation: WidgetStatePropertyAll(2),
+            shadowColor: WidgetStatePropertyAll(Colors.black),
           ),
+          icon: Image(image: Svg('assets/icons/back_button.svg')),
           onPressed: () => Get.back(),
         ),
-        title: const Text('Profile'),
+        title: const Text(
+          'Profile',
+          style: TextStyle(
+              color: Colors.redAccent, fontFamily: 'Poppins', fontSize: 25),
+        ),
       ),
       body: Obx(
         () {
@@ -75,6 +74,12 @@ class ProfileView extends StatelessWidget {
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
                                     color: Colors.white,
+                                    boxShadow: const [
+                                      BoxShadow(
+                                        color: Colors.black26,
+                                        blurRadius: 9,
+                                      ),
+                                    ],
                                   ),
                                   child: const Icon(
                                     Icons.camera_alt,
@@ -83,30 +88,24 @@ class ProfileView extends StatelessWidget {
                                 ),
                               ),
                             ),
-
-                            // User Name
-                            Positioned(
-                              bottom: 0,
-                              left: 0,
-                              child: Container(
-                                padding: const EdgeInsets.all(5),
-                                decoration: BoxDecoration(
-                                  color: Colors.redAccent,
-                                  borderRadius: BorderRadius.circular(5),
-                                ),
-                                child: Text(
-                                  controller.user.value!.username,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ),
                           ],
                         )),
-
+                    Container(
+                      padding: const EdgeInsets.all(5),
+                      decoration: BoxDecoration(
+                        color: Colors.redAccent,
+                        borderRadius: BorderRadius.circular(5),
+                      ),
+                      child: Text(
+                        controller.user.value!.username,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontFamily: 'Jost',
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
                     // Personal Information Section
                     BuildSection().buildSection('Personal Information', [
                       ListTile(
@@ -148,9 +147,12 @@ class ProfileView extends StatelessWidget {
                           BuildListTile().buildListTile(
                             '${method.cardType} - ${method.cardNumber}',
                             controller.getCardIcon(method.cardNumber),
-                           
                             trailing: IconButton(
-                                onPressed: () {}, icon: Icon(Icons.edit)),
+                                onPressed: () {
+                                  Get.toNamed('/payment-method',
+                                      arguments: {'paymentMethod': method});
+                                },
+                                icon: Icon(Icons.edit)),
                           )
                       else
                         const ListTile(
@@ -158,12 +160,20 @@ class ProfileView extends StatelessWidget {
                       const SizedBox(height: 10),
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red,
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 12, horizontal: 10),
+                          backgroundColor: const Color(0xFFFF4C5E),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                         ),
                         onPressed: () => controller.NavigateToPaymentMethod(),
                         child: const Text(
                           'Add Payment Method',
-                          style: TextStyle(color: Colors.white),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontFamily: 'Jost',
+                          ),
                         ),
                       ),
                     ]),
@@ -178,47 +188,62 @@ class ProfileView extends StatelessWidget {
                             Icon(Icons.location_on),
                             trailing: IconButton(
                               icon: const Icon(Icons.edit),
-                              onPressed: () {},
+                              onPressed: () {
+                                Get.toNamed('/address',
+                                    arguments: {'address': address});
+                              },
                             ),
                           )
                       else
-                        const ListTile(title: Text('No addresses added yet')),
+                        ListTile(
+                          title: Text('No addresses added yet'),
+                          // title: Text('No addresses added yet'),
+                          leading: IconButton(
+                              onPressed: () {
+                                Get.toNamed('/address',
+                                    arguments: {'address': Address()});
+                              },
+                              icon: Icon(Icons.add)),
+                        ),
+                      ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 12, horizontal: 10),
+                            backgroundColor: const Color(0xFFFF4C5E),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          onPressed: () {
+                            Get.toNamed('/address');
+                          },
+                          child: Text('Add Address',
+                              style: const TextStyle(
+                                fontFamily: 'Jost',
+                                color: Colors.white,
+                              ))),
                     ]),
 
-                    // Notifications
-                    BuildSection().buildSection('Notifications', [
-                      if (controller.user.value!.notifications != null &&
-                          controller.user.value!.notifications!.isNotEmpty)
-                        for (var notification
-                            in controller.user.value!.notifications!)
-                          BuildListTile().buildListTile(
-                            notification.template.toString(),
-                            Icon(Icons.notifications),
-                          )
-                      else
-                        const ListTile(
-                            title: Text('No notifications available')),
-                    ]),
-                    // Order History Section (Optional, if needed)
-                    BuildSection().buildSection('Order History', []),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 3),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
 
-                    // Preferences Section
-                    BuildSection().buildSection('Preferences', [
-                      BuildListTile().buildListTile(
-                          'Currency', Icon(Icons.monetization_on),
-                          trailing: const Text('USD')),
-                      BuildListTile().buildListTile('Language',Icon( Icons.language),
-                          trailing: const Text('EN')),
-                    ]),
-
-                    // Help and Support Section
-                    BuildSection().buildSection('Help and Support', [
-                      BuildListTile().buildListTile(
-                          controller.user.value!.email, Icon(Icons.email)),
-                      BuildListTile().buildListTile(
-                          controller.user.value!.phoneNumber ?? '',
-                          Icon(Icons.phone)),
-                    ]),
+                        child: TextButton(
+                            onPressed: () {
+                              Get.toNamed('/order-history');
+                            },
+                            child: Text(
+                              'Order History',
+                              style: TextStyle(
+                                  fontSize: 18,
+                                  color: Colors.black,
+                                  fontFamily: 'Jost',
+                                  fontWeight: FontWeight.bold),
+                            )),
+                        // Preferences Section,
+                      ),
+                    ),
 
                     const SizedBox(height: 20),
 
@@ -233,8 +258,8 @@ class ProfileView extends StatelessWidget {
                         ),
                       ),
                       trailing: const Icon(Icons.logout, color: Colors.red),
-                      onTap: () async {
-                        await controller
+                      onTap: () {
+                        controller
                             .logout(); // Call the logout method from ProfileController
                       },
                     ),

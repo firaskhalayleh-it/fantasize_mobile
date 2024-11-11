@@ -8,6 +8,7 @@ class User {
   final String? dateOfBirth;
   final String? phoneNumber;
   final String? gender;
+   String? deviceToken;
   final UserProfilePicture?
       userProfilePicture; // Use the UserProfilePicture model
   final List<PaymentMethod>? paymentMethods;
@@ -21,6 +22,7 @@ class User {
     this.dateOfBirth,
     this.phoneNumber,
     this.gender,
+    this.deviceToken,
     this.userProfilePicture,
     this.paymentMethods,
     this.addresses,
@@ -35,6 +37,7 @@ class User {
       dateOfBirth: json['dateofbirth'],
       phoneNumber: json['PhoneNumber'],
       gender: json['Gender'],
+      deviceToken: json['DeviceToken'],
       userProfilePicture: json['UserProfilePicture'] != null
           ? UserProfilePicture.fromJson(json['UserProfilePicture'])
           : null, // Safely parse UserProfilePicture

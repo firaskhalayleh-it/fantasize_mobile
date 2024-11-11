@@ -33,7 +33,7 @@ class ExploreController extends GetxController {
     try {
       isLoading(true);
       var response =
-          await http.get(Uri.parse('${Strings().apiUrl}/explore'));
+          await http.get(Uri.parse('${Strings().exploreUrl}/videos'));
 
       if (response.statusCode == 200) {
         var jsonData = json.decode(response.body);
@@ -58,8 +58,8 @@ class ExploreController extends GetxController {
     if (videoControllers[index] == null ||
         !videoControllers[index]!.value.isInitialized) {
       try {
-        final videoUrl = Uri.parse(
-            '${Strings().resourceUrl}/${videos[index].videoPath}');
+        final videoUrl =
+            Uri.parse('${Strings().resourceUrl}/${videos[index].videoPath}');
         final controller = VideoPlayerController.networkUrl(videoUrl);
 
         await controller.initialize();
@@ -125,7 +125,7 @@ class ExploreController extends GetxController {
     showHeartAnimation[index] = true;
     Future.delayed(Duration(seconds: 1), () {
       showHeartAnimation[index] = false;
-    }); 
+    });
   }
 
   // Check if the video is liked
@@ -163,12 +163,7 @@ class ExploreController extends GetxController {
     super.onClose();
   }
 
- 
   void disableAllControllers() {
-     if(videoControllers.length == 0  && chewieControllers.length == 0){ 
-      Get.offAllNamed('/home');
-    
-  }
     for (var index = 0; index < videoControllers.length; index++) {
       // Pause and dispose VideoPlayerController
       if (videoControllers[index] != null &&
@@ -177,8 +172,6 @@ class ExploreController extends GetxController {
         videoControllers[index]!.dispose();
         videoControllers[index] = null; // Release memory
       }
-  
-      
     }
   }
 }

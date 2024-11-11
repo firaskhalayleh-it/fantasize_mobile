@@ -1,39 +1,30 @@
+// lib/app/modules/address/views/address_view.dart
+
 import 'package:flutter/material.dart';
+import 'package:flutter_svg_provider/flutter_svg_provider.dart';
 import 'package:get/get.dart';
 import '../controllers/address_controller.dart';
 
 class AddressView extends GetView<AddressController> {
-  const AddressView({super.key});
+  AddressView({Key? key}) : super(key: key);
+
+  // Declare a GlobalKey for the Form
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   @override
   Widget build(BuildContext context) {
+    // The controller is automatically provided by GetView
+    // Access it using 'controller'
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        leading: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.grey[200],
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
-                  spreadRadius: 1,
-                  blurRadius: 5,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            child: IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.black),
-              onPressed: () {
-                Get.back();
-              },
-            ),
-          ),
-        ),
+        leading: IconButton(
+            onPressed: () {
+              Get.back();
+            },
+            icon: Image(image: Svg('assets/icons/back_button.svg'))),
         title: Center(
           child: Image.asset(
             'assets/icons/fantasize.png',
@@ -48,118 +39,174 @@ class AddressView extends GetView<AddressController> {
         color: Colors.white,
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Address Line',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 4),
-              SizedBox(
-                width: MediaQuery.of(context).size.width * 0.9,
-                child: const TextField(
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(),
+          child: Form(
+            key: _formKey, // Assign the GlobalKey to the Form
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Address Line',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Street',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 4),
-              SizedBox(
-                width: MediaQuery.of(context).size.width * 0.9,
-                child: const TextField(
-                  decoration: InputDecoration(
+                const SizedBox(height: 4),
+                TextFormField(
+                  controller: controller.addressLineController,
+                  decoration: const InputDecoration(
                     border: OutlineInputBorder(),
                   ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Region',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 4),
-              SizedBox(
-                width: MediaQuery.of(context).size.width * 0.9,
-                child: const TextField(
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'City',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 4),
-              SizedBox(
-                width: MediaQuery.of(context).size.width * 0.9,
-                child: const TextField(
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Country',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 4),
-              SizedBox(
-                width: MediaQuery.of(context).size.width * 0.9,
-                child: const TextField(
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 32),
-              Center(
-                child: ElevatedButton(
-                  onPressed: () {
-                    // Add your save logic here
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter the address line';
+                    }
+                    return null;
                   },
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 16, horizontal: 100),
-                    backgroundColor: const Color(0xFFFF4C5E),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Street',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
                   ),
-                  child: const Text(
-                    'Save',
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
+                ),
+                const SizedBox(height: 4),
+                TextFormField(
+                  controller: controller.streetController,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter the street';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Region',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                TextFormField(
+                  controller: controller.regionController,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter the region';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'City',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                TextFormField(
+                  controller: controller.cityController,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter the city';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Country',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                TextFormField(
+                  controller: controller.countryController,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter the country';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 32),
+                Center(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      // Validate the form before saving
+                      if (_formKey.currentState!.validate()) {
+                        controller.saveAddress();
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 16, horizontal: 100),
+                      backgroundColor: const Color(0xFFFF4C5E),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text(
+                      'Save',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontFamily: 'Jost',
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
+                SizedBox(height: 32),
+                //delete button under condition that address is not new
+                if (controller.addressId != null)
+                  Center(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        controller.deleteAddress();
+                      },
+                      icon: Icon(
+                        Icons.delete,
+                        color: Colors.white,
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 16, horizontal: 100),
+                        backgroundColor: Color(0xFFFF4C5E),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      label: const Text(
+                        'Delete',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontFamily: 'Jost',
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
       ),

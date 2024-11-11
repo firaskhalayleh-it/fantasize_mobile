@@ -1,3 +1,4 @@
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
@@ -12,16 +13,15 @@ class LoginController extends GetxController {
   var passwordController = TextEditingController();
   var errorMessage = ''.obs;
   var obscureText = true.obs;
-  // Instance of secure storage to store JWT
   final FlutterSecureStorage secureStorage = const FlutterSecureStorage();
-
-  // User object to store the logged-in user data
   var user = Rxn<User>();
+  String? deviceToken;
 
   @override
   void onInit() {
     super.onInit();
-    checkForToken(); // Check token when the app initializes
+
+    checkForToken(); // Moved after setting deviceToken
   }
 
   // Function to toggle the visibility of the password field
@@ -32,47 +32,49 @@ class LoginController extends GetxController {
   // Method to check for stored JWT token and navigate accordingly
   Future<void> checkForToken() async {
     String? token = await secureStorage.read(key: 'jwt_token');
-    String? userData = await secureStorage.read(key: 'user_data');
 
     if (token != null) {
-      // Token exists, check if it's valid
       bool isTokenExpired = JwtDecoder.isExpired(token);
 
       if (!isTokenExpired) {
-        // Decode the token to get user details
         Map<String, dynamic> decodedToken = JwtDecoder.decode(token);
-        print(
-            'Decoded Token: $decodedToken'); // Debugging: Print the decoded token
-        bool isTokenExpired = JwtDecoder.isExpired(token);
-        print('Is token expired? $isTokenExpired');
-
         Map<String, dynamic> payload = decodedToken['payload'];
 
-        // Create a User instance from the decoded token
+        print('Decoded Token: $decodedToken');
+        print('Is token expired? $isTokenExpired');
+
+        UserProfilePicture? userProfilePicture;
+
+        if (payload['userProfilePicture'] != null) {
+          var profilePicData = payload['userProfilePicture'];
+
+          userProfilePicture = UserProfilePicture(
+            resourceID: profilePicData['resourceID'],
+            entityName: profilePicData['entityName'],
+            filePath: profilePicData['filePath'],
+            fileType: profilePicData['fileType'],
+          );
+        }
+
         user.value = User(
-            username: payload['userName'], // Correct case
-            email: payload['email'], // Correct case
-            userProfilePicture: UserProfilePicture(
-              resourceID: payload['userProfilePicture']
-                  ['resourceID'], // Lowercase 'u'
-              entityName: payload['userProfilePicture']
-                  ['entityName'], // Lowercase 'u'
-              filePath: payload['userProfilePicture']
-                  ['filePath'], // Lowercase 'u'
-              fileType: payload['userProfilePicture']
-                  ['fileType'], // Lowercase 'u'
-            ));
+          username: payload['userName'],
+          email: payload['email'],
+          userProfilePicture: userProfilePicture,
+          deviceToken: deviceToken ?? '',
+        );
 
         await secureStorage.write(
-            key: 'user_data', value: jsonEncode(user.value));
+          key: 'user_data',
+          value: jsonEncode(user.value),
+        );
+        print('going to home');
         Get.offNamed('/home');
       } else {
-        // Token is expired, navigate to login
-        await secureStorage.delete(key: 'jwt_token'); // Remove expired token
-        Get.offNamed('/login'); // Go to sign-in page
+        await secureStorage.deleteAll();
+        Get.deleteAll();
+        Get.offNamed('/login');
       }
     } else {
-      // No token found, navigate to login page
       Get.offNamed('/login');
     }
   }
@@ -86,19 +88,30 @@ class LoginController extends GetxController {
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
 
+    // Retrieve DeviceToken from secure storage using await
+    var deviceToken = await secureStorage.read(key: 'DeviceToken');
+    print('Device Token from secureStorage: $deviceToken');
+
     if (email.isEmpty || password.isEmpty) {
       errorMessage.value = 'Please fill out all fields.';
       Get.snackbar('Error', 'Please fill out all fields.');
       return;
     }
+    if (deviceToken == null) {
+      errorMessage.value = 'Device Token not found.';
+      Get.snackbar('Error', 'Device Token not found.');
+      return;
+    }
 
     try {
       var url = Uri.parse('${Strings().apiUrl}/login');
-      var response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': email, 'password': password}),
-      );
+      var response = await http.post(url,
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'email': email,
+            'password': password,
+            'DeviceToken': deviceToken,
+          }));
 
       if (response.statusCode == 200) {
         String jwtToken = response.body;
@@ -107,27 +120,33 @@ class LoginController extends GetxController {
         Map<String, dynamic> decodedToken = JwtDecoder.decode(jwtToken);
         Map<String, dynamic> payload = decodedToken['payload'];
 
+        // Initialize userProfilePicture as null
+        UserProfilePicture? userProfilePicture;
+
+        // Check if userProfilePicture exists in the payload
+        if (payload['userProfilePicture'] != null) {
+          var profilePicData = payload['userProfilePicture'];
+
+          // Create a UserProfilePicture instance
+          userProfilePicture = UserProfilePicture(
+            resourceID: profilePicData['resourceID'],
+            entityName: profilePicData['entityName'],
+            filePath: profilePicData['filePath'],
+            fileType: profilePicData['fileType'],
+          );
+        }
+
         // Create a User instance from the decoded token
         user.value = User(
           username: payload['userName'],
           email: payload['email'],
-          userProfilePicture: UserProfilePicture(
-            resourceID: payload['userProfilePicture']['resourceID'],
-            entityName: payload['userProfilePicture']['entityName'],
-            filePath: payload['userProfilePicture']['filePath'],
-            fileType: payload['userProfilePicture']['fileType'],
-          ),
+          userProfilePicture: userProfilePicture,
         );
 
         await secureStorage.write(key: 'jwt_token', value: jwtToken);
-      await secureStorage.write(
-          key: 'user_data', value: jsonEncode(user.value));
-      var userData = await secureStorage.read(key: 'user_data');
-      print('User: ${user.value!.username}');
-      print('Email: ${user.value!.email}');
-      print('Profile Picture: ${user.value!.userProfilePicture?.filePath}');
-      print('User Data: $userData');
-
+        await secureStorage.write(
+            key: 'user_data', value: jsonEncode(user.value));
+        print('going to home');
         Get.offNamed('/home');
       } else {
         errorMessage.value = 'Login failed. Please check your credentials.';
@@ -137,12 +156,5 @@ class LoginController extends GetxController {
       errorMessage.value = 'An error occurred. Please try again later.';
       Get.snackbar('Error', 'An error occurred. Please try again later: $e');
     }
-  }
-
-  // Function to log out the user by deleting the stored token
-  Future<void> logout() async {
-    await secureStorage.delete(key: 'jwt_token');
-    user.value = null;
-    Get.offNamed('/login');
   }
 }

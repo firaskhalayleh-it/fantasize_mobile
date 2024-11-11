@@ -2,12 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:fantasize/app/global/strings.dart';
 import 'package:fantasize/app/data/models/product_model.dart';
 import 'package:get/get.dart';
-import 'package:get/get_connect/http/src/utils/utils.dart';
 
-class ProductCard extends StatelessWidget {
+class OfferCardProduct extends StatelessWidget {
   final Product product; // Product object passed to this widget
 
-  const ProductCard({Key? key, required this.product}) : super(key: key);
+  const OfferCardProduct({Key? key, required this.product}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -30,6 +29,29 @@ class ProductCard extends StatelessWidget {
                   // Product Image with 'Sold Out' badge if applicable
                   Stack(
                     children: [
+                      product.offer != null
+                          ? Positioned(
+                              top: 10,
+                              right: 10,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Color(0xFF3A4053),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Text(
+                                  '${product.offer!.discount}% OFF',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            )
+                          : Container(),
                       Material(
                         elevation: 5,
                         borderRadius: BorderRadius.circular(10),
@@ -40,30 +62,6 @@ class ProductCard extends StatelessWidget {
                             height: Get.height * 0.2,
                             width: Get.width * 0.5,
                             fit: BoxFit.cover,
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        top: Get.height * 0.08,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Color(0xFFFF4C5E),
-                            borderRadius: BorderRadius.only(
-                              bottomRight: Radius.circular(50),
-                              topRight: Radius.circular(50),
-                            ),
-                          ),
-                          child: Text(
-                            product.status == 'new' ? 'New' : 'Sale',
-                            style: TextStyle(
-                              fontFamily: 'Jost',
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
                           ),
                         ),
                       ),
@@ -89,8 +87,10 @@ class ProductCard extends StatelessWidget {
                             ),
                           ),
                         ),
+                     
                     ],
                   ),
+
                   Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: Column(

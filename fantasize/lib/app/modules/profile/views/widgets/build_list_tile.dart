@@ -6,9 +6,7 @@ class BuildListTile {
       leading: icon,
       title: Text(title),
       trailing: trailing,
-      onTap: () {
-        // Handle tile tap if needed
-      },
+      
     );
   }
 }

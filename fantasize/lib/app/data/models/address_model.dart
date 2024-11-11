@@ -1,11 +1,8 @@
 import 'package:fantasize/app/data/models/user_model.dart';
-import 'package:get/get.dart';
-// import 'orders_model.dart';
 
-class Address extends GetxController {
+class Address {
   int? addressID;
   User? user;
-  // List<Orders>? orders;
   String? addressLine;
   String? city;
   String? state;
@@ -18,7 +15,6 @@ class Address extends GetxController {
   Address({
     this.addressID,
     this.user,
-    // this.orders,
     this.addressLine,
     this.city,
     this.state,
@@ -33,16 +29,13 @@ class Address extends GetxController {
     return Address(
       addressID: json['AddressID'],
       user: json['User'] != null ? User.fromJson(json['User']) : null,
-      // orders: json['Orders'] != null
-      //     ? (json['Orders'] as List).map((i) => Orders.fromJson(i)).toList()
-      //     : null,
       addressLine: json['AddressLine'],
       city: json['City'],
       state: json['State'],
       country: json['Country'],
       postalCode: json['PostalCode'],
-      createdAt: DateTime.parse(json['CreatedAt']),
-      updatedAt: DateTime.parse(json['UpdatedAt']),
+      createdAt: json['CreatedAt'] != null ? DateTime.parse(json['CreatedAt']) : null,
+      updatedAt: json['UpdatedAt'] != null ? DateTime.parse(json['UpdatedAt']) : null,
     );
   }
 
@@ -51,7 +44,6 @@ class Address extends GetxController {
     return {
       'AddressID': addressID,
       'User': user?.toJson(),
-      // 'Orders': orders?.map((e) => e.toJson()).toList(),
       'AddressLine': addressLine,
       'City': city,
       'State': state,

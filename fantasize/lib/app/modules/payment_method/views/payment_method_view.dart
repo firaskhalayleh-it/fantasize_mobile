@@ -125,9 +125,6 @@ class PaymentMethodView extends GetView<PaymentMethodController> {
                           labelText: 'Expiry Date',
                           hintText: 'MM/YY',
                         ),
-                        onChanged: (value) {
-                          controller.updateExpirationDate(value);
-                        },
                       ),
                       TextFormField(
                         controller: controller.cvvController,
@@ -188,7 +185,6 @@ class PaymentMethodView extends GetView<PaymentMethodController> {
                     onPressed: () {
                       if (controller.formKey.currentState!.validate()) {
                         controller.savePaymentMethod();
-                        controller.postPaymentMethod();
                       } else {
                         Get.snackbar('Error', 'Please complete all fields');
                       }
@@ -196,9 +192,9 @@ class PaymentMethodView extends GetView<PaymentMethodController> {
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(
                           vertical: 16, horizontal: 100),
-                      backgroundColor: Colors.red,
+                      backgroundColor: Color(0xFFFF4C5E),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
+                        borderRadius: BorderRadius.circular(8),
                       ),
                     ),
                     child: const Text(
@@ -208,6 +204,33 @@ class PaymentMethodView extends GetView<PaymentMethodController> {
                   ),
                 ),
                 const SizedBox(height: 32),
+
+                //delete button under condition that address is not new
+                if (controller.paymentMethod.value.paymentMethodID != null)
+                  Center(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        controller.deletePaymentMethod();
+                      },
+                      icon: const Icon(
+                        Icons.delete,
+                        color: Colors.white,
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 16, horizontal: 100),
+                        backgroundColor: Color(0xFFFF4C5E),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      label: const Text(
+                        'Delete',
+                        style: TextStyle(fontSize: 18, color: Colors.white),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 32),
               ],
             ),
           ),

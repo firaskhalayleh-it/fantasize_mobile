@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:fantasize/app/global/widgets/general_input.dart';
 import 'package:fantasize/app/modules/home/controllers/home_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -16,6 +17,16 @@ import 'package:http_parser/http_parser.dart';
 class ProfileController extends GetxController {
   var user = Rxn<User>();
   TextEditingController usernameController = TextEditingController();
+  TextEditingController newpasswordController = TextEditingController();
+  TextEditingController confirmpasswordController = TextEditingController();
+  GlobalKey formKey = GlobalKey<FormState>();
+  var newpassword = ''.obs;
+
+  var confirmpassword = ''.obs;
+
+  var isObscureNewPassword = true.obs;
+  var isObscureConfirmPassword = true.obs;
+
   var isLoading = true.obs;
   final FlutterSecureStorage secureStorage = const FlutterSecureStorage();
   final ImagePicker _picker = ImagePicker();
@@ -67,10 +78,10 @@ class ProfileController extends GetxController {
     }
   }
 
-  Future<void> updateUserProfile({String? username, File? file}) async {
+  Future<void> updateUserProfile({String? passowrd, File? file}) async {
     final url = Uri.parse('${Strings().apiUrl}/update_user');
     String? token = await secureStorage.read(key: 'jwt_token');
-
+    print(passowrd);
     if (token == null) {
       Get.snackbar('Error', 'No token found. Please login again.');
       return;
@@ -96,9 +107,10 @@ class ProfileController extends GetxController {
         contentType: MediaType.parse(mimeType), // Set MIME type here
       ));
     }
-
-    request.fields['Username'] = username ?? user.value?.username ?? '';
-
+    // check the matching password
+    if (passowrd != null && passowrd.isNotEmpty) {
+      request.fields['Password'] = passowrd;
+    }
     var response = await request.send();
     var responseBody = await response.stream.bytesToString();
 
@@ -113,8 +125,8 @@ class ProfileController extends GetxController {
         user.refresh();
 
         // Check if the username was updated
-        if (username != null && username.isNotEmpty) {
-          await secureStorage.write(key: 'username', value: username);
+        if (passowrd != null && passowrd.isNotEmpty) {
+          await secureStorage.write(key: 'username', value: passowrd);
         }
 
         // Check if the profile picture was updated
@@ -141,25 +153,17 @@ class ProfileController extends GetxController {
     }
   }
 
-  void updateUsername() {
-    String newUsername = usernameController.text = user.value!.username;
-    if (newUsername.isEmpty) {
-      Get.snackbar('Error', 'Username cannot be empty');
-      return;
-    }
-    user.value!.username = newUsername;
-    updateUserProfile(username: newUsername);
-  }
-
   NavigateToUserInfo() {
+    print(
+        'sended data:${user.value!.gender},${user.value!.username},${user.value!.phoneNumber},${user.value!.dateOfBirth},${user.value!.email}');
+
     Get.toNamed('/user-info', parameters: {
       'gender': user.value?.gender?.toString() ?? '',
       'username': user.value?.username?.toString() ?? '',
       'phonenumber': user.value?.phoneNumber?.toString() ?? '',
       'DOB': user.value?.dateOfBirth?.toString() ?? '',
-      'email': user.value?.email?.toString() ?? ''
+      'email': user.value?.email.toString() ?? ''
     });
-    
   }
 
   NavigateToPaymentMethod() {
@@ -170,40 +174,158 @@ class ProfileController extends GetxController {
     isEditing.value = !isEditing.value;
   }
 
-  showResetPasswordDialog() {
+  void showResetPasswordDialog() {
     Get.defaultDialog(
       title: 'Reset Password',
-      content: Column(
-        children: [
-          Text('Enter your email address to reset your password'),
-          TextField(
-            decoration: InputDecoration(hintText: 'Email'),
+      content: Form(
+        key: formKey,
+        child: SizedBox(
+          width: Get.width * 0.8,
+          child: Column(
+            children: [
+              Obx(() {
+                return GeneralInput(
+                  key: const ValueKey('newpassword'),
+                  label: 'Enter new password',
+                  controller: newpasswordController,
+                  obscureText: isObscureNewPassword.value,
+                  keyboardType: TextInputType.visiblePassword,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your new password';
+                    }
+                    if (value.length < 6) {
+                      return 'Password must be at least 6 characters long';
+                    }
+                    return null;
+                  },
+                  postfixIcon: IconButton(
+                    icon: Icon(
+                      isObscureNewPassword.value
+                          ? Icons.visibility_off
+                          : Icons.visibility,
+                    ),
+                    onPressed: () {
+                      isObscureNewPassword.value = !isObscureNewPassword.value;
+                    },
+                  ),
+                );
+              }),
+              const SizedBox(height: 10),
+              Obx(() {
+                return GeneralInput(
+                  key: const ValueKey('confirmpassword'),
+                  label: 'Confirm your password',
+                  controller: confirmpasswordController,
+                  obscureText: isObscureConfirmPassword.value,
+                  keyboardType: TextInputType.visiblePassword,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please confirm your password';
+                    }
+                    if (value != newpasswordController.text) {
+                      return 'Passwords do not match';
+                    }
+                    if (value.length < 6) {
+                      return 'Password must be at least 6 characters long';
+                    }
+                    return null;
+                  },
+                  postfixIcon: IconButton(
+                    icon: Icon(
+                      isObscureConfirmPassword.value
+                          ? Icons.visibility_off
+                          : Icons.visibility,
+                    ),
+                    onPressed: () {
+                      isObscureConfirmPassword.value =
+                          !isObscureConfirmPassword.value;
+                    },
+                  ),
+                );
+              }),
+              const SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  ElevatedButton(
+                    style: ButtonStyle(
+                      padding: WidgetStateProperty.all(
+                        const EdgeInsets.symmetric(
+                            horizontal: 44, vertical: 12),
+                      ),
+                      backgroundColor:
+                          WidgetStateProperty.all(const Color(0xFFFF4C5E)),
+                      shape: WidgetStateProperty.all(
+                        RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ),
+                    onPressed: () {
+                      Get.back();
+                    },
+                    child: const Text('Cancel',
+                        style: TextStyle(color: Colors.white)),
+                  ),
+                  ElevatedButton(
+                    style: ButtonStyle(
+                      padding: WidgetStateProperty.all(
+                        const EdgeInsets.symmetric(
+                            horizontal: 15, vertical: 12),
+                      ),
+                      backgroundColor:
+                          WidgetStateProperty.all(const Color(0xFFFF4C5E)),
+                      shape: WidgetStateProperty.all(
+                        RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ),
+                    onPressed: () {
+                      if ((formKey.currentState as FormState).validate()) {
+                        newpassword.value = newpasswordController.text;
+                        confirmpassword.value = confirmpasswordController.text;
+
+                        updateUserProfile(passowrd: newpassword.value);
+                        Get.back();
+                      }
+                    },
+                    child: const Text('Reset Password',
+                        style: TextStyle(color: Colors.white)),
+                  ),
+                ],
+              ),
+            ],
           ),
-        ],
+        ),
       ),
-      actions: [
-        ElevatedButton(
-          onPressed: () {
-            Get.back();
-          },
-          child: Text('Cancel'),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            Get.back();
-            Get.snackbar('Success', 'Password reset email sent');
-          },
-          child: Text('Reset Password'),
-        ),
-      ],
     );
   }
 
   Future<void> logout() async {
-    await secureStorage.delete(key: 'jwt_token');
-    await secureStorage.delete(key: 'user_data');
-    user.value = null;
-    Get.offAllNamed('/login');
+    try {
+      // Retrieve all keys from secure storage
+      List<String> allKeys =
+          await secureStorage.readAll().then((map) => map.keys.toList());
+
+      // Define the keys you want to retain
+      List<String> keysToKeep = ['DeviceToken'];
+
+      // Filter out the keys to delete
+      List<String> keysToDelete =
+          allKeys.where((key) => !keysToKeep.contains(key)).toList();
+
+      // Delete the unwanted keys
+      for (String key in keysToDelete) {
+        await secureStorage.delete(key: key);
+        print('Deleted key: $key');
+      }
+
+      Get.offAllNamed('/login');
+    } catch (e) {
+      print('Error deleting keys except DeviceToken: $e');
+    }
   }
 
   Widget getCardIcon(String? CardNumber) {
