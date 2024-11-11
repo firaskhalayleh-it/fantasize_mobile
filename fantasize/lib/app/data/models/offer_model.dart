@@ -8,8 +8,6 @@ class Offer {
   final bool isActive;
   final String validFrom;
   final String validTo;
-  final List<Product> products;
-  final List<Package> packages;
 
   Offer({
     required this.offerID,
@@ -17,8 +15,6 @@ class Offer {
     required this.isActive,
     required this.validFrom,
     required this.validTo,
-    required this.products,
-    required this.packages,
   });
 
   factory Offer.fromJson(Map<String, dynamic> json) {
@@ -28,12 +24,6 @@ class Offer {
       isActive: json['IsActive'],
       validFrom: json['ValidFrom'],
       validTo: json['ValidTo'],
-      products: (json['Products'] as List)
-          .map((product) => Product.fromJson(product))
-          .toList(),
-      packages: (json['Packages'] as List)
-          .map((package) => Package.fromJson(package))
-          .toList(),
     );
   }
 

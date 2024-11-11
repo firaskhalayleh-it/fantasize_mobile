@@ -1,8 +1,10 @@
+// lib/app/modules/home/views/widgets/all_tab/all_tab.dart
+
 import 'package:fantasize/app/modules/home/controllers/home_controller.dart';
+import 'package:fantasize/app/modules/home/views/widgets/all_tab/widgets/home_offers.dart';
 import 'package:fantasize/app/modules/home/views/widgets/all_tab/widgets/new_collection_subcategory.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:fantasize/app/modules/home/views/widgets/all_tab/widgets/home_offers.dart';
 
 class AllTab extends StatelessWidget {
   const AllTab({super.key});
@@ -12,27 +14,28 @@ class AllTab extends StatelessWidget {
     final HomeController controller = Get.find<HomeController>();
 
     return SingleChildScrollView(
-      padding: EdgeInsets.all(8.0), // Optional: Adjust padding as needed
+      padding: EdgeInsets.all(8.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Horizontally scrollable homeOffers section
+          // Horizontally scrollable offers section for products and packages
           SizedBox(
-            height: 400, // Set an appropriate height for homeOffers
+            height: 400, // Set an appropriate height for offers
             child: Obx(() {
-              if (controller.offers.isEmpty) {
-                // Show a loader or placeholder while data is loading
+              if (controller.offersItems.isEmpty) {
+                // Show a loader while data is loading
                 return Center(child: CircularProgressIndicator());
               } else {
                 return ListView.builder(
                   scrollDirection: Axis.horizontal,
-                  itemCount: controller.offers.length,
+                  itemCount: controller.offersItems.length,
                   itemBuilder: (context, index) {
-                    final offer = controller.offers[index];
+                    final offerItem = controller.offersItems[index];
                     return Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 8.0),
                       child: HomeOffersWidget(
-                          offer: offer), // Pass the offer to the widget
+                        item: offerItem, // Pass either Product or Package
+                      ),
                     );
                   },
                 );
@@ -43,16 +46,17 @@ class AllTab extends StatelessWidget {
           // Spacer
           SizedBox(height: 20),
 
+          // Display new collection products
           Obx(() {
-            if (controller.newCollectionProducts.isEmpty) {
-              // Show a loader or placeholder while data is loading
+            if (controller.newCollectionItems.isEmpty) {
+              // Show a loader while data is loading
               return Center(child: CircularProgressIndicator());
             } else {
               return Column(
-                children: controller.newCollectionProducts.map((product) {
+                children: controller.newCollectionItems.map((item) {
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8.0),
-                    child: NewCollectionSubcategoryWidget(product: product),
+                    child: NewCollectionSubcategoryWidget(item: item),
                   );
                 }).toList(),
               );

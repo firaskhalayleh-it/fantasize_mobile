@@ -1,4 +1,5 @@
 import 'package:fantasize/app/modules/home/views/widgets/all_tab/all_tab.dart';
+import 'package:fantasize/app/modules/home/views/widgets/new_arrivals/new_arrival_view.dart';
 import 'package:fantasize/app/modules/home/views/widgets/offers/offer_view.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -28,12 +29,15 @@ class HomeTabView extends StatelessWidget {
             return AllTab();
           }
           if (index == 1) {
-            return Center(
-              child: Text('Page ${index + 1}'),
-            );
+            return NewArrivalView();
           }
           if (index == 2) {
             return OfferView();
+          }
+          if (index == 3) {
+            return Center(
+              child: Text('Page ${index + 1}'),
+            );
           }
           return Center(
             child: Text('Page ${index + 1}'),

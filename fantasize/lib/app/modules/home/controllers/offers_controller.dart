@@ -20,8 +20,7 @@ class OffersController extends GetxController {
 
   Future<void> fetchOffers() async {
     isOfferLoading.value = true;
-    final secureStorage =
-        FlutterSecureStorage(); // Replace with your secure storage instance
+    final secureStorage = FlutterSecureStorage();
     final authToken = await secureStorage.read(key: 'jwt_token');
 
     final response = await http.get(
@@ -33,21 +32,23 @@ class OffersController extends GetxController {
     );
 
     if (response.statusCode == 200) {
-      final offersData = json.decode(response.body) as List;
+      final responseData = json.decode(response.body) as List;
+    
+      productList.clear();
+      packageList.clear();
 
-      productList = offersData
-          .expand((offer) => offer['Products'])
-          .map((productJson) => Product.fromJson(productJson))
-          .toList();
-
-      packageList = offersData
-          .expand((offer) => offer['Packages'])
-          .map((packageJson) => Package.fromJson(packageJson))
-          .toList();
+      // Parse response data into Product and Package models
+      for (var item in responseData) {
+        if (item.containsKey('ProductID')) {
+          productList.add(Product.fromJson(item));
+        } else if (item.containsKey('PackageID')) {
+          packageList.add(Package.fromJson(item));
+        }
+      }
     } else {
-      // Handle error
       print("Failed to fetch offers: ${response.statusCode}");
     }
+
     isOfferLoading.value = false;
   }
 }

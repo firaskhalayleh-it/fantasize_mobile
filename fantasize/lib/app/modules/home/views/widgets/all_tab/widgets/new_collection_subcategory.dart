@@ -1,33 +1,19 @@
-// new_collection_subcategory_widget.dart
+import 'package:fantasize/app/data/models/resources_model.dart';
 import 'package:fantasize/app/global/strings.dart';
 import 'package:fantasize/app/global/widgets/image_handler.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:fantasize/app/data/models/product_model.dart';
 
 class NewCollectionSubcategoryWidget extends StatelessWidget {
-  final Product product;
+  final dynamic item; // Accepts either Product or Package
 
-  const NewCollectionSubcategoryWidget({Key? key, required this.product})
+  const NewCollectionSubcategoryWidget({Key? key, required this.item})
       : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    // Determine which image to display
-    String imageUrl = '';
-    if (product.resources.isNotEmpty) {
-      imageUrl = product.resources.first.filePath;
-    } else {
-      imageUrl = 'assets/images/placeholder.jpg'; // Fallback image
-    }
-
-    var resourceUrl = Strings().resourceUrl;
-
-    // Construct the full URL for the image
-    final fullImageUrl = '$resourceUrl/$imageUrl';
-
     return SizedBox(
-      height: 300, // Set a fixed height for the overall widget
+      height: 300,
       child: Stack(
         children: [
           Positioned(
@@ -66,16 +52,16 @@ class NewCollectionSubcategoryWidget extends StatelessWidget {
               ),
               child: Stack(
                 children: [
-                  // Background image with rounded corners
+                  // Display the image with error handling
                   ClipRRect(
                     borderRadius: BorderRadius.all(Radius.circular(7)),
                     child: Image.network(
-                      ImageHandler.getImageUrl(product.resources),
+                      ImageHandler.getImageUrl(item.resources),
                       width: double.infinity,
                       height: double.infinity,
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) {
-                        // Handle image loading errors
+                        // Display a local placeholder if the image fails to load
                         return Image.asset(
                           'assets/images/placeholder.jpg',
                           fit: BoxFit.cover,
@@ -85,7 +71,7 @@ class NewCollectionSubcategoryWidget extends StatelessWidget {
                       },
                     ),
                   ),
-                  // Center "New Collection" text
+                  // "New Collection" label
                   Align(
                     alignment: Alignment.topCenter,
                     child: Padding(
@@ -107,14 +93,13 @@ class NewCollectionSubcategoryWidget extends StatelessWidget {
                       ),
                     ),
                   ),
-                  // Center product name
+                  // Display item name
                   Align(
                     alignment: Alignment.topCenter,
                     child: Padding(
-                      padding: EdgeInsets.only(
-                          top: 45), // Adjust the distance as needed
+                      padding: EdgeInsets.only(top: 45),
                       child: Text(
-                        product.name,
+                        item.name,
                         style: TextStyle(
                           fontFamily: 'Abel',
                           color: Colors.black,
@@ -123,7 +108,7 @@ class NewCollectionSubcategoryWidget extends StatelessWidget {
                       ),
                     ),
                   ),
-                  // Bottom "Shop Now" button
+                  // "Shop Now" button
                   Align(
                     alignment: Alignment.bottomCenter,
                     child: Container(
@@ -141,7 +126,7 @@ class NewCollectionSubcategoryWidget extends StatelessWidget {
                         children: [
                           Expanded(
                             child: Text(
-                              product.description,
+                              item.description,
                               style: TextStyle(
                                 color: Colors.black,
                                 fontSize: 12,
@@ -158,7 +143,7 @@ class NewCollectionSubcategoryWidget extends StatelessWidget {
                               elevation: 0,
                             ),
                             onPressed: () {
-                              // Handle navigation to product details
+                              // Handle navigation to item details
                             },
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
