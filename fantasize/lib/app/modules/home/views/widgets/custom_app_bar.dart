@@ -3,12 +3,9 @@ import 'package:get/get.dart';
 import 'package:fantasize/app/global/strings.dart';
 import 'package:fantasize/app/modules/home/controllers/home_controller.dart';
 
-class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
+class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
   final double screenHeight;
   final double screenWidth;
-
-  final HomeController homeController = Get.find<HomeController>();
-
   final TabController tabController;
 
   CustomAppBar({
@@ -18,7 +15,76 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   });
 
   @override
+  _CustomAppBarState createState() => _CustomAppBarState();
+
+  @override
+  Size get preferredSize => Size.fromHeight(screenHeight * 0.35);
+}
+
+class _CustomAppBarState extends State<CustomAppBar> {
+  final HomeController homeController = Get.find<HomeController>();
+  late ScrollController _scrollController;
+  final Map<int, GlobalKey> _itemKeys = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+
+    // Initialize keys for each category
+    for (int i = 0; i < homeController.categories.length; i++) {
+      _itemKeys[i] = GlobalKey();
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _scrollToCenter(int index) {
+    // Delay the calculation to ensure the layout is updated
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      RenderBox? renderBox =
+          _itemKeys[index]?.currentContext?.findRenderObject() as RenderBox?;
+      if (renderBox != null) {
+        // Get the position of the clicked item
+        Offset position = renderBox.localToGlobal(Offset.zero, ancestor: null);
+        double itemPosition = position.dx;
+
+        // Calculate the offset to center the item
+        double screenWidth = MediaQuery.of(context).size.width;
+        double itemWidth = renderBox.size.width;
+        double offset = itemPosition + itemWidth / 2 - screenWidth / 2;
+
+        // Ensure offset is within bounds
+        double maxScrollExtent = _scrollController.position.maxScrollExtent;
+        double minScrollExtent = _scrollController.position.minScrollExtent;
+        double targetOffset = _scrollController.offset + offset;
+
+        if (targetOffset < minScrollExtent) {
+          targetOffset = minScrollExtent;
+        } else if (targetOffset > maxScrollExtent) {
+          targetOffset = maxScrollExtent;
+        }
+
+        // Scroll the controller to the calculated offset
+        _scrollController.animateTo(
+          targetOffset,
+          duration: Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final screenHeight = widget.screenHeight;
+    final screenWidth = widget.screenWidth;
+    final tabController = widget.tabController;
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -34,23 +100,23 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: const [
-                      Text(
-                        'Hello, Welcome',
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontSize: 14,
-                          fontFamily: 'Poppins',
-                          fontWeight: FontWeight.w300,
-                        ),
-                      ),
-                      Text(
-                        '👋',
-                        style: TextStyle(fontSize: 14),
-                      ),
-                    ],
+                 Row(
+                  children: [
+                     Text(
+                    'Hello, Welcome',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 14,
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.w300,
+                    ),
                   ),
+                  Text(
+                    '👋',
+                    style: TextStyle(fontSize: 14),
+                  ),
+                  ],
+                 ),
                   Obx(() {
                     return Text(
                       homeController.getUserName(),
@@ -79,18 +145,19 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                 onTap: () => homeController.goToProfile(),
                 child: Obx(() {
                   return Hero(
-                      tag: 'profile',
-                      child: CircleAvatar(
-                        radius: screenWidth * 0.06,
-                        backgroundImage: homeController.user.value
-                                    ?.userProfilePicture?.entityName !=
-                                null
-                            ? NetworkImage(
-                                '${Strings().resourceUrl}/${homeController.user.value!.userProfilePicture!.entityName}',
-                              )
-                            : const AssetImage('assets/images/profile.jpg')
-                                as ImageProvider,
-                      ));
+                    tag: 'profile',
+                    child: CircleAvatar(
+                      radius: screenWidth * 0.06,
+                      backgroundImage: homeController
+                                  .user.value?.userProfilePicture?.entityName !=
+                              null
+                          ? NetworkImage(
+                              '${Strings().resourceUrl}/${homeController.user.value!.userProfilePicture!.entityName}',
+                            )
+                          : const AssetImage('assets/images/profile.jpg')
+                              as ImageProvider,
+                    ),
+                  );
                 }),
               ),
             ],
@@ -136,6 +203,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         Padding(
           padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.04),
           child: SingleChildScrollView(
+            controller: _scrollController,
             scrollDirection: Axis.horizontal,
             child: Row(
               children:
@@ -145,14 +213,32 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                   return Row(
                     children: [
                       _buildCategoryButton(
+                        key: _itemKeys[index] ?? GlobalKey(),
                         screenWidth: screenWidth,
-                        icon: category['icon'], // Dynamic icon
-                        text: category['text'], // Dynamic text
+                        icon: category['icon'],
+                        text: category['text'],
                         selected:
                             homeController.currentIndexTabBar.value == index,
                         onTap: () {
-                          homeController.changeTabBarIndex(
-                              index); // Switch to the selected tab
+                          homeController.changeTabBarIndex(index);
+
+                          // Handle navigation to category
+                          if (tabController.index == 0) {
+                            homeController
+                                .getNewCollectionSubcategory(category['text']);
+                          } else if (tabController.index == 1) {
+                            homeController
+                                .getOffersSubcategory(category['text']);
+                          } else if (tabController.index == 2) {
+                            homeController
+                                .getNewArrivalsSubcategory(category['text']);
+                          } else if (tabController.index == 3) {
+                            homeController.getRecommendedForYouSubcategory(
+                                category['text']);
+                          }
+
+                          // Scroll to center the clicked button
+                          _scrollToCenter(index);
                         },
                       ),
                       const SizedBox(width: 10),
@@ -170,6 +256,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   // Helper method to build category buttons
   Widget _buildCategoryButton({
+    required Key key,
     required double screenWidth,
     required IconData icon,
     required String text,
@@ -177,6 +264,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     required VoidCallback onTap,
   }) {
     return GestureDetector(
+      key: key,
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
@@ -206,7 +294,4 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       ),
     );
   }
-
-  @override
-  Size get preferredSize => Size.fromHeight(screenHeight * 0.35);
 }

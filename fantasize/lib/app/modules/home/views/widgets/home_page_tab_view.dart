@@ -1,6 +1,7 @@
 import 'package:fantasize/app/modules/home/views/widgets/all_tab/all_tab.dart';
 import 'package:fantasize/app/modules/home/views/widgets/new_arrivals/new_arrival_view.dart';
 import 'package:fantasize/app/modules/home/views/widgets/offers/offer_view.dart';
+import 'package:fantasize/app/modules/home/views/widgets/recommended_for_you/recommended_for_you_view.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:fantasize/app/modules/home/controllers/home_controller.dart';
@@ -35,9 +36,7 @@ class HomeTabView extends StatelessWidget {
             return OfferView();
           }
           if (index == 3) {
-            return Center(
-              child: Text('Page ${index + 1}'),
-            );
+            return RecommendedForYouView();
           }
           return Center(
             child: Text('Page ${index + 1}'),

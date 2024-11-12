@@ -1,16 +1,14 @@
 import 'package:fantasize/app/data/models/user_model.dart';
 import 'package:get/get.dart';
-
+import 'package:flutter/foundation.dart';
 
 class NotificationModel extends GetxController {
   int? notificationID;
   User? user;
-  String? type; 
-  Map<String, dynamic>? template; 
   String? subject;
   bool? isRead;
+  dynamic template; // Can be either Map<String, dynamic> or String
 
-  // Constructor
   NotificationModel({
     this.notificationID,
     this.user,
@@ -22,26 +20,25 @@ class NotificationModel extends GetxController {
   // Factory method to create NotificationModel object from JSON
   factory NotificationModel.fromJson(Map<String, dynamic> json) {
     return NotificationModel(
-      notificationID: json['notificationID'],
-      user: json['user'] != null ? User.fromJson(json['user']) : null,
-      template: json['template'] != null
-          ? Map<String, dynamic>.from(json['template'])
+      notificationID: json['notificationID'] as int?,
+      user: json['user'] != null && json['user'] is Map<String, dynamic>
+          ? User.fromJson(json['user'])
           : null,
-      subject: json['subject'],
-      isRead: json['isRead'],
-      
+      template: json['template'] is Map<String, dynamic>
+          ? Map<String, dynamic>.from(json['template'])
+          : json['template'] as String?, // Handle String or Map
+      subject: json['subject'] as String?,
+      isRead: json['isRead'] as bool?,
     );
   }
 
-  // Method to convert NotificationModel object to JSON
   Map<String, dynamic> toJson() {
     return {
       'notificationID': notificationID,
       'user': user?.toJson(),
-      'type': type,
+      'template': template, // Can be either a String or a Map
       'subject': subject,
       'isRead': isRead,
-      
     };
   }
 }

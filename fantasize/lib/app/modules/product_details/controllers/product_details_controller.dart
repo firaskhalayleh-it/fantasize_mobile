@@ -1,4 +1,5 @@
 import 'package:fantasize/app/data/models/customization_model.dart';
+import 'package:fantasize/app/data/models/ordered_customization.dart';
 import 'package:fantasize/app/data/models/ordered_option.dart';
 import 'package:fantasize/app/data/models/product_model.dart';
 import 'package:fantasize/app/data/models/reviews_model.dart';

@@ -17,6 +17,12 @@ class CartView extends StatelessWidget {
               color: Colors.redAccent, fontFamily: 'Poppins', fontSize: 25),
         ),
         centerTitle: true,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () {
+            Get.offAllNamed('/home');
+          },
+        ),
       ),
       body: Obx(() {
         if (controller.isLoading.value) {

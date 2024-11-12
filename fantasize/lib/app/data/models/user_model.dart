@@ -68,7 +68,7 @@ class User {
 
 class UserProfilePicture {
   final int? resourceID;
-  final String? entityName;
+  final String? entityName; 
   final String? fileType;
   final String? filePath;
 

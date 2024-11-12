@@ -19,7 +19,8 @@ class Product {
   final List<Review> reviews;
   final List<ResourcesModel> resources;
   final List<Customization> customizations;
-  final SubCategory? subCategory; // SubCategory is optional
+  final SubCategory? subCategory;
+  final double? discountPrice; // Add DiscountPrice as nullable
 
   Product({
     required this.productId,
@@ -34,7 +35,8 @@ class Product {
     required this.resources,
     required this.customizations,
     this.offer,
-    this.subCategory, // SubCategory is optional
+    this.subCategory,
+    this.discountPrice, // Include discountPrice in the constructor
   });
 
   // Factory constructor with enhanced error handling and logging
@@ -47,6 +49,7 @@ class Product {
     try {
       debugPrint('Parsing Product JSON: ${json.toString()}');
 
+      // Parse Resources safely
       var resourceList = (json['Resource'] as List?)?.map((resourceJson) {
             if (resourceJson is Map<String, dynamic>) {
               return ResourcesModel.fromJson(resourceJson);
@@ -55,6 +58,7 @@ class Product {
           }).toList() ??
           [];
 
+      // Parse Reviews safely
       var reviewList = (json['Review'] as List?)?.map((reviewJson) {
             if (reviewJson is Map<String, dynamic>) {
               return Review.fromJson(reviewJson);
@@ -63,8 +67,12 @@ class Product {
           }).toList() ??
           [];
 
-      var offer = json['Offer'] != null ? Offer.fromJson(json['Offer']) : null;
+      // Parse Offer safely, handling empty objects
+      var offer = (json['Offer'] != null && json['Offer'].isNotEmpty)
+          ? Offer.fromJson(json['Offer'])
+          : null;
 
+      // Parse Customizations safely
       var customizationList =
           (json['Customization'] as List?)?.map((customizationJson) {
                 if (customizationJson is Map<String, dynamic>) {
@@ -74,9 +82,6 @@ class Product {
                     'Error: Invalid customization data: $customizationJson');
               }).toList() ??
               [];
-
-
-              
 
       return Product(
         productId: json['ProductID'],
@@ -94,6 +99,9 @@ class Product {
         subCategory: json['SubCategory'] != null
             ? SubCategory.fromJson(json['SubCategory'])
             : null,
+        discountPrice: (json['DiscountPrice'] != null)
+            ? json['DiscountPrice'].toDouble()
+            : null, // Handle nullable discount price
       );
     } catch (e) {
       debugPrint('Error parsing product JSON for product ${json['Name']}: $e');
@@ -119,34 +127,7 @@ class Product {
           .map((customization) => customization.toJson())
           .toList(),
       'SubCategory': subCategory?.toJson(),
-
-    };
-  }
-}
-
-class OrderedCustomization {
-  int orderedCustomizationId;
-  List<OrderedOption> selectedOptions;
-
-  OrderedCustomization({
-    required this.orderedCustomizationId,
-    required this.selectedOptions,
-  });
-
-  factory OrderedCustomization.fromJson(Map<String, dynamic> json) {
-    return OrderedCustomization(
-      orderedCustomizationId: json['OrderedCustomizationID'],
-      selectedOptions: (json['SelectedOptions'] as List)
-          .map((optionJson) => OrderedOption.fromJson(optionJson))
-          .toList(),
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'OrderedCustomizationID': orderedCustomizationId,
-      'SelectedOptions':
-          selectedOptions.map((option) => option.toJson()).toList(),
+      'DiscountPrice': discountPrice, // Include discount price in the JSON output
     };
   }
 }

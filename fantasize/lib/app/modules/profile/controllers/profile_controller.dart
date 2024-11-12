@@ -43,8 +43,7 @@ class ProfileController extends GetxController {
         Map<String, dynamic> decodedToken = JwtDecoder.decode(token);
         String userId = decodedToken['payload']['userId'];
 
-        var cookieHeader =
-            'authToken=$token'; // Name of the cookie as 'authToken'
+        var cookieHeader = 'authToken=$token'; // Cookie header
 
         // Fetch user data from the API
         final response = await http.get(
@@ -57,13 +56,21 @@ class ProfileController extends GetxController {
         );
 
         if (response.statusCode == 200) {
+          // Decode response body to JSON
           var jsonData = json.decode(response.body);
-          print(response.body);
 
-          var fetchedUser = User.fromJson(jsonData);
+          // Ensure jsonData is a Map (not a String)
+          if (jsonData is Map<String, dynamic>) {
+            print("JSON Data fetched: $jsonData");
 
-          user.value = fetchedUser;
-          print(user.value!.paymentMethods);
+            // Parse the JSON data into User object
+            var fetchedUser = User.fromJson(jsonData);
+            user.value = fetchedUser;
+            print("User payment methods: ${user.value?.paymentMethods}");
+          } else {
+            print("Error: Expected a JSON object but received: $jsonData");
+            Get.snackbar('Error', 'Unexpected data format');
+          }
         } else {
           Get.snackbar('Error', 'Failed to load user data');
         }
@@ -72,26 +79,35 @@ class ProfileController extends GetxController {
         Get.offAllNamed('/login');
       }
     } catch (e) {
+      print("Exception caught: $e");
       Get.snackbar('Error', e.toString());
     } finally {
       isLoading(false);
     }
   }
 
-  Future<void> updateUserProfile({String? passowrd, File? file}) async {
+  Future<void> updateUserProfile({String? password, File? file}) async {
     final url = Uri.parse('${Strings().apiUrl}/update_user');
     String? token = await secureStorage.read(key: 'jwt_token');
-    print(passowrd);
+
     if (token == null) {
       Get.snackbar('Error', 'No token found. Please login again.');
       return;
     }
 
     var request = http.MultipartRequest('PUT', url);
-    request.headers['Content-Type'] = 'multipart/form-data';
     request.headers['accept'] = '*/*';
     request.headers['cookie'] = 'authToken=$token';
 
+    // Add fields to the request
+    if (password != null && password.isNotEmpty) {
+      request.fields['Password'] = password;
+    } else {
+      request.fields['Password'] =
+          ''; // Add an empty field if no password is provided
+    }
+
+    // Add file if available
     if (file != null) {
       String fileExtension = file.path.split('.').last.toLowerCase();
       if (!allowedExtensions.contains(fileExtension)) {
@@ -102,44 +118,31 @@ class ProfileController extends GetxController {
       String? mimeType =
           lookupMimeType(file.path) ?? 'application/octet-stream';
       request.files.add(await http.MultipartFile.fromPath(
-        'file',
+        'file', // Ensure this matches the server's expected field name for the file
         file.path,
-        contentType: MediaType.parse(mimeType), // Set MIME type here
+        contentType: MediaType.parse(mimeType),
       ));
     }
-    // check the matching password
-    if (passowrd != null && passowrd.isNotEmpty) {
-      request.fields['Password'] = passowrd;
-    }
+
+    // Send the request
     var response = await request.send();
     var responseBody = await response.stream.bytesToString();
 
     if (response.statusCode == 200) {
       var jsonResponse = json.decode(responseBody);
-      //update home controller user value
+      print('Response: $jsonResponse');
+
       HomeController homeController = Get.find<HomeController>();
       homeController.user.value = User.fromJson(jsonResponse['user']);
 
-      if (jsonResponse['user'] != null) {
-        user.value = User.fromJson(jsonResponse['user']);
-        user.refresh();
+      user.value = User.fromJson(jsonResponse['user']);
+      user.refresh();
 
-        // Check if the username was updated
-        if (passowrd != null && passowrd.isNotEmpty) {
-          await secureStorage.write(key: 'username', value: passowrd);
-        }
-
-        // Check if the profile picture was updated
-        if (file != null) {
-          await secureStorage.write(key: 'profile_picture', value: file.path);
-        }
-
-        await secureStorage.write(
-            key: 'user_data', value: json.encode(jsonResponse['user']));
-        Get.snackbar('Success', 'Profile updated successfully');
-      }
+      Get.snackbar('Success', 'Profile updated successfully');
     } else {
       Get.snackbar('Error', 'Failed to update profile');
+      print('Failed to update profile: ${response.statusCode}');
+      print('Response: $responseBody');
     }
   }
 
@@ -287,7 +290,7 @@ class ProfileController extends GetxController {
                         newpassword.value = newpasswordController.text;
                         confirmpassword.value = confirmpasswordController.text;
 
-                        updateUserProfile(passowrd: newpassword.value);
+                        updateUserProfile(password: newpassword.value);
                         Get.back();
                       }
                     },

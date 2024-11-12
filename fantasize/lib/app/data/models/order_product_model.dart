@@ -1,3 +1,4 @@
+import 'package:fantasize/app/data/models/ordered_customization.dart';
 import 'package:fantasize/app/data/models/product_model.dart';
 
 class OrderProduct {

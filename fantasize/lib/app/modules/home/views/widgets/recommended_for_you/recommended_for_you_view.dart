@@ -1,11 +1,12 @@
 import 'package:fantasize/app/modules/home/controllers/new_arrival_controller.dart';
+import 'package:fantasize/app/modules/home/controllers/recommended_for_you_controller.dart';
 import 'package:fantasize/app/modules/home/views/widgets/recommended_for_you/widgets/recommended_for_you_card.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-class NewArrivalView extends StatelessWidget {
-  NewArrivalView({super.key});
-  final NewArrivalController controller = Get.put(NewArrivalController());
+class RecommendedForYouView extends StatelessWidget {
+  RecommendedForYouView({super.key});
+  final RecommendedForYouController controller = Get.put(RecommendedForYouController());
 
   @override
   Widget build(BuildContext context) {

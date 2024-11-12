@@ -11,7 +11,6 @@ class Address {
   DateTime? createdAt;
   DateTime? updatedAt;
 
-  // Constructor
   Address({
     this.addressID,
     this.user,
@@ -24,22 +23,20 @@ class Address {
     this.updatedAt,
   });
 
-  // Factory method to create Address object from JSON
   factory Address.fromJson(Map<String, dynamic> json) {
     return Address(
-      addressID: json['AddressID'],
+      addressID: json['AddressID'] as int?,
       user: json['User'] != null ? User.fromJson(json['User']) : null,
-      addressLine: json['AddressLine'],
-      city: json['City'],
-      state: json['State'],
-      country: json['Country'],
-      postalCode: json['PostalCode'],
+      addressLine: json['AddressLine'] as String?,
+      city: json['City'] as String?,
+      state: json['State'] as String?,
+      country: json['Country'] as String?,
+      postalCode: json['PostalCode'] as String?,
       createdAt: json['CreatedAt'] != null ? DateTime.parse(json['CreatedAt']) : null,
       updatedAt: json['UpdatedAt'] != null ? DateTime.parse(json['UpdatedAt']) : null,
     );
   }
 
-  // Method to convert Address object to JSON
   Map<String, dynamic> toJson() {
     return {
       'AddressID': addressID,

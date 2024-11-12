@@ -1,11 +1,7 @@
-import 'package:fantasize/app/data/models/user_model.dart';
-import 'package:get/get.dart';
-// import 'orders_model.dart';
+import 'package:flutter/material.dart';
 
-class PaymentMethod extends GetxController {
+class PaymentMethod {
   int? paymentMethodID;
-  User? user;
-  // List<Orders>? orders;
   String? method;
   String? cardholderName;
   String? cardNumber;
@@ -15,11 +11,8 @@ class PaymentMethod extends GetxController {
   DateTime? createdAt;
   DateTime? updatedAt;
 
-  // Constructor
   PaymentMethod({
     this.paymentMethodID,
-    this.user,
-    // this.orders,
     this.method,
     this.cardholderName,
     this.cardNumber,
@@ -30,37 +23,38 @@ class PaymentMethod extends GetxController {
     this.updatedAt,
   });
 
-  // Factory method to create PaymentMethod object from JSON
   factory PaymentMethod.fromJson(Map<String, dynamic> json) {
-    return PaymentMethod(
-      paymentMethodID: json['PaymentMethodID'],
-      // user: json['User'] != null ? User.fromJson(json['User']) : null,
-      // orders: json['Orders'] != null
-      //     ? (json['Orders'] as List).map((i) => Orders.fromJson(i)).toList()
-      //     : null,
-      method: json['Method'],
-      cardholderName: json['CardholderName'],
-      cardNumber: json['CardNumber'],
-      expirationDate: DateTime.parse(json['ExpirationDate']),
-      cvv: json['CVV'],
-      cardType: json['CardType'],
-      // createdAt: DateTime.parse(json['CreatedAt']),
-      // updatedAt: DateTime.parse(json['UpdatedAt']),
-    );
+    try {
+      return PaymentMethod(
+        paymentMethodID: json['PaymentMethodID'] as int?,
+        method: json['Method'] as String?,
+        cardholderName: json['CardholderName'] as String?,
+        cardNumber: json['CardNumber'] as String?,
+        expirationDate: json['ExpirationDate'] != null
+            ? DateTime.parse(json['ExpirationDate'])
+            : null,
+        cvv: json['CVV'] as int?,
+        cardType: json['CardType'] as String?,
+        createdAt: json['CreatedAt'] != null ? DateTime.parse(json['CreatedAt']) : null,
+        updatedAt: json['UpdatedAt'] != null ? DateTime.parse(json['UpdatedAt']) : null,
+      );
+    } catch (e) {
+      debugPrint('Error parsing PaymentMethod: $e');
+      throw Exception('Failed to parse PaymentMethod');
+    }
   }
 
-  // Method to convert PaymentMethod object to JSON
   Map<String, dynamic> toJson() {
     return {
       'PaymentMethodID': paymentMethodID,
-      // 'User': user?.toJson(),
-      // 'Orders': orders?.map((e) => e.toJson()).toList(),
       'Method': method,
       'CardholderName': cardholderName,
       'CardNumber': cardNumber,
-      'ExpiryDate': expirationDate?.toIso8601String(),
+      'ExpirationDate': expirationDate?.toIso8601String(),
       'CVV': cvv,
       'CardType': cardType,
+      'CreatedAt': createdAt?.toIso8601String(),
+      'UpdatedAt': updatedAt?.toIso8601String(),
     };
   }
 }
