@@ -38,35 +38,41 @@ class ProductCard extends StatelessWidget {
                           child: Image.network(
                             '${Strings().resourceUrl}/${product.resources.isNotEmpty ? product.resources[0].entityName : 'placeholder.jpg'}',
                             height: Get.height * 0.2,
-                            width: Get.width * 0.5,
+                            width: Get.width < 400
+                                ? Get.width * 0.45
+                                : Get.width * 0.5,
                             fit: BoxFit.cover,
                           ),
                         ),
                       ),
-                      Positioned(
-                        top: Get.height * 0.08,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Color(0xFFFF4C5E),
-                            borderRadius: BorderRadius.only(
-                              bottomRight: Radius.circular(50),
-                              topRight: Radius.circular(50),
-                            ),
-                          ),
-                          child: Text(
-                            product.status == 'new' ? 'New' : 'Sale',
-                            style: TextStyle(
-                              fontFamily: 'Jost',
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
+                      product.offer != null
+                          ? Positioned(
+                              top: Get.height * 0.08,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Color(0xFFFF4C5E),
+                                  borderRadius: BorderRadius.only(
+                                    bottomRight: Radius.circular(50),
+                                    topRight: Radius.circular(50),
+                                  ),
+                                ),
+                                child: Text(
+                                  product.offer != null
+                                      ? '${product.offer!.discount}% OFF'
+                                      : '',
+                                  style: TextStyle(
+                                    fontFamily: 'Jost',
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            )
+                          : Container(),
                       if (product.status == 'out of stock')
                         Positioned(
                           top: 10,
@@ -99,13 +105,13 @@ class ProductCard extends StatelessWidget {
                         Text(
                           product.name,
                           style: TextStyle(
-                            fontWeight: FontWeight.w400,
+                            fontWeight: FontWeight.w700,
                             fontFamily: 'Jost',
-                            fontSize: 18,
+                            fontSize: Get.width < 400 ? 18 : 20,
                           ),
                         ),
                         Text(
-                          product.description.split(' ').take(5).join(' ') +
+                          product.description.split(' ').take(3).join(' ') +
                               (product.description.split(' ').length > 10
                                   ? '...'
                                   : ''),

@@ -65,7 +65,8 @@ class ProductsController extends GetxController
     if (user.value != null) {
       userName.value = user.value!.username;
       userProfilePicture.value =
-          user.value!.userProfilePicture!.entityName.toString();
+          user.value!.userProfilePicture?.entityName?.toString() ??
+              'profile.jpg';
     }
   }
 
@@ -73,7 +74,6 @@ class ProductsController extends GetxController
     try {
       isLoading(true);
 
-      // Retrieve the token from secure storage
       String? token = await _secureStorage.read(key: 'jwt_token');
 
       loadUserData();
@@ -84,7 +84,6 @@ class ProductsController extends GetxController
         return;
       }
 
-      // Check if the token is expired
       bool isExpired = JwtDecoder.isExpired(token);
       if (isExpired) {
         Get.snackbar('Error', 'Token has expired. Please login again.');

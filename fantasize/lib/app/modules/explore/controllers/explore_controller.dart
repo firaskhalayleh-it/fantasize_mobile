@@ -1,3 +1,5 @@
+// lib/app/modules/explore/controllers/explore_controller.dart
+
 import 'package:chewie/chewie.dart';
 import 'package:fantasize/app/data/models/video_model.dart';
 import 'package:fantasize/app/global/strings.dart';
@@ -10,15 +12,11 @@ class ExploreController extends GetxController {
   var videos = <VideoModel>[].obs;
   var isLoading = true.obs;
 
-  // Make the videoControllers list nullable
-  var videoControllers = <VideoPlayerController?>[].obs;
-  var chewieControllers = <ChewieController?>[].obs; // Chewie Controllers
-
-  // Track liked state for each video
-  var likedVideos = <bool>[].obs;
-
-  // Track heart animation visibility
-  var showHeartAnimation = <bool>[].obs;
+  // Initialize the lists with empty values to avoid null issues
+  RxList<VideoPlayerController?> videoControllers =
+      RxList<VideoPlayerController?>([]);
+  RxList<bool> likedVideos = RxList<bool>([]);
+  RxList<bool> showHeartAnimation = RxList<bool>([]);
 
   int? previousIndex; // Track the previous video index
 
@@ -28,8 +26,8 @@ class ExploreController extends GetxController {
     fetchVideos();
   }
 
-  // Fetch videos from the API without initializing controllers upfront
-  void fetchVideos() async {
+  // Fetch videos from the API and initialize controllers
+  Future<void> fetchVideos() async {
     try {
       isLoading(true);
       var response =
@@ -41,13 +39,14 @@ class ExploreController extends GetxController {
         videos.value =
             videoList.map((video) => VideoModel.fromJson(video)).toList();
 
-        // Initialize empty controllers and other states as null
-        videoControllers.value = List.generate(videos.length, (_) => null);
-        likedVideos.value =
-            List.generate(videos.length, (_) => false); // Initially not liked
-        showHeartAnimation.value = List.generate(
-            videos.length, (_) => false); // No animation by default
+        // Initialize lists with default values
+        videoControllers.value =
+            List<VideoPlayerController?>.filled(videos.length, null);
+        likedVideos.value = List<bool>.filled(videos.length, false);
+        showHeartAnimation.value = List<bool>.filled(videos.length, false);
       }
+    } catch (e) {
+      print("Error fetching videos: $e");
     } finally {
       isLoading(false);
     }
@@ -56,7 +55,7 @@ class ExploreController extends GetxController {
   // Initialize the video controller lazily when needed
   Future<void> initializeVideoController(int index) async {
     if (videoControllers[index] == null ||
-        !videoControllers[index]!.value.isInitialized) {
+        !(videoControllers[index]?.value.isInitialized ?? false)) {
       try {
         final videoUrl =
             Uri.parse('${Strings().resourceUrl}/${videos[index].videoPath}');
@@ -72,23 +71,23 @@ class ExploreController extends GetxController {
       }
     } else {
       // If already initialized, just play the video
-      videoControllers[index]!.play();
+      videoControllers[index]?.play();
     }
   }
 
   // Dispose video controllers when they go offscreen
   void disposeVideoController(int index) {
     if (videoControllers[index] != null) {
-      videoControllers[index]!.dispose();
+      videoControllers[index]?.pause();
+      videoControllers[index]?.dispose();
       videoControllers[index] = null;
     }
   }
 
   // Pause the video at the given index
   void pauseVideo(int index) {
-    if (videoControllers[index] != null &&
-        videoControllers[index]!.value.isInitialized) {
-      videoControllers[index]!.pause();
+    if (videoControllers[index]?.value.isInitialized ?? false) {
+      videoControllers[index]?.pause();
     }
   }
 
@@ -100,13 +99,12 @@ class ExploreController extends GetxController {
     }
 
     // Pause the next video if it's initialized and active
-    if (index + 1 < videoControllers.length &&
-        videoControllers[index + 1] != null) {
+    if (index + 1 < videoControllers.length) {
       pauseVideo(index + 1);
     }
 
     // Pause the previous video if it's initialized and active
-    if (index - 1 >= 0 && videoControllers[index - 1] != null) {
+    if (index - 1 >= 0) {
       pauseVideo(index - 1);
     }
 
@@ -141,10 +139,10 @@ class ExploreController extends GetxController {
     final video = videos[index];
     if (video.productId != null) {
       // Navigate to the product page
-      //Get.toNamed('/product', arguments: video.productId);
+      // Get.toNamed('/product', arguments: video.productId);
     } else if (video.packageId != null) {
       // Navigate to the package page
-      ///Get.toNamed('/package', arguments: video.packageId);
+      // Get.toNamed('/package', arguments: video.packageId);
     } else {
       print('No product or package associated with this video.');
     }
@@ -152,26 +150,13 @@ class ExploreController extends GetxController {
 
   @override
   void onClose() {
-    // Dispose of all video controllers when the view is closed
+    // Dispose of all video controllers when the controller is destroyed
     for (var controller in videoControllers) {
-      if (controller != null) {
-        controller.dispose();
+      if (controller?.value.isInitialized ?? false) {
+        controller?.pause();
+        controller?.dispose();
       }
     }
-    disableAllControllers();
-
     super.onClose();
-  }
-
-  void disableAllControllers() {
-    for (var index = 0; index < videoControllers.length; index++) {
-      // Pause and dispose VideoPlayerController
-      if (videoControllers[index] != null &&
-          videoControllers[index]!.value.isInitialized) {
-        videoControllers[index]!.pause();
-        videoControllers[index]!.dispose();
-        videoControllers[index] = null; // Release memory
-      }
-    }
   }
 }

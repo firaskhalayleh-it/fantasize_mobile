@@ -13,7 +13,6 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get/get.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:video_player/video_player.dart';
 import '../../../data/models/user_model.dart';
 
 class HomeController extends GetxController
@@ -41,9 +40,10 @@ class HomeController extends GetxController
   ];
 
   @override
-  void onInit() {
+  void onInit() async {
     super.onInit();
-    Get.lazyPut(() => ExploreController());
+    // Use Get.put with fenix to ensure a singleton instance
+    Get.put(ExploreController(), permanent: true);
     exploreController = Get.find<ExploreController>();
 
     tabController = TabController(length: categories.length, vsync: this);
@@ -51,8 +51,7 @@ class HomeController extends GetxController
     tabController.addListener(() {
       currentIndexTabBar.value = tabController.index;
     });
-    // disable the video player when the user navigates to another tab
-    disposeVideoPlayer();
+
     fetchOffers();
     fetchNewArrivals();
     loadUserData();
@@ -61,7 +60,7 @@ class HomeController extends GetxController
       if (index != 2) {
         disposeVideoPlayer();
         if (Get.isRegistered<ExploreController>()) {
-          exploreController = Get.put(ExploreController());
+          exploreController = Get.find<ExploreController>();
         }
       }
     });
@@ -91,19 +90,18 @@ class HomeController extends GetxController
           })
           .whereType<dynamic>()
           .toList(); // Filter out any null values
-
-      // print resources for each offer
     } else {
       print('Failed to load offers');
     }
   }
 
-  // dispose the video player when the user navigates to another tab
-
   void disposeVideoPlayer() {
+    print("Pausing video players...");
     exploreController.videoControllers.forEach((controller) {
-      if (controller != null) {
-        controller.dispose();
+      if (controller?.value.isInitialized ?? false) {
+        controller?.pause();
+        // Do not dispose here
+        // controller?.dispose();
       }
     });
   }
@@ -162,7 +160,6 @@ class HomeController extends GetxController
 
   void changeTabBarIndex(int index) {
     currentIndexTabBar.value = index;
-
     tabController.animateTo(index);
   }
 

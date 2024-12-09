@@ -32,7 +32,7 @@ class PackageDetailsController extends GetxController {
   // Map to store image paths for uploadPicture options
   final Map<String, RxString> _uploadedImages = {};
   final cartController = Get.find<CartController>();
-
+  var InitialPrice = 0.0;
   @override
   void onInit() {
     super.onInit();
@@ -82,6 +82,7 @@ class PackageDetailsController extends GetxController {
           // Parse package data
           package.value = Package.fromJson(data);
 
+          InitialPrice = package.value!.price;
           // Sort resources: videos first, images last
           package.value!.resources.sort((a, b) {
             if (a.fileType == 'video/mp4' && b.fileType != 'video/mp4') {
@@ -330,74 +331,60 @@ class PackageDetailsController extends GetxController {
     }
   }
 
-  calcTotalPrice() {
-    if (package.value != null) {
-      TotalPrice.value = package.value!.price * quantity.value;
-    } else {
-      TotalPrice.value = 0.0;
+  String calcTotalPrice() {
+    // Parse the base price from the package and calculate total price based on quantity
+    double basePrice = (package.value?.price ?? 0.0);
+    basePrice *= quantity.value;
+
+    double discount = 0.0;
+
+    // Check if the package has a valid active offer
+    if (package.value != null &&
+        package.value!.offer != null &&
+        package.value!.offer!.isActive &&
+        package.value!.offer!.discount.isNotEmpty) {
+      var offer = package.value!.offer!;
+      // Calculate percentage-based discount
+      double offerDiscount = double.tryParse(offer.discount) ?? 0.0;
+      discount = (basePrice * offerDiscount) / 100;
     }
-    return TotalPrice.value;
+
+    // Calculate the total price after applying the discount
+    double totalPrice = basePrice - discount;
+
+    print('Calculated Total Price: $totalPrice');
+
+    // Ensure the result is formatted to 2 decimal places
+    return totalPrice.toStringAsFixed(2);
+  }
+
+  String getThePrice() {
+    // Parse the base price from the package
+    double basePrice = (InitialPrice);
+
+    double discount = 0.0;
+
+    // Check if the package has a valid active offer
+    if (package.value!.offer != null &&
+        package.value!.offer!.isActive &&
+        package.value!.offer!.discount.isNotEmpty) {
+      var offer = package.value!.offer!;
+      // Calculate percentage-based discount
+      double offerDiscount = double.tryParse(offer.discount) ?? 0.0;
+      discount = (basePrice * offerDiscount) / 100;
+    }
+
+    // Calculate the price after applying the discount
+    double priceWithDiscount = basePrice - discount;
+
+    print('Price with Discount: $priceWithDiscount');
+
+    // Ensure the result is formatted to 2 decimal places
+    return priceWithDiscount.toStringAsFixed(2);
   }
 
   void showAddToCartDialog() {
-    Get.bottomSheet(
-      Container(
-        padding: EdgeInsets.all(20),
-        width: Get.width,
-        height: Get.height * 0.28,
-        color: Colors.white,
-        child: Column(
-          children: [
-            Text(
-              'Product added to cart',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: () {
-                Get.toNamed('/cart'); // Navigate to the checkout page
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.redAccent,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                padding: EdgeInsets.symmetric(
-                    vertical: Get.height * 0.025, horizontal: Get.width * 0.3),
-              ),
-              child: Text(
-                'Go to checkout',
-                style: TextStyle(
-                    color: Colors.white, fontFamily: 'Jost', fontSize: 18),
-              ),
-            ),
-            SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: () {
-                Get.back();
-                Get.until((route) => route.settings.name == '/products');
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.redAccent,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                padding: EdgeInsets.symmetric(
-                    vertical: Get.height * 0.025, horizontal: Get.width * 0.27),
-              ),
-              child: Text(
-                'Continue shopping',
-                style: TextStyle(
-                    color: Colors.white, fontFamily: 'Jost', fontSize: 18),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+    Get.bottomSheet(AddToCartBottomSheet());
   }
 
   // Function to handle adding a product to the cart
@@ -422,7 +409,8 @@ class PackageDetailsController extends GetxController {
 
       print('Response status: ${response.statusCode}');
       print('Response body: ${response.body}');
-      print('Ordered options: ${json.encode(orderedCustomizations.map((option) => option.toJson()).toList())}');
+      print(
+          'Ordered options: ${json.encode(orderedCustomizations.map((option) => option.toJson()).toList())}');
       debugPrint(response.statusCode.toString());
       print('orderedCustomizations: ');
       orderedCustomizations.forEach((element) {
@@ -596,5 +584,87 @@ class PackageDetailsController extends GetxController {
 
   void navigateToCart() {
     Get.toNamed('/cart');
+  }
+}
+
+class AddToCartBottomSheet extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    // Now you have access to MediaQuery and other context-based tools
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    // Adjust font sizes and paddings based on screen size
+    double fontSizeTitle = screenWidth * 0.05; // Adjust as needed
+    double fontSizeButton = screenWidth * 0.045; // Adjust as needed
+
+    return Container(
+      padding: EdgeInsets.all(20),
+      color: Colors.white,
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Product added to cart',
+              style: TextStyle(
+                fontSize: fontSizeTitle,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: () {
+                Get.back();
+                Get.toNamed('/cart');
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                padding: EdgeInsets.symmetric(
+                  vertical: screenHeight * 0.015,
+                  horizontal: screenWidth * 0.1,
+                ),
+              ),
+              child: Text(
+                'Go to checkout',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontFamily: 'Jost',
+                  fontSize: fontSizeButton,
+                ),
+              ),
+            ),
+            SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: () {
+                Get.back();
+                Get.until((route) => route.settings.name == '/products');
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                padding: EdgeInsets.symmetric(
+                  vertical: screenHeight * 0.015,
+                  horizontal: screenWidth * 0.1,
+                ),
+              ),
+              child: Text(
+                'Continue shopping',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontFamily: 'Jost',
+                  fontSize: fontSizeButton,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

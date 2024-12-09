@@ -134,16 +134,15 @@ class ProductDetailsView extends StatelessWidget {
                       ),
                       SizedBox(height: 16),
 
-                      // Price (should be reactive)
                       Text(
-                        'Price: \$${product.price}',
+                        'Price: \$${controller.getThePrice()}',
                         style: TextStyle(
                           fontSize: 20,
                           fontFamily: 'Jost',
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      SizedBox(height: 16),
+                      // Price with Discount
 
                       // Product Description
                       Text(

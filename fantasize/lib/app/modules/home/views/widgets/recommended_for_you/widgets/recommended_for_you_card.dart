@@ -84,6 +84,32 @@ class RecommendedForYouCard extends StatelessWidget {
                         ),
                       ),
                     ),
+                  item.offer != null
+                      ? Positioned(
+                          top: Get.height * 0.08,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Color(0xFF3A4053),
+                              borderRadius: BorderRadius.only(
+                                bottomRight: Radius.circular(50),
+                                topRight: Radius.circular(50),
+                              ),
+                            ),
+                            child: Text(
+                              '${item.offer!.discount}% OFF',
+                              style: TextStyle(
+                                fontFamily: 'Jost',
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        )
+                      : Container(),
                 ],
               ),
 

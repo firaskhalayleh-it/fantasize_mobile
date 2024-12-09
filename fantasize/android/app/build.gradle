@@ -1,13 +1,11 @@
 plugins {
     id "com.android.application"
     id "kotlin-android"
-    // The Flutter Gradle Plugin should be applied after Android and Kotlin plugins for compatibility.
     id "dev.flutter.flutter-gradle-plugin"
 }
 
 
 android {
-    // Namespace is required for AGP 7.0+ to uniquely identify the package.
     namespace "com.fantasize.fantasize"
 
     compileSdk flutter.compileSdkVersion
@@ -23,13 +21,13 @@ android {
     }
 
     defaultConfig {
-        // Unique Application ID for the Android application.
         applicationId "com.fantasize.fantasize"
         
-        // Set minimum and target SDK versions based on Flutter settings.
         minSdk flutter.minSdkVersion
         targetSdk flutter.targetSdkVersion
         buildToolsVersion "35.0.0"
+        minSdkVersion 23                                                                          
+        multiDexEnabled true
 
         // Application versioning.
         versionCode flutter.versionCode
@@ -62,14 +60,15 @@ android {
 }
 
 flutter {
-    // Specifies the location of the Flutter source files.
     source "../.."
 }
 
 dependencies {
     // Import the Firebase BoM
-    implementation platform('com.google.firebase:firebase-bom:32.0.0') // Use the latest BoM version
+    implementation platform('com.google.firebase:firebase-bom:32.0.0')
+    implementation 'androidx.multidex:multidex:2.0.1'
 
+    implementation 'com.facebook.android:facebook-android-sdk:17.0.1'
     // Add the Firebase Messaging dependency
     implementation 'com.google.firebase:firebase-messaging'
     // Other dependencies...

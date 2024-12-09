@@ -35,7 +35,7 @@ class ProductDetailsController extends GetxController {
       {}; // Define the _uploadedImages map
   final Map<String, RxBool> _attachMessageVisibility =
       {}; // Define the _attachMessageVisibility map
-
+  var productInitialPrice = 0.0; // Initial price of the product
   @override
   void onInit() {
     super.onInit();
@@ -78,7 +78,7 @@ class ProductDetailsController extends GetxController {
           .sort((a, b) => a.fileType == 'video/mp4' ? -1 : 1);
 
       product.value = fetchedProduct; // Assign fetched product
-
+      productInitialPrice = double.tryParse(fetchedProduct.price) ?? 0.0;
       // **Add this line**
       initializeOrderedCustomizations(); // Initialize ordered customizations
     } else {
@@ -289,7 +289,7 @@ class ProductDetailsController extends GetxController {
             Text(
               'Product added to cart',
               style: TextStyle(
-                fontSize: 20,
+                fontSize: Get.width < 300 ? 18 : 20,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -304,12 +304,16 @@ class ProductDetailsController extends GetxController {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 padding: EdgeInsets.symmetric(
-                    vertical: Get.height * 0.025, horizontal: Get.width * 0.3),
+                    vertical: Get.height * 0.025,
+                    horizontal:
+                        Get.width < 400 ? Get.width * 0.288 : Get.width * 0.3),
               ),
               child: Text(
                 'Go to checkout',
                 style: TextStyle(
-                    color: Colors.white, fontFamily: 'Jost', fontSize: 18),
+                    color: Colors.white,
+                    fontFamily: 'Jost',
+                    fontSize: Get.width < 400 ? 16 : 20),
               ),
             ),
             SizedBox(height: 10),
@@ -324,12 +328,16 @@ class ProductDetailsController extends GetxController {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 padding: EdgeInsets.symmetric(
-                    vertical: Get.height * 0.025, horizontal: Get.width * 0.27),
+                    vertical: Get.height * 0.025,
+                    horizontal:
+                        Get.width < 400 ? Get.width * 0.255 : Get.width * 0.27),
               ),
               child: Text(
                 'Continue shopping',
                 style: TextStyle(
-                    color: Colors.white, fontFamily: 'Jost', fontSize: 18),
+                    color: Colors.white,
+                    fontFamily: 'Jost',
+                    fontSize: Get.width < 400 ? 16 : 20),
               ),
             ),
           ],
@@ -339,67 +347,68 @@ class ProductDetailsController extends GetxController {
   }
 
   Future<void> addToCart() async {
-  try {
-    String? token = await _secureStorage.read(key: 'jwt_token');
+    try {
+      String? token = await _secureStorage.read(key: 'jwt_token');
 
-    if (token == null) {
-      Get.snackbar('Error', 'User is not authenticated');
-      return;
-    }
+      if (token == null) {
+        Get.snackbar('Error', 'User is not authenticated');
+        return;
+      }
 
-    if (product.value?.productId == null || quantity.value == null) {
-      Get.snackbar('Error', 'Product ID or quantity is missing');
-      return;
-    }
+      if (product.value?.productId == null || quantity.value == null) {
+        Get.snackbar('Error', 'Product ID or quantity is missing');
+        return;
+      }
 
-    // Serialize orderedOptions correctly
-    var orderedOptions = orderedCustomizations.map((customization) {
-      // Assuming customization.selectedOptions is a list with one element
-      var selectedOption = customization.selectedOptions[0];
-      return {
-        'name': selectedOption.name,
-        'type': selectedOption.type,
-        'optionValues': selectedOption.optionValues.map((v) => v.toJson()).toList(),
+      // Serialize orderedOptions correctly
+      var orderedOptions = orderedCustomizations.map((customization) {
+        // Assuming customization.selectedOptions is a list with one element
+        var selectedOption = customization.selectedOptions[0];
+        return {
+          'name': selectedOption.name,
+          'type': selectedOption.type,
+          'optionValues':
+              selectedOption.optionValues.map((v) => v.toJson()).toList(),
+        };
+      }).toList();
+
+      var requestBody = {
+        "productId": product.value!.productId,
+        "quantity": quantity.value,
+        "orderedOptions": orderedOptions,
       };
-    }).toList();
 
-    var requestBody = {
-      "productId": product.value!.productId,
-      "quantity": quantity.value,
-      "orderedOptions": orderedOptions,
-    };
+      // Print request body for debugging
+      print('Request Body: ${json.encode(requestBody)}');
 
-    // Print request body for debugging
-    print('Request Body: ${json.encode(requestBody)}');
+      // Send the request
+      var response = await http.post(
+        Uri.parse('${Strings().apiUrl}/order'),
+        headers: {
+          'Content-Type': 'application/json',
+          'authorization': 'Bearer $token',
+          'cookie': 'authToken=$token',
+          'Accept': 'application/json',
+        },
+        body: json.encode(requestBody),
+      );
 
-    // Send the request
-    var response = await http.post(
-      Uri.parse('${Strings().apiUrl}/order'),
-      headers: {
-        'Content-Type': 'application/json',
-        'authorization': 'Bearer $token',
-        'cookie': 'authToken=$token',
-        'Accept': 'application/json',
-      },
-      body: json.encode(requestBody),
-    );
+      print('Response Body: ${response.body}');
+      print('Status Code: ${response.statusCode}');
 
-    print('Response Body: ${response.body}');
-    print('Status Code: ${response.statusCode}');
-
-    if (response.statusCode == 201) {
-      Get.snackbar('Success', 'Product added to cart');
-      showAddToCartDialog();
-      cartController.fetchCart();
-    } else {
-      var errorResponse = json.decode(response.body);
-      Get.snackbar('Error', 'Failed to add product to cart: ${errorResponse['message']}');
+      if (response.statusCode == 201) {
+        Get.snackbar('Success', 'Product added to cart');
+        showAddToCartDialog();
+        cartController.fetchCart();
+      } else {
+        var errorResponse = json.decode(response.body);
+        Get.snackbar('Error',
+            'Failed to add product to cart: ${errorResponse['message']}');
+      }
+    } catch (e) {
+      Get.snackbar('Error', 'Failed to add product to cart: $e');
     }
-  } catch (e) {
-    Get.snackbar('Error', 'Failed to add product to cart: $e');
   }
-}
-
 
   List<OrderedOption> convertCustomizationsToOrderedOptions(
       List<Customization> customizations) {
@@ -527,8 +536,54 @@ class ProductDetailsController extends GetxController {
   }
 
   String calcTotalPrice() {
-    double totalPrice = (double.parse(product.value!.price) * quantity.value);
-    return totalPrice.toStringAsFixed(2); // Format to 2 decimal places
+    // Parse the base price from the product and calculate total price based on quantity
+    double basePrice = double.tryParse(product.value!.price) ?? 0.0;
+    basePrice *= quantity.value;
+
+    double discount = 0.0;
+
+    // Check if the product has a valid active offer
+    if (product.value!.offer != null &&
+        product.value!.offer!.isActive &&
+        product.value!.offer!.discount.isNotEmpty) {
+      var offer = product.value!.offer!;
+      // Calculate percentage-based discount
+      double offerDiscount = double.tryParse(offer.discount) ?? 0.0;
+      discount = (basePrice * offerDiscount) / 100;
+    }
+
+    // Calculate the total price after applying the discount
+    double totalPrice = basePrice - discount;
+
+    print('Calculated Total Price: $totalPrice');
+
+    // Ensure the result is formatted to 2 decimal places
+    return totalPrice.toStringAsFixed(2);
+  }
+
+  String getThePrice() {
+    // Parse the base price from the product
+    double basePrice = (productInitialPrice);
+
+    double discount = 0.0;
+
+    // Check if the product has a valid active offer
+    if (product.value!.offer != null &&
+        product.value!.offer!.isActive &&
+        product.value!.offer!.discount.isNotEmpty) {
+      var offer = product.value!.offer!;
+      // Calculate percentage-based discount
+      double offerDiscount = double.tryParse(offer.discount) ?? 0.0;
+      discount = (basePrice * offerDiscount) / 100;
+    }
+
+    // Calculate the price after applying the discount
+    double priceWithDiscount = basePrice - discount;
+
+    print('Price with Discount: $priceWithDiscount');
+
+    // Ensure the result is formatted to 2 decimal places
+    return priceWithDiscount.toStringAsFixed(2);
   }
 
   @override

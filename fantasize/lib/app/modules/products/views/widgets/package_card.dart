@@ -34,7 +34,9 @@ class PackageCard extends StatelessWidget {
                         child: Image.network(
                           ImageHandler.getImageUrl(package.resources),
                           height: Get.height * 0.2,
-                          width: Get.width * 0.5,
+                          width: Get.width < 400
+                              ? Get.width * 0.45
+                              : Get.width * 0.5,
                           fit: BoxFit.cover,
                         ),
                       ),
@@ -61,6 +63,29 @@ class PackageCard extends StatelessWidget {
                           ),
                         ),
                       ),
+                    package.offer != null
+                        ? Positioned(
+                            top: 10,
+                            right: 10,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Color(0xFF3A4053),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Text(
+                                '${package.offer!.discount}% OFF',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          )
+                        : Container(),
                   ],
                 ),
                 Padding(
@@ -70,6 +95,8 @@ class PackageCard extends StatelessWidget {
                     children: [
                       Text(
                         package.name,
+                        softWrap: true,
+                        overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontWeight: FontWeight.w400,
                           fontFamily: 'Jost',
@@ -77,7 +104,7 @@ class PackageCard extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        package.description.split(' ').take(5).join(' ') +
+                        package.description.split(' ').take(3).join(' ') +
                             (package.description.split(' ').length > 10
                                 ? '...'
                                 : ''),

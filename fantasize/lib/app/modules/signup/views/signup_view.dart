@@ -51,18 +51,6 @@ class SignupView extends GetView<SignupController> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 FirebaseBtns().btn(
-                  'Facebook',
-                  'assets/icons/facebook.svg',
-                  Colors.black,
-                  Color(0xFFECF5FF),
-                  () {
-                    // controller.signInWithGoogle();
-                  },
-                ),
-                SizedBox(
-                    width: screenWidth *
-                        0.05), // Adjust space relative to screen width
-                FirebaseBtns().btn(
                   'Google',
                   'assets/icons/google.svg',
                   Colors.black,
@@ -90,47 +78,47 @@ class SignupView extends GetView<SignupController> {
             SizedBox(height: screenHeight * 0.02),
             Obx(
               () => Input().build(
-              label: 'Password',
-              controller: controller.passwordController,
-              keyboardType: TextInputType.visiblePassword,
-              PostfixIcon: IconButton(
-                onPressed: () {
-                controller.toggleObscureText();
+                label: 'Password',
+                controller: controller.passwordController,
+                keyboardType: TextInputType.visiblePassword,
+                PostfixIcon: IconButton(
+                  onPressed: () {
+                    controller.toggleObscureText();
+                  },
+                  icon: Icon(controller.obscureText.value
+                      ? Icons.visibility_off
+                      : Icons.visibility),
+                ),
+                obscureText: controller.obscureText.value,
+                validator: (value) {
+                  if (value!.isEmpty) {
+                    return 'Please enter your password';
+                  }
+                  return null;
                 },
-                icon: Icon(controller.obscureText.value
-                  ? Icons.visibility_off
-                  : Icons.visibility),
-              ),
-              obscureText: controller.obscureText.value,
-              validator: (value) {
-                if (value!.isEmpty) {
-                return 'Please enter your password';
-                }
-                return null;
-              },
               ),
             ),
             SizedBox(height: screenHeight * 0.01),
             Obx(
               () => Input().build(
-              label: 'Confirm Password',
-              controller: controller.confirmPasswordController,
-              keyboardType: TextInputType.visiblePassword,
-              PostfixIcon: IconButton(
-                onPressed: () {
-                controller.toggleConfirmPasswordObscureText();
+                label: 'Confirm Password',
+                controller: controller.confirmPasswordController,
+                keyboardType: TextInputType.visiblePassword,
+                PostfixIcon: IconButton(
+                  onPressed: () {
+                    controller.toggleConfirmPasswordObscureText();
+                  },
+                  icon: Icon(controller.confirmPasswordObscureText.value
+                      ? Icons.visibility_off
+                      : Icons.visibility),
+                ),
+                obscureText: controller.confirmPasswordObscureText.value,
+                validator: (value) {
+                  if (value!.isEmpty) {
+                    return 'Please enter your password';
+                  }
+                  return null;
                 },
-                icon: Icon(controller.confirmPasswordObscureText.value
-                  ? Icons.visibility_off
-                  : Icons.visibility),
-              ),
-              obscureText: controller.confirmPasswordObscureText.value,
-              validator: (value) {
-                if (value!.isEmpty) {
-                return 'Please enter your password';
-                }
-                return null;
-              },
               ),
             ),
             SizedBox(height: screenHeight * 0.02),

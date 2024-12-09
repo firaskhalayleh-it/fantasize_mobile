@@ -22,20 +22,25 @@ class NewArrivalCard extends StatelessWidget {
                 children: [
                   item.offer != null
                       ? Positioned(
-                          top: 10,
-                          right: 10,
+                          top: Get.height * 0.08,
                           child: Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 8,
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: Color(0xFF3A4053),
-                              borderRadius: BorderRadius.circular(10),
+                              color: Color(0xFFFF4C5E),
+                              borderRadius: BorderRadius.only(
+                                bottomRight: Radius.circular(50),
+                                topRight: Radius.circular(50),
+                              ),
                             ),
                             child: Text(
-                              '${item.offer!.discount}% OFF',
+                              item.offer != null
+                                  ? '${item.offer!.discount}% OFF'
+                                  : '',
                               style: TextStyle(
+                                fontFamily: 'Jost',
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
                               ),

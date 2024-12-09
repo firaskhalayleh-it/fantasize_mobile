@@ -87,7 +87,34 @@ class OfferCardProduct extends StatelessWidget {
                             ),
                           ),
                         ),
-                     
+                      product.offer != null
+                          ? Positioned(
+                              top: Get.height * 0.08,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Color(0xFFFF4C5E),
+                                  borderRadius: BorderRadius.only(
+                                    bottomRight: Radius.circular(50),
+                                    topRight: Radius.circular(50),
+                                  ),
+                                ),
+                                child: Text(
+                                  product.offer != null
+                                      ? '${product.offer!.discount}% OFF'
+                                      : '',
+                                  style: TextStyle(
+                                    fontFamily: 'Jost',
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            )
+                          : Container(),
                     ],
                   ),
 
