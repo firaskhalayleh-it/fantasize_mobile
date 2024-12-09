@@ -178,129 +178,163 @@ class ProfileController extends GetxController {
   }
 
   void showResetPasswordDialog() {
-    Get.defaultDialog(
-      title: 'Reset Password',
-      content: Form(
-        key: formKey,
-        child: SizedBox(
-          width: Get.width * 0.8,
-          child: Column(
-            children: [
-              Obx(() {
-                return GeneralInput(
-                  key: const ValueKey('newpassword'),
-                  label: 'Enter new password',
-                  controller: newpasswordController,
-                  obscureText: isObscureNewPassword.value,
-                  keyboardType: TextInputType.visiblePassword,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your new password';
-                    }
-                    if (value.length < 6) {
-                      return 'Password must be at least 6 characters long';
-                    }
-                    return null;
-                  },
-                  postfixIcon: IconButton(
-                    icon: Icon(
-                      isObscureNewPassword.value
-                          ? Icons.visibility_off
-                          : Icons.visibility,
-                    ),
-                    onPressed: () {
-                      isObscureNewPassword.value = !isObscureNewPassword.value;
-                    },
-                  ),
-                );
-              }),
-              const SizedBox(height: 10),
-              Obx(() {
-                return GeneralInput(
-                  key: const ValueKey('confirmpassword'),
-                  label: 'Confirm your password',
-                  controller: confirmpasswordController,
-                  obscureText: isObscureConfirmPassword.value,
-                  keyboardType: TextInputType.visiblePassword,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please confirm your password';
-                    }
-                    if (value != newpasswordController.text) {
-                      return 'Passwords do not match';
-                    }
-                    if (value.length < 6) {
-                      return 'Password must be at least 6 characters long';
-                    }
-                    return null;
-                  },
-                  postfixIcon: IconButton(
-                    icon: Icon(
-                      isObscureConfirmPassword.value
-                          ? Icons.visibility_off
-                          : Icons.visibility,
-                    ),
-                    onPressed: () {
-                      isObscureConfirmPassword.value =
-                          !isObscureConfirmPassword.value;
-                    },
-                  ),
-                );
-              }),
-              const SizedBox(height: 10),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  ElevatedButton(
-                    style: ButtonStyle(
-                      padding: WidgetStateProperty.all(
-                        const EdgeInsets.symmetric(
-                            horizontal: 44, vertical: 12),
-                      ),
-                      backgroundColor:
-                          WidgetStateProperty.all(const Color(0xFFFF4C5E)),
-                      shape: WidgetStateProperty.all(
-                        RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                    ),
-                    onPressed: () {
-                      Get.back();
-                    },
-                    child: const Text('Cancel',
-                        style: TextStyle(color: Colors.white)),
-                  ),
-                  ElevatedButton(
-                    style: ButtonStyle(
-                      padding: WidgetStateProperty.all(
-                        const EdgeInsets.symmetric(
-                            horizontal: 15, vertical: 12),
-                      ),
-                      backgroundColor:
-                          WidgetStateProperty.all(const Color(0xFFFF4C5E)),
-                      shape: WidgetStateProperty.all(
-                        RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                    ),
-                    onPressed: () {
-                      if ((formKey.currentState as FormState).validate()) {
-                        newpassword.value = newpasswordController.text;
-                        confirmpassword.value = confirmpasswordController.text;
-
-                        updateUserProfile(password: newpassword.value);
-                        Get.back();
-                      }
-                    },
-                    child: const Text('Reset Password',
-                        style: TextStyle(color: Colors.white)),
-                  ),
-                ],
-              ),
-            ],
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Container(
+          width: Get.width * 0.9,
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
           ),
+          child: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Reset Password',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF2D3142),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Get.back(),
+                      icon: const Icon(Icons.close),
+                      color: Colors.grey[600],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                Obx(() => GeneralInput(
+                      key: const ValueKey('newpassword'),
+                      label: 'New Password',
+                      controller: newpasswordController,
+                      obscureText: isObscureNewPassword.value,
+                      keyboardType: TextInputType.visiblePassword,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter your new password';
+                        }
+                        if (value.length < 6) {
+                          return 'Password must be at least 6 characters long';
+                        }
+                        return null;
+                      },
+                      postfixIcon: IconButton(
+                        icon: Icon(
+                          isObscureNewPassword.value
+                              ? Icons.visibility_off
+                              : Icons.visibility,
+                          color: Colors.grey[600],
+                        ),
+                        onPressed: () {
+                          isObscureNewPassword.value =
+                              !isObscureNewPassword.value;
+                        },
+                      ),
+                    )),
+                const SizedBox(height: 16),
+                Obx(() => GeneralInput(
+                      key: const ValueKey('confirmpassword'),
+                      label: 'Confirm Password',
+                      controller: confirmpasswordController,
+                      obscureText: isObscureConfirmPassword.value,
+                      keyboardType: TextInputType.visiblePassword,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please confirm your password';
+                        }
+                        if (value != newpasswordController.text) {
+                          return 'Passwords do not match';
+                        }
+                        if (value.length < 6) {
+                          return 'Password must be at least 6 characters long';
+                        }
+                        return null;
+                      },
+                      postfixIcon: IconButton(
+                        icon: Icon(
+                          isObscureConfirmPassword.value
+                              ? Icons.visibility_off
+                              : Icons.visibility,
+                          color: Colors.grey[600],
+                        ),
+                        onPressed: () {
+                          isObscureConfirmPassword.value =
+                              !isObscureConfirmPassword.value;
+                        },
+                      ),
+                    )),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildButton(
+                        title: 'Cancel',
+                        onPressed: () => Get.back(),
+                        backgroundColor: Colors.grey[100]!,
+                        textColor: Colors.grey[800]!,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildButton(
+                        title: 'Reset Password',
+                        onPressed: () {
+                          if ((formKey.currentState as FormState).validate()) {
+                            newpassword.value = newpasswordController.text;
+                            confirmpassword.value =
+                                confirmpasswordController.text;
+                            updateUserProfile(password: newpassword.value);
+                            Get.back();
+                          }
+                        },
+                        backgroundColor: const Color(0xFFFF4C5E),
+                        textColor: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
+  }
+
+  Widget _buildButton({
+    required String title,
+    required VoidCallback onPressed,
+    required Color backgroundColor,
+    required Color textColor,
+  }) {
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: backgroundColor,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        elevation: 0,
+      ),
+      onPressed: onPressed,
+      child: Text(
+        title,
+        style: TextStyle(
+          color: textColor,
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );
@@ -352,5 +386,13 @@ class ProfileController extends GetxController {
   void onInit() {
     super.onInit();
     fetchUserData();
+  }
+
+  void navigateToPaymentMethod() {
+    Get.toNamed('/payment-method');
+  }
+
+  void navigateToUserInfo() {
+    Get.toNamed('/user-info');
   }
 }
