@@ -65,56 +65,61 @@ class LoginView extends GetView<LoginController> {
             Devider().build(),
             SizedBox(height: screenHeight * 0.02),
             Form(
-              key: controller.formKey,
+                key: controller.formKey,
                 child: Column(
-              children: [
-                Input().build(
-                  label: 'Email',
-                  controller: controller.emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (value) {
-                    if (value!.isEmpty) {
-                      return 'Please enter your email';
-                    }
-                    return null;
-                  },
-                ),
-                SizedBox(height: screenHeight * 0.02),
-                Obx(() => Input().build(
-                      label: 'Password',
-                      controller: controller.passwordController,
-                      keyboardType: TextInputType.visiblePassword,
-                      PostfixIcon: IconButton(
-                        onPressed: () {
-                          controller.toggleObscureText();
-                        },
-                        icon: Icon(controller.obscureText.value
-                            ? Icons.visibility_off
-                            : Icons.visibility),
-                      ),
-                      obscureText: controller.obscureText.value,
+                  children: [
+                    Input().build(
+                      label: 'Email',
+                      controller: controller.emailController,
+                      keyboardType: TextInputType.emailAddress,
                       validator: (value) {
                         if (value!.isEmpty) {
-                          return 'Please enter your password';
+                          return 'Please enter your email';
                         }
                         return null;
                       },
-                    )),
-              ],
-            )),
+                    ),
+                    SizedBox(height: screenHeight * 0.02),
+                    Obx(() => Input().build(
+                          label: 'Password',
+                          controller: controller.passwordController,
+                          keyboardType: TextInputType.visiblePassword,
+                          PostfixIcon: IconButton(
+                            onPressed: () {
+                              controller.toggleObscureText();
+                            },
+                            icon: Icon(controller.obscureText.value
+                                ? Icons.visibility_off
+                                : Icons.visibility),
+                          ),
+                          obscureText: controller.obscureText.value,
+                          validator: (value) {
+                            if (value!.isEmpty) {
+                              return 'Please enter your password';
+                            }
+                            return null;
+                          },
+                        )),
+                  ],
+                )),
             SizedBox(height: screenHeight * 0.01),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                Text(
-                  'Forgot Password?',
-                  style: TextStyle(
-                    color: Color(0xFF7C8AA0),
-                    fontSize: DynamicFont().getSmallFont(),
-                    fontFamily: 'Poppins',
-                    fontWeight: FontWeight.w400,
+                TextButton(
+                  onPressed: () {
+                    controller.goToResetPassword();
+                  },
+                  child: Text(
+                    'Forgot Password?',
+                    style: TextStyle(
+                      color: Color(0xFF7C8AA0),
+                      fontSize: DynamicFont().getSmallFont(),
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.w400,
+                    ),
                   ),
-                ),
+                )
               ],
             ),
             SizedBox(height: screenHeight * 0.02),

@@ -432,4 +432,8 @@ class LoginController extends GetxController {
       Get.snackbar('Error', 'An error occurred. Please try again later: $e');
     }
   }
+
+  void goToResetPassword() {
+    Get.toNamed('/reset-password');
+  }
 }

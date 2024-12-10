@@ -1,3 +1,4 @@
+import 'package:fantasize/app/global/strings.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
@@ -17,9 +18,10 @@ class ChangePasswordController extends GetxController {
   Future<void> changePassword() async {
     try {
       isLoading.value = true;
-      
+
       final response = await http.put(
-        Uri.parse('http://localhost:5000/api/reset_password/${tokenController.text.trim()}'),
+        Uri.parse(
+            '${Strings().apiUrl}/reset_password/${tokenController.text.trim()}'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'password': passwordController.text,
@@ -36,11 +38,12 @@ class ChangePasswordController extends GetxController {
           margin: EdgeInsets.all(16),
           borderRadius: 12,
         );
-        
+
         // Navigate to login route
         Get.offAllNamed('/login');
       } else {
-        final errorMessage = json.decode(response.body)['message'] ?? 'An error occurred';
+        final errorMessage =
+            json.decode(response.body)['message'] ?? 'An error occurred';
         Get.snackbar(
           'Error',
           errorMessage,

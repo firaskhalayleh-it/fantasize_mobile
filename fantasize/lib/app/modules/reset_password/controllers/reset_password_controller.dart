@@ -1,3 +1,4 @@
+import 'package:fantasize/app/global/strings.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
@@ -13,13 +14,13 @@ class ResetPasswordController extends GetxController {
       isLoading.value = true;
       
       final response = await http.post(
-        Uri.parse('http://localhost:5000/api/reset_password'),
+        Uri.parse('${Strings().apiUrl}/reset_password'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'email': emailController.text.trim(),
         }),
       );
-
+      
       if (response.statusCode == 200) {
         Get.snackbar(
           'Success',
@@ -30,6 +31,8 @@ class ResetPasswordController extends GetxController {
           margin: EdgeInsets.all(16),
           borderRadius: 12,
         );
+
+        
         // Optional: Navigate back or to another screen
         Get.back();
       } else {
