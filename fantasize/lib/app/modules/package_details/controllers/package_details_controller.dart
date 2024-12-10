@@ -250,11 +250,16 @@ class PackageDetailsController extends GetxController {
         'Accept': 'application/json',
         'cookie': 'authToken=$token'
       },
-      body: json.encode({
-        'PackageId': PackageId,
-        'Comment': comment,
-        'Rating': rating,
-      }),
+      body: isEditing.value && reviewId != null
+          ? json.encode({
+              'Rating': rating,
+              'Comment': comment,
+            })
+          : json.encode({
+              'PackageId': PackageId,
+              'Rating': rating,
+              'Comment': comment,
+            }),
     );
 
     if (response.statusCode == 200) {

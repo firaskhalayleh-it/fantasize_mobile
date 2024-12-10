@@ -152,14 +152,19 @@ class ProductDetailsController extends GetxController {
         'Accept': 'application/json',
         'cookie': 'authToken=$token'
       },
-      body: json.encode({
-        'ProductID': productId,
-        'Comment': comment,
-        'Rating': rating,
-      }),
+      body: isEditing.value && reviewId != null
+          ? json.encode({
+              'Comment': comment,
+              'Rating': rating,
+            })
+          : json.encode({
+              'ProductID': productId,
+              'Rating': rating,
+              'Comment': comment,
+            }),
     );
 
-    if (response.statusCode == 201) {
+    if (response.statusCode == 201 || response.statusCode == 200) {
       // Hide the form after successful submission
       isEditing(false);
       isReviewFormVisible(false);

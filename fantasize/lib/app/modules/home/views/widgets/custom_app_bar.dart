@@ -223,9 +223,7 @@ class _CustomAppBarState extends State<CustomAppBar>
                     flex: 7,
                     child: _buildSearchBar(screenHeight, screenWidth),
                   ),
-                  SizedBox(width: 10),
-                  // Filter Button
-                  _buildFilterButton(screenHeight),
+               
                 ],
               ),
             ),
@@ -297,31 +295,6 @@ class _CustomAppBarState extends State<CustomAppBar>
         'assets/icons/fantasize.png',
         width: screenWidth * 0.15,
         height: screenHeight * 0.05,
-      ),
-    );
-  }
-
-  /// Builds the filter button with icon
-  Widget _buildFilterButton(double screenHeight) {
-    return Container(
-      height: screenHeight * 0.06,
-      width: screenHeight * 0.06,
-      decoration: BoxDecoration(
-        color: Colors.redAccent,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.redAccent.withOpacity(0.3),
-            blurRadius: 8,
-            spreadRadius: 0,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Icon(
-        Icons.tune_rounded,
-        color: Colors.white,
-        size: 22,
       ),
     );
   }

@@ -1,4 +1,7 @@
+// lib/app/modules/explore/views/widgets/new_collection_subcategory_widget.dart
 import 'dart:ui';
+import 'package:fantasize/app/data/models/package_model.dart';
+import 'package:fantasize/app/data/models/product_model.dart';
 import 'package:fantasize/app/data/models/resources_model.dart';
 import 'package:fantasize/app/global/strings.dart';
 import 'package:fantasize/app/global/widgets/image_handler.dart';
@@ -6,15 +9,17 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class NewCollectionSubcategoryWidget extends StatefulWidget {
-  final dynamic item;
-
-  const NewCollectionSubcategoryWidget({Key? key, required this.item}) : super(key: key);
+  dynamic item;
+  NewCollectionSubcategoryWidget({Key? key, required this.item})
+      : super(key: key);
 
   @override
-  State<NewCollectionSubcategoryWidget> createState() => _NewCollectionSubcategoryWidgetState();
+  State<NewCollectionSubcategoryWidget> createState() =>
+      _NewCollectionSubcategoryWidgetState();
 }
 
-class _NewCollectionSubcategoryWidgetState extends State<NewCollectionSubcategoryWidget> 
+class _NewCollectionSubcategoryWidgetState
+    extends State<NewCollectionSubcategoryWidget>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -60,6 +65,25 @@ class _NewCollectionSubcategoryWidgetState extends State<NewCollectionSubcategor
   void dispose() {
     _animationController.dispose();
     super.dispose();
+  }
+
+  void _navigateToDetails() {
+    if (widget.item is Product) {
+      final product = widget.item as Product;
+      final package = widget.item as Package;
+      Get.toNamed(
+        '/product-details',
+        arguments: [product.productId],
+      );
+    } else if (widget.item is Package) {
+      final package = widget.item as Package;
+      Get.toNamed(
+        '/package-details',
+        arguments: package.packageId,
+      );
+    } else {
+      Get.snackbar('Error', 'Unknown item type');
+    }
   }
 
   @override
@@ -166,7 +190,7 @@ class _NewCollectionSubcategoryWidgetState extends State<NewCollectionSubcategor
         borderRadius: BorderRadius.circular(15),
         child: Stack(
           children: [
-            // Background Image with Shimmer Effect
+            // Background Image with Shader Mask
             ShaderMask(
               shaderCallback: (rect) {
                 return LinearGradient(
@@ -230,7 +254,8 @@ class _NewCollectionSubcategoryWidgetState extends State<NewCollectionSubcategor
                             return Transform.scale(
                               scale: value,
                               child: Container(
-                                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 8),
                                 decoration: BoxDecoration(
                                   color: Colors.redAccent,
                                   borderRadius: BorderRadius.circular(12),
@@ -256,8 +281,8 @@ class _NewCollectionSubcategoryWidgetState extends State<NewCollectionSubcategor
                           },
                         ),
                         SizedBox(height: 16),
-                        
-                        // Animated Name with Shimmer
+
+                        // Animated Name with Shader Mask
                         ShaderMask(
                           shaderCallback: (bounds) {
                             return LinearGradient(
@@ -271,6 +296,7 @@ class _NewCollectionSubcategoryWidgetState extends State<NewCollectionSubcategor
                               end: Alignment.bottomRight,
                             ).createShader(bounds);
                           },
+                          blendMode: BlendMode.srcATop,
                           child: Text(
                             widget.item.name,
                             style: TextStyle(
@@ -286,7 +312,7 @@ class _NewCollectionSubcategoryWidgetState extends State<NewCollectionSubcategor
                     ),
                   ),
                 ),
-                
+
                 // Bottom Bar with Animation
                 TweenAnimationBuilder<double>(
                   duration: const Duration(milliseconds: 600),
@@ -298,7 +324,8 @@ class _NewCollectionSubcategoryWidgetState extends State<NewCollectionSubcategor
                       child: Opacity(
                         opacity: value,
                         child: Container(
-                          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                          padding:
+                              EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.only(
@@ -323,10 +350,11 @@ class _NewCollectionSubcategoryWidgetState extends State<NewCollectionSubcategor
                               MouseRegion(
                                 cursor: SystemMouseCursors.click,
                                 child: TextButton.icon(
-                                  onPressed: () {},
+                                  onPressed: _navigateToDetails,
                                   style: TextButton.styleFrom(
                                     foregroundColor: Colors.redAccent,
-                                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                    padding: EdgeInsets.symmetric(
+                                        horizontal: 16, vertical: 8),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(12),
                                     ),

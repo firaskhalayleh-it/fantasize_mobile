@@ -19,6 +19,7 @@ abstract class Routes {
   static const ADDRESS = _Paths.ADDRESS;
   static const PACKAGE_DETAILS = _Paths.PACKAGE_DETAILS;
   static const ORDER_HISTORY = _Paths.ORDER_HISTORY;
+  static const RESET_PASSWORD = _Paths.RESET_PASSWORD;
 }
 
 abstract class _Paths {
@@ -39,4 +40,5 @@ abstract class _Paths {
   static const ADDRESS = '/address';
   static const PACKAGE_DETAILS = '/package-details';
   static const ORDER_HISTORY = '/order-history';
+  static const RESET_PASSWORD = '/reset-password';
 }

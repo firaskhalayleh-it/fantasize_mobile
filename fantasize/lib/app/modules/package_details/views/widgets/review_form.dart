@@ -1,7 +1,7 @@
+import 'package:fantasize/app/modules/package_details/controllers/package_details_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:fantasize/app/data/models/reviews_model.dart';
-import 'package:fantasize/app/modules/package_details/controllers/package_details_controller.dart';
 
 class ReviewFormPackage extends GetView<PackageDetailsController> {
   final int packageId;
@@ -24,52 +24,160 @@ class ReviewFormPackage extends GetView<PackageDetailsController> {
       selectedRating.value = review!.rating!;
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        TextField(
-          controller: commentController,
-          decoration: InputDecoration(labelText: 'Comment'),
-        ),
-        SizedBox(height: 10),
-
-        // Star rating selection
-        Obx(() => Row(
-          children: List.generate(5, (index) {
-            return GestureDetector(
-              onTap: () {
-                selectedRating.value = index + 1; // Set the selected rating
-                print('Selected rating: ${selectedRating.value}');
-              },
-              child: Icon(
-                index < selectedRating.value ? Icons.star : Icons.star_border,
-                color: Colors.yellow,
-              ),
-            );
-          }),
-        )),
-        
-        SizedBox(height: 10),
-        
-        // Add or Update Review button with styling
-        ElevatedButton(
-          onPressed: () {
-            controller.addOrUpdateReview(
-              packageId,
-              commentController.text,
-              selectedRating.value,
-            );
-          },
-          child: Text(isEditing ? 'Update Review' : 'Add Review', style: TextStyle(fontSize: 16,color: Colors.white)),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.redAccent,
-            padding: EdgeInsets.symmetric(vertical: 16, horizontal: 32),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+    return Container(
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            spreadRadius: 0,
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            isEditing ? 'Edit Your Review' : 'Write a Review',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'Jost',
+              color: Colors.grey[800],
             ),
           ),
-        ),
-      ],
+          SizedBox(height: 16),
+          // Rating Section
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Rating',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.grey[600],
+                ),
+              ),
+              SizedBox(height: 8),
+              Obx(() => Row(
+                    children: List.generate(5, (index) {
+                      return GestureDetector(
+                        onTap: () => selectedRating.value = index + 1,
+                        child: Padding(
+                          padding: EdgeInsets.only(right: 8),
+                          child: Icon(
+                            index < selectedRating.value
+                                ? Icons.star_rounded
+                                : Icons.star_outline_rounded,
+                            color: index < selectedRating.value
+                                ? Colors.amber
+                                : Colors.grey[400],
+                            size: 32,
+                          ),
+                        ),
+                      );
+                    }),
+                  )),
+            ],
+          ),
+          SizedBox(height: 16),
+          // Comment Section
+          TextField(
+            controller: commentController,
+            maxLines: 4,
+            decoration: InputDecoration(
+              hintText: 'Share your thoughts about this product...',
+              hintStyle: TextStyle(
+                color: Colors.grey[400],
+                fontSize: 14,
+              ),
+              filled: true,
+              fillColor: Colors.grey[50],
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: Colors.grey[200]!,
+                  width: 1,
+                ),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: Colors.grey[200]!,
+                  width: 1,
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: Colors.redAccent,
+                  width: 1,
+                ),
+              ),
+              contentPadding: EdgeInsets.all(16),
+            ),
+          ),
+          SizedBox(height: 20),
+          // Submit Button
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: ElevatedButton(
+              onPressed: () {
+                if (selectedRating.value == 0) {
+                  Get.snackbar(
+                    'Rating Required',
+                    'Please select a rating before submitting',
+                    snackPosition: SnackPosition.TOP,
+                    backgroundColor: Colors.redAccent,
+                    colorText: Colors.white,
+                    margin: EdgeInsets.all(16),
+                    borderRadius: 12,
+                  );
+                  return;
+                }
+                if (commentController.text.trim().isEmpty) {
+                  Get.snackbar(
+                    'Review Required',
+                    'Please write a review before submitting',
+                    snackPosition: SnackPosition.TOP,
+                    backgroundColor: Colors.redAccent,
+                    colorText: Colors.white,
+                    margin: EdgeInsets.all(16),
+                    borderRadius: 12,
+                  );
+                  return;
+                }
+                controller.addOrUpdateReview(
+                  packageId,
+                  commentController.text,
+                  selectedRating.value,
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Text(
+                isEditing ? 'Update Review' : 'Submit Review',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontFamily: 'Jost',
+                  fontWeight: FontWeight.w500,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

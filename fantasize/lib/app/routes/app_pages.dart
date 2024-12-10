@@ -26,6 +26,8 @@ import '../modules/products/bindings/products_binding.dart';
 import '../modules/products/views/products_view.dart';
 import '../modules/profile/bindings/profile_binding.dart';
 import '../modules/profile/views/profile_view.dart';
+import '../modules/reset_password/bindings/reset_password_binding.dart';
+import '../modules/reset_password/views/reset_password_view.dart';
 import '../modules/signup/bindings/signup_binding.dart';
 import '../modules/signup/views/signup_view.dart';
 import '../modules/splash/bindings/splash_binding.dart';
@@ -113,13 +115,18 @@ class AppPages {
     ),
     GetPage(
       name: _Paths.PACKAGE_DETAILS,
-      page: () => const PackageDetailsView(),
+      page: () => PackageDetailsView(),
       binding: PackageDetailsBinding(),
     ),
     GetPage(
       name: _Paths.ORDER_HISTORY,
       page: () => const OrderHistoryView(),
       binding: OrderHistoryBinding(),
+    ),
+    GetPage(
+      name: _Paths.RESET_PASSWORD,
+      page: () => const ResetPasswordView(),
+      binding: ResetPasswordBinding(),
     ),
   ];
 }

@@ -1,5 +1,3 @@
-// lib/app/modules/product_details/views/widgets/product_customization_widget.dart
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:fantasize/app/data/models/customization_model.dart';
@@ -15,7 +13,6 @@ class CustomizationWidgets extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Ensure customizations are not null
     final uniqueCustomizations = {
       for (var customization in customizations)
         customization.customizationId: customization
@@ -23,17 +20,34 @@ class CustomizationWidgets extends StatelessWidget {
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: uniqueCustomizations.expand<Widget>((customization) {
-        // Ensure options are not null
-        return (customization.options).map<Widget>((option) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildOptionTypeWidget(customization.customizationId, option),
-            ],
-          );
-        }).toList();
-      }).toList(),
+      children: [
+        ...uniqueCustomizations.expand<Widget>((customization) {
+          return (customization.options).map<Widget>((option) {
+            return Container(
+              margin: EdgeInsets.only(bottom: 20),
+              padding: EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    spreadRadius: 0,
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                 
+                  _buildOptionTypeWidget(customization.customizationId, option),
+                ],
+              ),
+            );
+          }).toList();
+        }).toList(),
+      ],
     );
   }
 
@@ -59,8 +73,16 @@ class CustomizationWidgets extends StatelessWidget {
 
     return Wrap(
       spacing: 8.0,
+      runSpacing: 8.0,
       children: (option.optionValues).map((optionValue) {
-        return Obx(() => ElevatedButton(
+        return Obx(() {
+          final isSelected = controller.isOptionSelected(
+            customizationId,
+            optionValue.value,
+          );
+          return AnimatedContainer(
+            duration: Duration(milliseconds: 200),
+            child: ElevatedButton(
               onPressed: () {
                 controller.updateSelectedOption(
                   customizationId,
@@ -69,18 +91,28 @@ class CustomizationWidgets extends StatelessWidget {
                 );
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: controller.isOptionSelected(
-                  customizationId,
-                  optionValue.value,
-                )
-                    ? Colors.redAccent
-                    : Colors.grey,
+                backgroundColor: isSelected ? Colors.redAccent : Colors.white,
+                foregroundColor: isSelected ? Colors.white : Colors.grey[800],
+                elevation: isSelected ? 2 : 0,
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  side: BorderSide(
+                    color: isSelected ? Colors.redAccent : Colors.grey[300]!,
+                    width: 1,
+                  ),
+                ),
               ),
               child: Text(
                 optionValue.value,
-                style: Theme.of(Get.context!).textTheme.bodyMedium,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                ),
               ),
-            ));
+            ),
+          );
+        });
       }).toList(),
     );
   }
@@ -89,34 +121,51 @@ class CustomizationWidgets extends StatelessWidget {
     final ProductDetailsController controller = Get.find();
 
     return Wrap(
-      spacing: 8.0,
-      children: (option.optionValues ).map((optionValue) {
-        return Obx(() => GestureDetector(
-              onTap: () {
-                controller.updateSelectedOption(
-                  customizationId,
-                  option.name,
-                  optionValue.value,
-                );
-              },
-              child: Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: _parseColor(optionValue.value),
-                  border: Border.all(
-                    color: controller.isOptionSelected(
-                      customizationId,
-                      optionValue.value,
-                    )
-                        ? Colors.green
-                        : Colors.transparent,
-                    width: 2,
-                  ),
+      spacing: 12.0,
+      runSpacing: 12.0,
+      children: (option.optionValues).map((optionValue) {
+        return Obx(() {
+          final isSelected = controller.isOptionSelected(
+            customizationId,
+            optionValue.value,
+          );
+          return GestureDetector(
+            onTap: () {
+              controller.updateSelectedOption(
+                customizationId,
+                option.name,
+                optionValue.value,
+              );
+            },
+            child: AnimatedContainer(
+              duration: Duration(milliseconds: 200),
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: _parseColor(optionValue.value),
+                border: Border.all(
+                  color: isSelected ? Colors.redAccent : Colors.transparent,
+                  width: 2,
                 ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 4,
+                    spreadRadius: 0,
+                  ),
+                ],
               ),
-            ));
+              child: isSelected
+                  ? Icon(
+                      Icons.check,
+                      color: Colors.white,
+                      size: 20,
+                    )
+                  : null,
+            ),
+          );
+        });
       }).toList(),
     );
   }
@@ -124,10 +173,17 @@ class CustomizationWidgets extends StatelessWidget {
   Widget _buildImageOptions(int customizationId, Option option) {
     final ProductDetailsController controller = Get.find();
 
-    return Wrap(
-      spacing: 8.0,
-      children: (option.optionValues).map((optionValue) {
-        return Obx(() => GestureDetector(
+    return Container(
+      height: 100,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        children: (option.optionValues).map((optionValue) {
+          return Obx(() {
+            final isSelected = controller.isOptionSelected(
+              customizationId,
+              optionValue.value,
+            );
+            return GestureDetector(
               onTap: () {
                 controller.updateSelectedOption(
                   customizationId,
@@ -136,185 +192,256 @@ class CustomizationWidgets extends StatelessWidget {
                 );
               },
               child: Container(
+                margin: EdgeInsets.only(right: 12),
                 decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: controller.isOptionSelected(
-                      customizationId,
-                      optionValue.value,
-                    )
-                        ? Colors.green
-                        : Colors.transparent,
-                    width: 3,
+                    color: isSelected ? Colors.redAccent : Colors.transparent,
+                    width: 2,
                   ),
-                  borderRadius: BorderRadius.circular(50),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 4,
+                      spreadRadius: 0,
+                    ),
+                  ],
                 ),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(50),
-                  child: Image.network(
-                    '${Strings().resourceUrl}/${optionValue.fileName}',
-                    width: 80,
-                    height: 80,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Icon(Icons.image_not_supported);
-                    },
+                  borderRadius: BorderRadius.circular(10),
+                  child: Stack(
+                    children: [
+                      Image.network(
+                        '${Strings().resourceUrl}/${optionValue.fileName}',
+                        width: 80,
+                        height: 80,
+                        fit: BoxFit.fill,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            width: 80,
+                            height: 80,
+                            color: Colors.grey[200],
+                            child: Icon(
+                              Icons.image_not_supported,
+                              color: Colors.grey[400],
+                            ),
+                          );
+                        },
+                      ),
+                      if (isSelected)
+                        Positioned.fill(
+                          child: Container(
+                            color: Colors.black.withOpacity(0.3),
+                            child: Icon(
+                              Icons.check_circle,
+                              color: Colors.white,
+                              size: 24,
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
               ),
-            ));
-      }).toList(),
+            );
+          });
+        }).toList(),
+      ),
     );
   }
 
-  // Method for 'attachMessage'
   Widget _buildAttachMessageOption(int customizationId, Option option) {
     final controller = Get.find<ProductDetailsController>();
-    final textController =
-        controller.getTextController(customizationId, option.name);
-    final isVisible =
-        controller.getAttachMessageVisibility(customizationId, option.name);
+    final textController = controller.getTextController(customizationId, option.name);
+    final isVisible = controller.getAttachMessageVisibility(customizationId, option.name);
 
     return Obx(() {
       final hasText = textController.text.isNotEmpty;
-      final buttonText = isVisible.value ? 'Done' : (hasText ? 'Edit' : 'Yes');
+      final buttonText = isVisible.value ? 'Done' : (hasText ? 'Edit Message' : 'Add Message');
 
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ElevatedButton(
-            onPressed: () {
-              // Toggle visibility
-              controller.toggleAttachMessageVisibility(
-                  customizationId, option.name);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.redAccent,
-            ),
-            child: Text(
-              buttonText,
-              style: TextStyle(fontFamily: 'Jost', color: Colors.white),
-            ),
-          ),
-          if (isVisible.value)
-            Container(
-              margin: EdgeInsets.only(top: 8.0),
-              child: TextField(
-                controller: textController,
-                maxLines: 3, // Limit to 3 lines
-                decoration: InputDecoration(
-                  labelText: option.name,
-                  focusColor: Colors.redAccent,
-                  hoverColor: Colors.redAccent,
-                  alignLabelWithHint: true, // Align label for multiline
-                  border: OutlineInputBorder(
-                    borderRadius:
-                        BorderRadius.circular(10.0), // Rounded corners
-                    borderSide: BorderSide(
-                      color: Colors.redAccent,
-                    ),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius:
-                        BorderRadius.circular(10.0), // Rounded corners
-                    borderSide: BorderSide(
-                      color: Colors.redAccent,
-                    ),
-                  ),
+      return Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey[200]!),
+        ),
+        padding: EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ElevatedButton.icon(
+              onPressed: () {
+                controller.toggleAttachMessageVisibility(
+                  customizationId,
+                  option.name,
+                );
+              },
+              icon: Icon(
+                hasText ? Icons.edit : Icons.add,
+                size: 18,
+              ),
+              label: Text(buttonText),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
                 ),
               ),
             ),
-        ],
+            if (isVisible.value) ...[
+              SizedBox(height: 12),
+              TextField(
+                controller: textController,
+                maxLines: 3,
+                decoration: InputDecoration(
+                  hintText: 'Type your message here...',
+                  filled: true,
+                  fillColor: Colors.grey[50],
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: Colors.grey[300]!),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: Colors.redAccent),
+                  ),
+                  contentPadding: EdgeInsets.all(12),
+                ),
+              ),
+            ],
+            if (hasText && !isVisible.value) ...[
+              SizedBox(height: 8),
+              Container(
+                padding: EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.grey[50],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  textController.text,
+                  style: TextStyle(color: Colors.grey[700]),
+                ),
+              ),
+            ],
+          ],
+        ),
       );
     });
   }
 
-  // Method for 'uploadPicture'
   Widget _buildUploadPictureOption(int customizationId, Option option) {
     final controller = Get.find<ProductDetailsController>();
-    final imagePathRx =
-        controller.getUploadedImagePath(customizationId, option.name);
+    final imagePathRx = controller.getUploadedImagePath(customizationId, option.name);
 
     return Obx(() {
       final imagePath = imagePathRx.value;
       final hasImage = imagePath.isNotEmpty;
 
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              // Upload/Change Picture Icon Button
-              IconButton(
-                icon: Icon(
-                  Icons.upload_file_rounded,
-                  color: Colors.white,
-                ),
-                style: ButtonStyle(
-                  backgroundColor: WidgetStateProperty.all(Colors.redAccent),
-                ),
-                onPressed: () async {
-                  final picker = ImagePicker();
-                  final image =
-                      await picker.pickImage(source: ImageSource.gallery);
-                  if (image != null) {
-                    controller.updateUploadedImage(
-                      customizationId,
-                      option.name,
-                      image.path,
-                    );
-                  }
-                },
-              ),
-              SizedBox(width: 8.0),
-              Text(
-                hasImage ? 'Change Picture' : 'Upload Picture',
-                style: TextStyle(fontFamily: 'Jost', color: Colors.black),
-              ),
-              // Delete Picture Icon Button (appears only if an image is uploaded)
-              if (hasImage)
-                IconButton(
+      return Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey[200]!),
+        ),
+        padding: EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                ElevatedButton.icon(
                   icon: Icon(
-                    Icons.delete,
-                    color: Colors.white,
+                    hasImage ? Icons.edit : Icons.upload_file,
+                    size: 18,
                   ),
-                  style: ButtonStyle(
-                    backgroundColor: WidgetStateProperty.all(Colors.redAccent),
-                  ),
-                  onPressed: () {
-                    // Clear the uploaded image
-                    controller.updateUploadedImage(
-                      customizationId,
-                      option.name,
-                      '',
-                    );
+                  label: Text(hasImage ? 'Change Picture' : 'Upload Picture'),
+                  onPressed: () async {
+                    final picker = ImagePicker();
+                    final image = await picker.pickImage(source: ImageSource.gallery);
+                    if (image != null) {
+                      controller.updateUploadedImage(
+                        customizationId,
+                        option.name,
+                        image.path,
+                      );
+                    }
                   },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.redAccent,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
                 ),
-            ],
-          ),
-          // Display the uploaded image if available
-          if (hasImage)
-            Padding(
-              padding: const EdgeInsets.only(top: 8.0),
-              child: Image.file(
-                File(imagePath),
-                width: 100,
-                height: 100,
-                errorBuilder: (context, error, stackTrace) {
-                  return Icon(Icons.image_not_supported);
-                },
-              ),
+                if (hasImage) ...[
+                  SizedBox(width: 8),
+                  IconButton(
+                    icon: Icon(Icons.delete_outline),
+                    onPressed: () {
+                      controller.updateUploadedImage(
+                        customizationId,
+                        option.name,
+                        '',
+                      );
+                    },
+                    style: IconButton.styleFrom(
+                      backgroundColor: Colors.grey[100],
+                      foregroundColor: Colors.red[300],
+                    ),
+                  ),
+                ],
+              ],
             ),
-        ],
+            if (hasImage) ...[
+              SizedBox(height: 12),
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 4,
+                      spreadRadius: 0,
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.file(
+                    File(imagePath),
+                    width: 120,
+                    height: 120,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        width: 120,
+                        height: 120,
+                        color: Colors.grey[200],
+                        child: Icon(
+                          Icons.image_not_supported,
+                          color: Colors.grey[400],
+                          size: 32,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
       );
     });
   }
 
-  // Helper method to parse color strings safely
   Color _parseColor(String colorString) {
     try {
       return Color(int.parse(colorString));
     } catch (e) {
-      // Return a default color if parsing fails
       return Colors.grey;
     }
   }

@@ -9,7 +9,7 @@ import 'package:get/get.dart';
 
 class HomeOffersWidget extends GetView<HomeController> {
   final dynamic item;
-  
+
   const HomeOffersWidget({Key? key, required this.item}) : super(key: key);
 
   @override
@@ -120,10 +120,12 @@ class HomeOffersWidget extends GetView<HomeController> {
                                           ),
                                           decoration: BoxDecoration(
                                             color: Colors.redAccent,
-                                            borderRadius: BorderRadius.circular(12),
+                                            borderRadius:
+                                                BorderRadius.circular(12),
                                             boxShadow: [
                                               BoxShadow(
-                                                color: Colors.redAccent.withOpacity(0.4),
+                                                color: Colors.redAccent
+                                                    .withOpacity(0.4),
                                                 blurRadius: 12,
                                                 offset: Offset(0, 6),
                                               ),
@@ -145,7 +147,8 @@ class HomeOffersWidget extends GetView<HomeController> {
                                               Text(
                                                 'OFF',
                                                 style: TextStyle(
-                                                  color: Colors.white.withOpacity(0.9),
+                                                  color: Colors.white
+                                                      .withOpacity(0.9),
                                                   fontSize: 16,
                                                   fontWeight: FontWeight.w600,
                                                 ),
@@ -192,18 +195,29 @@ class HomeOffersWidget extends GetView<HomeController> {
                                       width: double.infinity,
                                       height: 54,
                                       child: ElevatedButton(
-                                        onPressed: () {},
+                                        onPressed: () {
+                                          if (item is Product) {
+                                            Get.toNamed('/product-details',
+                                                arguments: [item.productId]);
+                                          } else if (item is Package) {
+                                            Get.toNamed('/package-details',
+                                                arguments: item.packageId);
+                                          }
+                                        },
                                         style: ElevatedButton.styleFrom(
                                           backgroundColor: Colors.white,
                                           foregroundColor: Colors.redAccent,
                                           elevation: 12,
-                                          shadowColor: Colors.redAccent.withOpacity(0.4),
+                                          shadowColor:
+                                              Colors.redAccent.withOpacity(0.4),
                                           shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(16),
+                                            borderRadius:
+                                                BorderRadius.circular(16),
                                           ),
                                         ),
                                         child: Row(
-                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
                                           children: [
                                             Text(
                                               'Explore Offer',

@@ -5,6 +5,7 @@ import 'package:fantasize/app/global/strings.dart';
 class CustomVideoPlayerController extends GetxController {
   late VideoPlayerController videoController;
   final String videoUrl;
+  var isVisible = false.obs;
 
   CustomVideoPlayerController({required this.videoUrl});
 
@@ -27,10 +28,18 @@ class CustomVideoPlayerController extends GetxController {
   void togglePlayPause() {
     if (videoController.value.isPlaying) {
       videoController.pause();
+      isVisible.value = true;
     } else {
       videoController.play();
+      isVisible.value = false;
     }
     update(); // Update the UI after play/pause action
+  }
+
+  void onTapVideo() {
+    isVisible.value = !isVisible.value;
+    togglePlayPause();
+    update();
   }
 
   bool get isInitialized => videoController.value.isInitialized;

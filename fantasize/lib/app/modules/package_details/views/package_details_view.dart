@@ -2,434 +2,482 @@
 
 import 'package:fantasize/app/data/models/reviews_model.dart';
 import 'package:fantasize/app/global/strings.dart';
-import 'package:fantasize/app/global/widgets/image_handler.dart';
-import 'package:fantasize/app/modules/package_details/views/widgets/floating_price_button.dart';
+import 'package:fantasize/app/modules/package_details/views/widgets/customization_widget.dart';
 import 'package:fantasize/app/modules/package_details/views/widgets/review_form.dart';
+
 import 'package:fantasize/app/modules/package_details/views/widgets/video_player_widget_package.dart';
-import 'package:fantasize/app/modules/product_details/views/widgets/floating_price_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg_provider/flutter_svg_provider.dart';
 import 'package:get/get.dart';
 import 'package:fantasize/app/modules/package_details/controllers/package_details_controller.dart';
+import 'widgets/floating_price_button.dart'; // Ensure this is a generic widget or create FloatingPriceButtonPackage if needed
 
-import 'widgets/customization_widget.dart';
-
-class PackageDetailsView extends GetView<PackageDetailsController> {
-  const PackageDetailsView({super.key});
+class PackageDetailsView extends StatelessWidget {
+  final PackageDetailsController controller =
+      Get.put(PackageDetailsController());
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      bottomNavigationBar: FloatingPriceButtonPackage(
-          price: controller.package.value?.price?.toString() ?? '',
-          onAddToCart: () {
-            controller.addToCart(controller.package.value!,
-                controller.orderedCustomizations, controller.quantity.value);
-          }),
+      backgroundColor: Colors.white,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        foregroundColor: Colors.white,
-        leading: IconButton(
-          onPressed: () {
-            Get.back();
-          },
-          icon: Image(
-            image: Svg('assets/icons/back_button.svg'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: CircleAvatar(
+            backgroundColor: Colors.white,
+            child: IconButton(
+              icon: Image(image: Svg('assets/icons/back_button.svg')),
+              onPressed: () => Get.back(),
+            ),
           ),
         ),
-        title: Image.asset('assets/icons/fantasize.png', width: 50, height: 50),
-        centerTitle: true,
         actions: [
-          Obx(() {
-            if (controller.package.value == null) {
-              return Icon(Icons.favorite_border);
-            } else {
-              return IconButton(
-                icon: Image(
-                  image: Svg(
-                    controller.isLiked.value
-                        ? 'assets/icons/like.svg'
-                        : 'assets/icons/like-outlined.svg',
-                  ),
-                ),
-                onPressed: () {
-                  controller.toggleLike();
-                },
-              );
-            }
-          }),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: CircleAvatar(
+              backgroundColor: Colors.white,
+              child: Obx(() => IconButton(
+                    icon: Image(
+                      image: Svg(
+                        controller.isLiked.value
+                            ? 'assets/icons/like.svg'
+                            : 'assets/icons/like-outlined.svg',
+                      ),
+                    ),
+                    onPressed: () => controller.toggleLike(),
+                  )),
+            ),
+          ),
         ],
       ),
+      bottomNavigationBar: Obx(() {
+        if (controller.package.value != null) {
+          return FloatingPriceButtonPackage(
+            price: controller.package.value!.price.toString(),
+            onAddToCart: () => controller.addToCart(controller.package.value!,
+                controller.orderedCustomizations, controller.quantity.value),
+          );
+        }
+        return SizedBox.shrink();
+      }),
       body: Obx(() {
         if (controller.package.value == null) {
-          return Center(child: CircularProgressIndicator());
-        } else {
-          final package = controller.package.value!;
-
-          return SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (package.resources.isNotEmpty)
-                  Container(
-                    height: 300,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: package.resources.length,
-                      itemBuilder: (context, index) {
-                        final resource = package.resources[index];
-                        if (resource.fileType == 'video/mp4') {
-                          return Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: VideoPlayerWidgetPackage(
-                                videoUrl:
-                                    '${Strings().resourceUrl}/${resource.entityName}'),
-                          );
-                        } else {
-                          return Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Image.network(
-                              '${Strings().resourceUrl}/${resource.entityName}',
-                              fit: BoxFit.cover,
-                              width: 300,
-                            ),
-                          );
-                        }
-                      },
-                    ),
-                  ),
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      // package Name and Rating
-                      Text(
-                        package.name,
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontFamily: 'Jost',
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Row(
-                        children: [
-                          SizedBox(width: 8),
-                          Row(
-                            children: List.generate(5, (index) {
-                              return Icon(
-                                index < package.avgRating.round()
-                                    ? Icons.star
-                                    : Icons.star_border,
-                                color: Color(0xFFFFD33C),
-                              );
-                            }),
-                          ),
-                          Text(
-                            '${package.avgRating} (${package.reviews.length} reviews)',
-                            style: TextStyle(color: Colors.blue),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 16),
-
-                      // Price (should be reactive)
-                      Text(
-                        'Price: \$${package.price}',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontFamily: 'Jost',
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      SizedBox(height: 16),
-
-                      // package Description
-                      Text(
-                        package.description,
-                        style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-                      ),
-                      SizedBox(height: 16),
-
-                      // Customization Section
-                      Obx(() => Row(
-                            children: [
-                              IconButton(
-                                  icon: Icon(Icons.remove),
-                                  color: Colors.white,
-                                  style: ButtonStyle(
-                                      backgroundColor: WidgetStateProperty.all(
-                                          Colors.redAccent)),
-                                  onPressed: () {
-                                    controller.decrementQuantity();
-                                  }),
-                              SizedBox(
-                                width: 10,
-                              ),
-                              Text(
-                                controller.quantity.value.toString(),
-                                style:
-                                    TextStyle(fontFamily: 'Jost', fontSize: 18),
-                              ),
-                              SizedBox(
-                                width: 10,
-                              ),
-                              IconButton(
-                                icon: Icon(Icons.add),
-                                color: Colors.white,
-                                style: ButtonStyle(
-                                    backgroundColor: WidgetStatePropertyAll(
-                                        Colors.redAccent)),
-                                onPressed: () {
-                                  controller.incrementQuantity();
-                                },
-                              ),
-                            ],
-                          )),
-                      // Products Included in the Package
-                      if (package.packageProducts.isNotEmpty)
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            SizedBox(height: 16),
-                            Text(
-                              'Products Included',
-                              style: TextStyle(
-                                fontSize: 22,
-                                fontFamily: 'Jost',
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            SizedBox(height: 8),
-                            Container(
-                              height: 100, // Adjust height as needed
-                              child: ListView.builder(
-                                scrollDirection: Axis.horizontal,
-                                itemCount: package.packageProducts.length,
-                                itemBuilder: (context, index) {
-                                  final packageProduct =
-                                      package.packageProducts[index];
-                                  final product = packageProduct.product;
-                                  return GestureDetector(
-                                    onTap: () {
-                                      print('Product tapped');
-                                      product.resources.isEmpty
-                                          ? print('No resources')
-                                          : product.resources
-                                              .forEach((element) {
-                                              print(element.entityName);
-                                            });
-
-                                      Get.toNamed('/product-details',
-                                          arguments: [product.productId]);
-                                    },
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.grey.withOpacity(0.2),
-                                            spreadRadius: 1,
-                                            blurRadius: 10,
-                                            offset: Offset(0, 1),
-                                          ),
-                                        ],
-                                        borderRadius: BorderRadius.circular(50),
-                                      ),
-                                      margin: EdgeInsets.only(right: 8),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.center,
-                                        children: [
-                                          Expanded(
-                                            child: product.resources != null &&
-                                                    product.resources.isNotEmpty
-                                                ? ClipRRect(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            10),
-                                                    child: Image.network(
-                                                      ImageHandler.getImageUrl(
-                                                          product.resources),
-                                                      fit: BoxFit.cover,
-                                                    ),
-                                                  )
-                                                : Container(
-                                                    color: Colors.grey[300],
-                                                    child: Icon(Icons.image),
-                                                  ),
-                                          ),
-                                          SizedBox(height: 8),
-                                          Text(
-                                            product.name,
-                                            style: TextStyle(
-                                              fontFamily: 'Jost',
-                                              fontSize: 16,
-                                            ),
-                                            textAlign: TextAlign.center,
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          controller.package.value!.customizations.isNotEmpty
-                              ? Divider()
-                              : Container(),
-                          // Only loop through customizations, not options
-                          ...controller.package.value!.customizations
-                              .map((customization) {
-                            return Column(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                PackageCustomizationWidget(
-                                  customizations: [
-                                    customization
-                                  ], // Pass only the current customization
-                                ),
-                              ],
-                            );
-                          }).toList(),
-                        ],
-                      ),
-
-                      // Reviews Section
-                      Divider(),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Reviews',
-                            style: TextStyle(
-                                fontFamily: 'Jost',
-                                fontSize: 22,
-                                fontWeight: FontWeight.bold),
-                          ),
-                          IconButton(
-                            onPressed: () {
-                              controller.toggleReviewFormVisibility();
-                            },
-                            icon: Icon(
-                              controller.isReviewFormVisible.value
-                                  ? Icons.remove
-                                  : Icons.add,
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      SizedBox(height: 10),
-
-// Reviews List with Dismissible
-                      ...?package.reviews?.map((review) {
-                        return Dismissible(
-                          key: Key(review.reviewId
-                              .toString()), // Unique key for Dismissible
-                          background: Container(
-                            color: Colors.red,
-                            alignment: Alignment.centerLeft,
-                            padding: EdgeInsets.symmetric(horizontal: 20),
-                            child: Icon(Icons.delete, color: Colors.white),
-                          ),
-                          secondaryBackground: Container(
-                            color: Colors.blue,
-                            alignment: Alignment.centerRight,
-                            padding: EdgeInsets.symmetric(horizontal: 20),
-                            child: Icon(Icons.edit, color: Colors.white),
-                          ),
-                          confirmDismiss: (direction) async {
-                            if (direction == DismissDirection.startToEnd) {
-                              // Confirm delete
-                              return await _confirmDelete(context, review);
-                            } else if (direction ==
-                                DismissDirection.endToStart) {
-                              // Trigger edit: Set form visible and load review for editing
-                              Get.find<PackageDetailsController>()
-                                  .startEditingReview(review);
-                              Get.find<PackageDetailsController>()
-                                  .isReviewFormVisible
-                                  .value = true; // Show the form
-                              return false; // Don't dismiss, just trigger edit
-                            }
-                            return false;
-                          },
-                          child: Card(
-                            child: ListTile(
-                              leading: CircleAvatar(
-                                backgroundImage: NetworkImage(review
-                                            .user!.userProfilePicture !=
-                                        null
-                                    ? '${Strings().resourceUrl}/${review.user!.userProfilePicture!.entityName}'
-                                    : '${Strings().resourceUrl}/profile.jpg'),
-                              ),
-                              title: Text(review.user!.username),
-                              subtitle: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(review.comment!),
-                                  Row(
-                                    children: List.generate(5, (ratingIndex) {
-                                      return Icon(
-                                        ratingIndex < review.rating!
-                                            ? Icons.star
-                                            : Icons.star_border,
-                                        color: Colors.yellow,
-                                      );
-                                    }),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                      SizedBox(height: 10),
-
-                      // Review Form
-                      Obx(() {
-                        if (controller.isReviewFormVisible.value) {
-                          return controller.isEditing.value
-                              ? ReviewFormPackage(
-                                  packageId: package.packageId,
-                                  isEditing: true,
-                                  review: controller.reviewBeingEdited.value!,
-                                )
-                              : ReviewFormPackage(
-                                  packageId: package.packageId,
-                                  isEditing: false,
-                                );
-                        } else {
-                          return Container();
-                        }
-                      }),
-                    ],
-                  ),
-                ),
-              ],
+          return Center(
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.redAccent),
             ),
           );
         }
+
+        final package = controller.package.value!;
+        return SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Media Gallery
+              _buildMediaGallery(package),
+
+              // Package Information
+              Container(
+                transform: Matrix4.translationValues(0, -20, 0),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Package Header
+                    Padding(
+                      padding: EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            package.name,
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontFamily: 'Jost',
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          SizedBox(height: 8),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: List.generate(5, (index) {
+                                  return Icon(
+                                    index < package.avgRating.round()
+                                        ? Icons.star_rounded
+                                        : Icons.star_outline_rounded,
+                                    color: Color(0xFFFFD700),
+                                    size: 20,
+                                  );
+                                }),
+                              ),
+                              Text(
+                                '\$${controller.getThePrice()}',
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.redAccent,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Description
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 20),
+                      child: Text(
+                        package.description,
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.grey[600],
+                          height: 1.5,
+                        ),
+                      ),
+                    ),
+
+                    // Quantity Selector
+                    Padding(
+                      padding: EdgeInsets.all(20),
+                      child: Row(
+                        children: [
+                          Text(
+                            'Quantity',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Spacer(),
+                          _buildQuantityControl(),
+                        ],
+                      ),
+                    ),
+
+                    // Customization Section
+                    if (package.customizations.isNotEmpty)
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Customize',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            SizedBox(height: 16),
+                            ...package.customizations
+                                .expand((customization) => customization.options
+                                    .map((option) => Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              option.name,
+                                              style: TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w500,
+                                                color: Colors.grey[700],
+                                              ),
+                                            ),
+                                            SizedBox(height: 8),
+                                            PackageCustomizationWidget(
+                                              customizations: [customization],
+                                            ),
+                                            SizedBox(height: 16),
+                                          ],
+                                        )))
+                                .toList(),
+                          ],
+                        ),
+                      ),
+
+                    // Reviews Section
+                    Padding(
+                      padding: EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Reviews',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              IconButton(
+                                icon: Container(
+                                  padding: EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.redAccent,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    controller.isReviewFormVisible.value
+                                        ? Icons.remove
+                                        : Icons.add,
+                                    color: Colors.white,
+                                    size: 20,
+                                  ),
+                                ),
+                                onPressed: () =>
+                                    controller.toggleReviewFormVisibility(),
+                              ),
+                            ],
+                          ),
+                          _buildReviewsList(package, context),
+                          Obx(() {
+                            if (controller.isReviewFormVisible.value) {
+                              return Padding(
+                                padding: EdgeInsets.only(top: 16),
+                                child: controller.isEditing.value
+                                    ? ReviewFormPackage(
+                                        packageId: package.packageId,
+                                        isEditing: true,
+                                        review:
+                                            controller.reviewBeingEdited.value!,
+                                      )
+                                    : ReviewFormPackage(
+                                        packageId: package.packageId,
+                                        isEditing: false,
+                                      ),
+                              );
+                            }
+                            return SizedBox.shrink();
+                          }),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
       }),
     );
   }
-}
 
-Future<bool?> _confirmDelete(BuildContext context, Review review) {
-  return showDialog<bool>(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
+  Widget _buildMediaGallery(package) {
+    return Container(
+      height: 400,
+      child: Stack(
+        children: [
+          ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: package.resources.length,
+            itemBuilder: (context, index) {
+              final resource = package.resources[index];
+              return Container(
+                width: Get.width,
+                child: resource.fileType == 'video/mp4'
+                    ? VideoPlayerWidgetPackage(
+                        videoUrl:
+                            '${Strings().resourceUrl}/${resource.entityName}')
+                    : Image.network(
+                        '${Strings().resourceUrl}/${resource.entityName}',
+                        fit: BoxFit.cover,
+                      ),
+              );
+            },
+          ),
+          Positioned(
+            bottom: 20,
+            left: 0,
+            right: 0,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(
+                package.resources.length,
+                (index) => Container(
+                  width: 8,
+                  height: 8,
+                  margin: EdgeInsets.symmetric(horizontal: 4),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withOpacity(0.8),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuantityControl() {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey[300]!),
+      ),
+      child: Row(
+        children: [
+          _buildQuantityButton(
+            icon: Icons.remove,
+            onPressed: () => controller.decrementQuantity(),
+          ),
+          Container(
+            width: 40,
+            alignment: Alignment.center,
+            child: Obx(() => Text(
+                  controller.quantity.value.toString(),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                )),
+          ),
+          _buildQuantityButton(
+            icon: Icons.add,
+            onPressed: () => controller.incrementQuantity(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuantityButton({
+    required IconData icon,
+    required VoidCallback onPressed,
+  }) {
+    return InkWell(
+      onTap: onPressed,
+      child: Container(
+        padding: EdgeInsets.all(8),
+        child: Icon(
+          icon,
+          size: 20,
+          color: Colors.grey[700],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildReviewsList(package, BuildContext context) {
+    if (package.reviews == null || package.reviews.isEmpty) {
+      return Center(
+        child: Text('No reviews yet'),
+      );
+    }
+
+    return Column(
+      children: package.reviews.map<Widget>((review) {
+        return Dismissible(
+          key: Key(review.reviewId.toString()),
+          background: _buildDismissBackground(Colors.red, Icons.delete),
+          secondaryBackground: _buildDismissBackground(Colors.blue, Icons.edit),
+          confirmDismiss: (direction) async {
+            if (direction == DismissDirection.startToEnd) {
+              return await _showDeleteConfirmation(context, review);
+            } else {
+              controller.startEditingReview(review);
+              controller.isReviewFormVisible.value = true;
+              return false;
+            }
+          },
+          child: Card(
+            elevation: 0,
+            margin: EdgeInsets.symmetric(vertical: 8),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(color: Colors.grey[200]!),
+            ),
+            child: Padding(
+              padding: EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      CircleAvatar(
+                       backgroundImage: NetworkImage(
+                          review.user!.userProfilePicture != null
+                              ? '${Strings().resourceUrl}/${review.user!.userProfilePicture!.entityName}'
+                              : '${Strings().resourceUrl}/profile.jpg',
+                        ),
+                        radius: 20,
+                      ),
+                      SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            review.user!.username,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          Row(
+                            children: List.generate(5, (index) {
+                              return Icon(
+                                index < review.rating
+                                    ? Icons.star_rounded
+                                    : Icons.star_outline_rounded,
+                                color: Color(0xFFFFD700),
+                                size: 16,
+                              );
+                            }),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    review.comment!,
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildDismissBackground(Color color, IconData icon) {
+    return Container(
+      color: color,
+      alignment:
+          icon == Icons.delete ? Alignment.centerLeft : Alignment.centerRight,
+      padding: EdgeInsets.symmetric(horizontal: 20),
+      child: Icon(icon, color: Colors.white),
+    );
+  }
+
+  Future<bool?> _showDeleteConfirmation(BuildContext context, Review review) {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
         title: Text('Delete Review'),
         content: Text('Are you sure you want to delete this review?'),
-        actions: <Widget>[
+        actions: [
           TextButton(
             onPressed: () => Get.back(),
             child: Text('Cancel'),
@@ -437,17 +485,18 @@ Future<bool?> _confirmDelete(BuildContext context, Review review) {
           TextButton(
             onPressed: () {
               Get.back();
-              Get.find<PackageDetailsController>().deleteReview(
-                  review.reviewId!,
-                  Get.find<PackageDetailsController>()
-                      .package
-                      .value!
-                      .packageId);
+              controller.deleteReview(
+                review.reviewId!,
+                controller.package.value!.packageId,
+              );
             },
-            child: Text('Delete', style: TextStyle(color: Colors.red)),
+            child: Text(
+              'Delete',
+              style: TextStyle(color: Colors.red),
+            ),
           ),
         ],
-      );
-    },
-  );
+      ),
+    );
+  }
 }

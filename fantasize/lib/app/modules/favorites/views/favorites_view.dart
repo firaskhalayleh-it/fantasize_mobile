@@ -14,50 +14,103 @@ class FavoritesView extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Favorites List',
+          'Favorites',
           style: TextStyle(
-            fontFamily: 'Poppins',
-            fontSize: 30,
             color: Colors.redAccent,
+            fontFamily: 'Poppins',
+            fontSize: 22,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.5,
           ),
         ),
         centerTitle: true,
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_rounded, color: Colors.redAccent),
+          onPressed: () => Get.back(),
+        ),
       ),
-      body: Obx(() {
-        if (controller.isLoading.value) {
-          return Center(child: CircularProgressIndicator());
-        }
-
-        // Combine both product and package lists for unified display
-        final favoriteItems = [
-          ...controller.favoriteProducts,
-          ...controller.favoritePackages,
-        ];
-
-        if (favoriteItems.isEmpty) {
-          return Center(child: Text('No favorite items available'));
-        }
-
-        return GridView.builder(
-          padding: EdgeInsets.all(10),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            crossAxisSpacing: 10,
-            mainAxisSpacing: 10,
-            childAspectRatio: 0.6, // Adjust for better fit
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.redAccent.withOpacity(0.05),
+              Colors.white.withOpacity(0.95),
+            ],
           ),
-          itemCount: favoriteItems.length,
-          itemBuilder: (context, index) {
-            final item = favoriteItems[index];
-            return InkWell(
-              onTap: () => controller.navigateToDetails(item),
-              child: item is Product
-                  ? ProductCard(product: item)
-                  : PackageCard(package: item as Package),
+        ),
+        child: Obx(() {
+          if (controller.isLoading.value) {
+            return Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.redAccent),
+              ),
             );
-          },
-        );
-      }),
+          }
+
+          final favoriteItems = [
+            ...controller.favoriteProducts,
+            ...controller.favoritePackages,
+          ];
+
+          if (favoriteItems.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.favorite_border_rounded,
+                    size: 64,
+                    color: Colors.redAccent.withOpacity(0.5),
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    "No favorites yet",
+                    style: TextStyle(
+                      color: Colors.grey[800],
+                      fontSize: 18,
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    "Items you favorite will appear here",
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 14,
+                      fontFamily: 'Poppins',
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          return GridView.builder(
+            padding: EdgeInsets.all(16),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+              childAspectRatio: 0.65,
+            ),
+            itemCount: favoriteItems.length,
+            itemBuilder: (context, index) {
+              final item = favoriteItems[index];
+              return InkWell(
+                onTap: () => controller.navigateToDetails(item),
+                child: item is Product
+                    ? ProductCard(product: item)
+                    : PackageCard(package: item as Package),
+              );
+            },
+          );
+        }),
+      ),
     );
   }
 }

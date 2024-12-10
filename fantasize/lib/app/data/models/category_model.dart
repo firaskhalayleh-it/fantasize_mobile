@@ -10,6 +10,7 @@ class CategoryModel {
   List<SubCategory>? subCategories;
   String? imageUrl;
 
+
   CategoryModel({this.categoryId, this.name, this.isActive, this.subCategories, this.imageUrl});
 
   factory CategoryModel.fromJson(Map<String, dynamic> json) {
@@ -22,5 +23,14 @@ class CategoryModel {
           .toList(),
       imageUrl: Uri.encodeFull( json['Image']['entityName']), // Correctly formatted URL
     );
+  }
+  toJson() {
+    return {
+      'CategoryID': categoryId,
+      'Name': name,
+      'IsActive': isActive,
+      'SubCategory': subCategories!.map((subCategory) => subCategory.toJson()).toList(),
+      'Image': imageUrl,
+    };
   }
 }
