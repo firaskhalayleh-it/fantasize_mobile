@@ -1,3 +1,6 @@
+// lib/app/modules/home/views/widgets/custom_app_bar.dart
+
+import 'package:fantasize/app/modules/search/views/search_view.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'dart:ui';
@@ -80,7 +83,7 @@ class _CustomAppBarState extends State<CustomAppBar>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       RenderBox? renderBox =
           _itemKeys[index]?.currentContext?.findRenderObject() as RenderBox?;
-      if (renderBox != null) {
+      if (renderBox != null && _scrollController.hasClients) {
         Offset position = renderBox.localToGlobal(Offset.zero, ancestor: null);
         double itemPosition = position.dx;
         double screenWidth = MediaQuery.of(context).size.width;
@@ -223,7 +226,9 @@ class _CustomAppBarState extends State<CustomAppBar>
                     flex: 7,
                     child: _buildSearchBar(screenHeight, screenWidth),
                   ),
-               
+                  SizedBox(width: 10),
+                  // Filter Button
+                  _buildFilterButton(screenHeight, screenWidth),
                 ],
               ),
             ),
@@ -261,7 +266,7 @@ class _CustomAppBarState extends State<CustomAppBar>
           return Container(
             constraints: BoxConstraints(maxWidth: 130),
             child: Text(
-              homeController.getUserName(),
+              homeController.user.value?.username ?? '',
               style: TextStyle(
                 color: Colors.black87,
                 fontSize: 15,
@@ -313,7 +318,8 @@ class _CustomAppBarState extends State<CustomAppBar>
                   color: const Color(0xFFFF5252).withOpacity(0.2), width: 2),
               boxShadow: [
                 BoxShadow(
-                  color: const Color.fromRGBO(255, 82, 82, 1).withOpacity(0.1),
+                  color:
+                      const Color.fromRGBO(255, 82, 82, 1).withOpacity(0.1),
                   blurRadius: 10,
                   spreadRadius: 2,
                 ),
@@ -342,34 +348,70 @@ class _CustomAppBarState extends State<CustomAppBar>
 
   /// Builds the search bar with input decoration
   Widget _buildSearchBar(double screenHeight, double screenWidth) {
-    return Container(
-      height: screenHeight * 0.06,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.redAccent.withOpacity(0.1),
-            blurRadius: 8,
-            spreadRadius: 0,
-          ),
-        ],
+    return GestureDetector(
+      onTap: () {
+        Get.toNamed('/search'); // Use named route for consistency
+      },
+      child: Container(
+        height: screenHeight * 0.06,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.redAccent.withOpacity(0.1),
+              blurRadius: 8,
+              spreadRadius: 0,
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            SizedBox(width: 15),
+            Icon(
+              Icons.search_rounded,
+              color: Colors.redAccent,
+              size: 22,
+            ),
+            SizedBox(width: 10),
+            Text(
+              'Search products...',
+              style: TextStyle(
+                color: Colors.grey[400],
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ],
+        ),
       ),
-      child: TextField(
-        decoration: InputDecoration(
-          hintText: 'Search products...',
-          hintStyle: TextStyle(
-            color: Colors.grey[400],
-            fontSize: 14,
-            fontWeight: FontWeight.w400,
-          ),
-          prefixIcon: Icon(
-            Icons.search_rounded,
-            color: Colors.redAccent,
-            size: 22,
-          ),
-          border: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(horizontal: 15, vertical: 15),
+    );
+  }
+
+  /// Builds the filter button
+  Widget _buildFilterButton(double screenHeight, double screenWidth) {
+    return GestureDetector(
+      onTap: () {
+        Get.toNamed('/search'); // Use named route for consistency
+      },
+      child: Container(
+        height: screenHeight * 0.06,
+        width: screenWidth * 0.12,
+        decoration: BoxDecoration(
+          color: Colors.redAccent,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.redAccent.withOpacity(0.3),
+              blurRadius: 8,
+              spreadRadius: 0,
+            ),
+          ],
+        ),
+        child: Icon(
+          Icons.filter_list_rounded,
+          color: Colors.white,
+          size: 22,
         ),
       ),
     );
@@ -406,29 +448,31 @@ class _CustomAppBarState extends State<CustomAppBar>
                 controller: _scrollController,
                 scrollDirection: Axis.horizontal,
                 physics: BouncingScrollPhysics(),
-                padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.04),
+                padding:
+                    EdgeInsets.symmetric(horizontal: screenWidth * 0.04),
                 itemCount: homeController.categories.length,
                 itemBuilder: (context, index) {
                   final category = homeController.categories[index];
-                  return Obx(() {
-                    return Padding(
-                      padding: EdgeInsets.only(right: 10),
-                      child: _buildCategoryButton(
+                  return Padding(
+                    padding: EdgeInsets.only(right: 10),
+                    child: Obx(() { // Wrap each category button with Obx
+                      final isSelected =
+                          homeController.currentIndexTabBar.value == index;
+                      return _buildCategoryButton(
                         key: _itemKeys[index] ?? GlobalKey(),
                         screenWidth: screenWidth,
                         icon: category['icon'],
                         text: category['text'],
-                        selected:
-                            homeController.currentIndexTabBar.value == index,
+                        selected: isSelected,
                         onTap: () {
                           homeController.changeTabBarIndex(index);
                           _handleCategoryNavigation(
                               tabController, category['text']);
                           _scrollToCenter(index);
                         },
-                      ),
-                    );
-                  });
+                      );
+                    }),
+                  );
                 },
               ),
             ),
@@ -456,7 +500,8 @@ class _CustomAppBarState extends State<CustomAppBar>
           color: selected ? Colors.redAccent : Colors.white,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color: selected ? Colors.redAccent : Colors.grey.withOpacity(0.2),
+            color:
+                selected ? Colors.redAccent : Colors.grey.withOpacity(0.2),
             width: 1.5,
           ),
           boxShadow: [
@@ -518,3 +563,4 @@ class _CustomAppBarState extends State<CustomAppBar>
     }
   }
 }
+  

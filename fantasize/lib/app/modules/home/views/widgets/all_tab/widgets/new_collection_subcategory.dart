@@ -70,7 +70,6 @@ class _NewCollectionSubcategoryWidgetState
   void _navigateToDetails() {
     if (widget.item is Product) {
       final product = widget.item as Product;
-      final package = widget.item as Package;
       Get.toNamed(
         '/product-details',
         arguments: [product.productId],

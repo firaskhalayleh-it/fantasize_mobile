@@ -21,6 +21,9 @@ abstract class Routes {
   static const ORDER_HISTORY = _Paths.ORDER_HISTORY;
   static const RESET_PASSWORD = _Paths.RESET_PASSWORD;
   static const CHANGE_PASSWORD = _Paths.CHANGE_PASSWORD;
+  static const SEARCH = _Paths.SEARCH;
+  static const ORDER_PRODUCT_EDIT = _Paths.ORDER_PRODUCT_EDIT;
+  static const ORDER_PACKAGE_EDIT = _Paths.ORDER_PACKAGE_EDIT;
 }
 
 abstract class _Paths {
@@ -43,4 +46,7 @@ abstract class _Paths {
   static const ORDER_HISTORY = '/order-history';
   static const RESET_PASSWORD = '/reset-password';
   static const CHANGE_PASSWORD = '/change-password';
+  static const SEARCH = '/search';
+  static const ORDER_PRODUCT_EDIT = '/order-product-edit';
+  static const ORDER_PACKAGE_EDIT = '/order-package-edit';
 }

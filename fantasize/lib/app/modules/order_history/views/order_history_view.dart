@@ -1,4 +1,8 @@
+// lib/app/modules/order_history/views/order_history_view.dart
+
 import 'package:fantasize/app/data/models/order_model.dart';
+import 'package:fantasize/app/data/models/order_package_model.dart';
+import 'package:fantasize/app/data/models/order_product_model.dart';
 import 'package:fantasize/app/global/widgets/image_handler.dart';
 import 'package:fantasize/app/modules/order_history/controllers/order_history_controller.dart';
 import 'package:flutter/material.dart';
@@ -31,6 +35,14 @@ class OrderHistoryView extends GetView<OrderHistoryController> {
           ),
         ),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.filter_list, color: Colors.redAccent),
+            onPressed: () {
+              _showFilterModal(context);
+            },
+          ),
+        ],
       ),
       body: Obx(() {
         if (controller.isLoading.value) {
@@ -67,6 +79,116 @@ class OrderHistoryView extends GetView<OrderHistoryController> {
     );
   }
 
+  /// Show filter modal
+  void _showFilterModal(BuildContext context) {
+    Get.bottomSheet(
+      Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              Text(
+                'Filter Orders',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Divider(),
+              // Status Dropdown
+              DropdownButtonFormField<String>(
+                value: controller.searchStatus.value.isNotEmpty
+                    ? controller.searchStatus.value
+                    : null,
+                decoration: InputDecoration(
+                  labelText: 'Status',
+                  border: OutlineInputBorder(),
+                ),
+                items: ['pending', 'purchased', 'under review', 'rejected',
+                  'shipped', 'delivered', 'returned', 'canceled','completed']
+                    .map((status) {
+                  return DropdownMenuItem<String>(
+                    value: status,
+                    child: Text(status.capitalizeFirst ?? status),
+                  );
+                }).toList(),
+                onChanged: (String? newStatus) {
+                  controller.searchStatus.value = newStatus ?? '';
+                },
+              ),
+              SizedBox(height: 16),
+              // Product Name TextField
+              TextFormField(
+                initialValue: controller.searchProductName.value,
+                decoration: InputDecoration(
+                  labelText: 'Product Name',
+                  border: OutlineInputBorder(),
+                ),
+                onChanged: (value) {
+                  controller.searchProductName.value = value;
+                },
+              ),
+              SizedBox(height: 16),
+              // Package Name TextField
+              TextFormField(
+                initialValue: controller.searchPackageName.value,
+                decoration: InputDecoration(
+                  labelText: 'Package Name',
+                  border: OutlineInputBorder(),
+                ),
+                onChanged: (value) {
+                  controller.searchPackageName.value = value;
+                },
+              ),
+              SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () {
+                        controller.resetSearch();
+                        Get.back();
+                      },
+                      child: Text('Reset'),
+                    ),
+                  ),
+                  SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        controller.searchOrders(
+                          status: controller.searchStatus.value.isNotEmpty
+                              ? controller.searchStatus.value
+                              : null,
+                          productName: controller.searchProductName.value.isNotEmpty
+                              ? controller.searchProductName.value
+                              : null,
+                          packageName: controller.searchPackageName.value.isNotEmpty
+                              ? controller.searchPackageName.value
+                              : null,
+                        );
+                        Get.back();
+                      },
+                      child: Text('Apply'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Color(0xFFFF4C5E),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+      isScrollControlled: true,
+    );
+  }
+
   Widget _buildOrderCard(BuildContext context, Order order, int index) {
     return Obx(() {
       bool isExpanded = controller.expandedIndices.contains(index);
@@ -94,6 +216,7 @@ class OrderHistoryView extends GetView<OrderHistoryController> {
                   : CrossFadeState.showFirst,
               duration: const Duration(milliseconds: 300),
             ),
+            _buildOrderActions(order),
           ],
         ),
       );
@@ -109,9 +232,11 @@ class OrderHistoryView extends GetView<OrderHistoryController> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Header Row
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
+                // Order ID
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 12,
@@ -129,6 +254,7 @@ class OrderHistoryView extends GetView<OrderHistoryController> {
                     ),
                   ),
                 ),
+                // Expand Icon
                 AnimatedRotation(
                   turns: isExpanded ? 0.5 : 0,
                   duration: const Duration(milliseconds: 300),
@@ -147,6 +273,7 @@ class OrderHistoryView extends GetView<OrderHistoryController> {
               ],
             ),
             const SizedBox(height: 12),
+            // Date and Total Price
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -171,12 +298,56 @@ class OrderHistoryView extends GetView<OrderHistoryController> {
                     ),
                   ],
                 ),
+                // Order Status
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _getStatusColor(order.status).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    order.status.capitalizeFirst ?? order.status,
+                    style: TextStyle(
+                      color: _getStatusColor(order.status),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
               ],
             ),
           ],
         ),
       ),
     );
+  }
+
+  /// Get color based on status
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return Colors.orange;
+      case 'purchased':
+        return Colors.blue;
+      case 'under review':
+        return Colors.purple;
+      case 'rejected':
+        return Colors.red;
+      case 'shipped':
+        return Colors.indigo;
+      case 'delivered':
+        return Colors.green;
+      case 'returned':
+        return Colors.teal;
+      case 'canceled':
+        return Colors.grey;
+      case 'completed':
+        return Colors.blueGrey;
+      default:
+        return Colors.orange;
+    }
   }
 
   Widget _buildOrderDetails(Order order) {
@@ -195,13 +366,15 @@ class OrderHistoryView extends GetView<OrderHistoryController> {
           if (order.ordersProducts.isNotEmpty) ...[
             _buildSectionHeader('Products'),
             ...order.ordersProducts
-                .map((orderProduct) => _buildProductTile(orderProduct)),
+                .map((orderProduct) => _buildProductTile(orderProduct,order.orderId.toString()))
+                .toList(),
           ],
           if (order.ordersPackages.isNotEmpty) ...[
             const SizedBox(height: 16),
             _buildSectionHeader('Packages'),
             ...order.ordersPackages
-                .map((orderPackage) => _buildPackageTile(orderPackage)),
+                .map((orderPackage) => _buildPackageTile(orderPackage,order.orderId.toString()))
+                .toList(),
           ],
         ],
       ),
@@ -234,7 +407,7 @@ class OrderHistoryView extends GetView<OrderHistoryController> {
     );
   }
 
-  Widget _buildProductTile(dynamic orderProduct) {
+  Widget _buildProductTile(OrderProduct orderProduct,String orderId) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
@@ -284,12 +457,19 @@ class OrderHistoryView extends GetView<OrderHistoryController> {
               fontSize: 16,
             ),
           ),
+          IconButton(
+            icon: Icon(Icons.edit, color: Colors.blueAccent),
+            onPressed: () {
+              // Navigate to edit product screen or open a dialog
+              _navigateToEditOrderProduct(orderProduct,orderId);
+            },
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildPackageTile(dynamic orderPackage) {
+  Widget _buildPackageTile(OrderPackage orderPackage,String orderId) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
@@ -339,8 +519,136 @@ class OrderHistoryView extends GetView<OrderHistoryController> {
               fontSize: 16,
             ),
           ),
+          IconButton(
+            icon: Icon(Icons.edit, color: Colors.blueAccent),
+            onPressed: () {
+              // Navigate to edit package screen or open a dialog
+              _navigateToEditOrderPackage(orderPackage,orderId);
+            },
+          ),
         ],
       ),
+    );
+  }
+
+  /// Navigate to edit order product
+  void _navigateToEditOrderProduct(OrderProduct orderProduct,String orderId) {
+    Get.toNamed('/order-product-edit', arguments: {
+      'orderId': orderId,
+      'orderProductId': orderProduct.orderProductId,
+      'currentProductId': orderProduct.product.productId,
+      'currentQuantity': orderProduct.quantity,
+      'orderedOptions': orderProduct.orderedCustomization?.selectedOptions.map((option) => option.toJson()).toList() ?? [],
+    });
+  }
+
+  /// Navigate to edit order package
+  void _navigateToEditOrderPackage(OrderPackage orderPackage,orderId) {
+    Get.toNamed('/order-package-edit', arguments: {
+      'orderId':orderId,
+      'orderPackageId': orderPackage.orderPackageId,
+      'currentPackageId': orderPackage.package.packageId,
+      'currentQuantity': orderPackage.quantity,
+      'orderedOptions': orderPackage.orderedCustomization?.selectedOptions.map((option) => option.toJson()).toList() ?? [],
+    });
+  }
+
+  /// Build actions based on order status
+  Widget _buildOrderActions(Order order) {
+    OrderStatus status = orderStatusFromString(order.status);
+
+    List<Widget> actions = [];
+
+    // If order is rejected, allow editing
+    if (status == OrderStatus.rejected) {
+      actions.add(
+        TextButton.icon(
+          onPressed: () {
+            // Navigate to product/package details for editing
+            Get.toNamed('/order-edit', arguments: order);
+          },
+          icon: Icon(Icons.edit, color: Colors.blueAccent),
+          label: Text(
+            'Edit Order',
+            style: TextStyle(color: Colors.blueAccent),
+          ),
+        ),
+      );
+    }
+
+    // If order is not delivered, allow cancellation
+    if (status != OrderStatus.delivered &&
+        status != OrderStatus.canceled &&
+        status != OrderStatus.returned &&
+        status != OrderStatus.completed) {
+      actions.add(
+        TextButton.icon(
+          onPressed: () {
+            _showCancelConfirmation(order);
+          },
+          icon: Icon(Icons.cancel, color: Colors.redAccent),
+          label: Text(
+            'Cancel Order',
+            style: TextStyle(color: Colors.redAccent),
+          ),
+        ),
+      );
+    }
+
+    // If order is delivered, allow return
+    if (status == OrderStatus.delivered) {
+      actions.add(
+        TextButton.icon(
+          onPressed: () {
+            _showReturnConfirmation(order);
+          },
+          icon: Icon(Icons.undo, color: Colors.orangeAccent),
+          label: Text(
+            'Return Order',
+            style: TextStyle(color: Colors.orangeAccent),
+          ),
+        ),
+      );
+    }
+
+    // If no actions, return empty container
+    if (actions.isEmpty) {
+      return SizedBox.shrink();
+    }
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: actions,
+    );
+  }
+
+  /// Show confirmation dialog for canceling an order
+  void _showCancelConfirmation(Order order) {
+    Get.defaultDialog(
+      title: 'Cancel Order',
+      middleText: 'Are you sure you want to cancel this order?',
+      textCancel: 'No',
+      textConfirm: 'Yes',
+      confirmTextColor: Colors.white,
+      onConfirm: () {
+        controller.updateOrderStatus(order.orderId, OrderStatus.canceled);
+        Get.back();
+      },
+    );
+  }
+
+  /// Show confirmation dialog for returning an order
+  void _showReturnConfirmation(Order order) {
+    Get.defaultDialog(
+      title: 'Return Order',
+      middleText: 'Are you sure you want to return this order?',
+      textCancel: 'No',
+      textConfirm: 'Yes',
+      confirmTextColor: Colors.white,
+      onConfirm: () {
+        controller.updateOrderStatus(order.orderId, OrderStatus.returned);
+        Get.back();
+      },
     );
   }
 }

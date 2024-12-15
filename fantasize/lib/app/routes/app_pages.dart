@@ -18,6 +18,10 @@ import '../modules/login/bindings/login_binding.dart';
 import '../modules/login/views/login_view.dart';
 import '../modules/order_history/bindings/order_history_binding.dart';
 import '../modules/order_history/views/order_history_view.dart';
+import '../modules/order_package_edit/bindings/order_package_edit_binding.dart';
+import '../modules/order_package_edit/views/order_package_edit_view.dart';
+import '../modules/order_product_edit/bindings/order_product_edit_binding.dart';
+import '../modules/order_product_edit/views/order_product_edit_view.dart';
 import '../modules/package_details/bindings/package_details_binding.dart';
 import '../modules/package_details/views/package_details_view.dart';
 import '../modules/payment_method/bindings/payment_method_binding.dart';
@@ -30,6 +34,8 @@ import '../modules/profile/bindings/profile_binding.dart';
 import '../modules/profile/views/profile_view.dart';
 import '../modules/reset_password/bindings/reset_password_binding.dart';
 import '../modules/reset_password/views/reset_password_view.dart';
+import '../modules/search/bindings/search_binding.dart';
+import '../modules/search/views/search_view.dart';
 import '../modules/signup/bindings/signup_binding.dart';
 import '../modules/signup/views/signup_view.dart';
 import '../modules/splash/bindings/splash_binding.dart';
@@ -134,6 +140,19 @@ class AppPages {
       name: _Paths.CHANGE_PASSWORD,
       page: () => const ChangePasswordView(),
       binding: ChangePasswordBinding(),
+    ),
+    GetPage(
+      name: _Paths.SEARCH,
+      page: () => SearchView(),
+      binding: SearchBinding(),
+    ),
+    GetPage(
+      name: _Paths.ORDER_PRODUCT_EDIT,
+      page: () => const OrderProductEditView(),
+    ),
+    GetPage(
+      name: _Paths.ORDER_PACKAGE_EDIT,
+      page: () => const OrderPackageEditView(),
     ),
   ];
 }

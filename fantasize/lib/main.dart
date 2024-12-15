@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:get_storage/get_storage.dart';
+import 'app/modules/login/controllers/login_controller.dart';
 import 'app/routes/app_pages.dart';
 
 void main() async {
@@ -15,7 +16,6 @@ void main() async {
   } catch (e) {
     debugPrint("Firebase initialization failed: $e");
   }
-
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
@@ -33,6 +33,7 @@ void main() async {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+  Get.lazyPut(() => LoginController());
     final box = GetStorage();
 
     return GetMaterialApp(

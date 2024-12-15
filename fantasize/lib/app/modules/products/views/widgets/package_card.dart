@@ -18,7 +18,7 @@ class PackageCard extends StatelessWidget {
       child: Stack(
         children: [
           Card(
-            color: Colors.white,
+            color: Colors.transparent,
             elevation: 0,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -98,9 +98,10 @@ class PackageCard extends StatelessWidget {
                         softWrap: true,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          fontWeight: FontWeight.w400,
+                          fontWeight: FontWeight.w600,
                           fontFamily: 'Jost',
                           fontSize: 18,
+                          
                         ),
                       ),
                       Text(

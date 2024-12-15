@@ -22,7 +22,7 @@ class ProductCard extends StatelessWidget {
         child: Stack(
           children: [
             Card(
-              color: Color(Colors.white.value),
+              color: Colors.transparent,
               elevation: 0,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

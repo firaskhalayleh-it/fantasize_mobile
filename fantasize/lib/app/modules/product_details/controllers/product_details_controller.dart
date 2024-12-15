@@ -282,74 +282,168 @@ class ProductDetailsController extends GetxController {
     isReviewFormVisible.value = !isReviewFormVisible.value;
   }
 
-  void showAddToCartDialog() {
-    Get.bottomSheet(
-      Container(
-        padding: EdgeInsets.all(20),
-        width: Get.width,
-        height: Get.height * 0.28,
+ void showAddToCartDialog() {
+  final double buttonPadding = Get.width * 0.15; // Reduced padding
+
+  Get.bottomSheet(
+    Container(
+      padding: const EdgeInsets.all(20),
+      width: Get.width,
+      height: Get.height * 0.28,
+      decoration: const BoxDecoration(
         color: Colors.white,
-        child: Column(
-          children: [
-            Text(
-              'Product added to cart',
-              style: TextStyle(
-                fontSize: Get.width < 300 ? 18 : 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: () {
-                Get.toNamed('/cart'); // Navigate to the checkout page
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.redAccent,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                padding: EdgeInsets.symmetric(
-                    vertical: Get.height * 0.025,
-                    horizontal:
-                        Get.width < 400 ? Get.width * 0.288 : Get.width * 0.3),
-              ),
-              child: Text(
-                'Go to checkout',
-                style: TextStyle(
-                    color: Colors.white,
-                    fontFamily: 'Jost',
-                    fontSize: Get.width < 400 ? 16 : 20),
-              ),
-            ),
-            SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: () {
-                Get.back();
-                Get.until((route) => route.settings.name == '/products');
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.redAccent,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                padding: EdgeInsets.symmetric(
-                    vertical: Get.height * 0.025,
-                    horizontal:
-                        Get.width < 400 ? Get.width * 0.255 : Get.width * 0.27),
-              ),
-              child: Text(
-                'Continue shopping',
-                style: TextStyle(
-                    color: Colors.white,
-                    fontFamily: 'Jost',
-                    fontSize: Get.width < 400 ? 16 : 20),
-              ),
-            ),
-          ],
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
         ),
       ),
-    );
-  }
+      child: TweenAnimationBuilder<double>(
+        duration: const Duration(milliseconds: 400),
+        tween: Tween(begin: 0.0, end: 1.0),
+        curve: Curves.easeOutCubic,
+        builder: (context, value, child) {
+          return Transform.translate(
+            offset: Offset(0, 20 * (1 - value)),
+            child: Opacity(
+              opacity: value,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Success Check Mark with fixed animation
+                  ScaleTransition(
+                    scale: CurvedAnimation(
+                      parent: AnimationController(
+                        vsync: navigator!,
+                        duration: const Duration(milliseconds: 400),
+                      )..forward(),
+                      curve: Curves.elasticOut,
+                    ),
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.redAccent.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.check_circle_outline,
+                        color: Colors.redAccent,
+                        size: 28,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  // Title
+                  Text(
+                    'Product added to cart',
+                    style: TextStyle(
+                      fontSize: Get.width < 300 ? 18 : 20,
+                      fontWeight: FontWeight.w600,
+                      fontFamily: 'Jost',
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // Checkout Button with fixed padding
+                  TweenAnimationBuilder<double>(
+                    duration: const Duration(milliseconds: 400),
+                    tween: Tween(begin: 0.0, end: 1.0),
+                    curve: Curves.easeOutCubic,
+                    builder: (context, value, child) {
+                      return Transform.translate(
+                        offset: Offset(30 * (1 - value), 0),
+                        child: Opacity(
+                          opacity: value,
+                          child: SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: () => Get.toNamed('/cart'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.redAccent,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                padding: EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
+                              ),
+                              child: Text(
+                                'Go to checkout',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontFamily: 'Jost',
+                                  fontSize: Get.width < 400 ? 16 : 18,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  // Continue Shopping Button with fixed padding
+                  TweenAnimationBuilder<double>(
+                    duration: const Duration(milliseconds: 400),
+                    tween: Tween(begin: 0.0, end: 1.0),
+                    curve: Curves.easeOutCubic,
+                    builder: (context, value, child) {
+                      return Transform.translate(
+                        offset: Offset(-30 * (1 - value), 0),
+                        child: Opacity(
+                          opacity: value,
+                          child: SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                Get.back();
+                                Get.until((route) => route.settings.name == '/products');
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                  side: const BorderSide(
+                                    color: Colors.redAccent,
+                                    width: 1,
+                                  ),
+                                ),
+                                padding: EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
+                              ),
+                              child: Text(
+                                'Continue shopping',
+                                style: TextStyle(
+                                  color: Colors.redAccent,
+                                  fontFamily: 'Jost',
+                                  fontSize: Get.width < 400 ? 16 : 18,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    ),
+    isDismissible: true,
+    enableDrag: true,
+    isScrollControlled: true,
+  );
+}
 
   Future<void> addToCart() async {
     try {

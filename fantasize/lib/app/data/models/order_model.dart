@@ -5,7 +5,7 @@ import 'package:fantasize/app/data/models/order_package_model.dart';
 
 class Order {
   final int orderId;
-  final bool status;
+  final String status;
   final bool isGift;
   final String? giftMessage;
   final bool isAnonymous;
@@ -46,4 +46,69 @@ class Order {
           .toList(),
     );
   }
+  
 }
+// lib/app/data/models/order_model.dart
+
+enum OrderStatus {
+  pending,
+  purchased,
+  underReview,
+  rejected,
+  shipped,
+  delivered,
+  returned,
+  canceled,
+  completed,
+}
+
+OrderStatus orderStatusFromString(String status) {
+  switch (status.toLowerCase()) {
+    case 'pending':
+      return OrderStatus.pending;
+    case 'purchased':
+      return OrderStatus.purchased;
+    case 'under review':
+      return OrderStatus.underReview;
+    case 'rejected':
+      return OrderStatus.rejected;
+    case 'shipped':
+      return OrderStatus.shipped;
+    case 'delivered':
+      return OrderStatus.delivered;
+    case 'returned':
+      return OrderStatus.returned;
+    case 'canceled':
+      return OrderStatus.canceled;
+    case 'completed':
+      return OrderStatus.completed;
+    default:
+      return OrderStatus.pending;
+  }
+}
+
+String orderStatusToString(OrderStatus status) {
+  switch (status) {
+    case OrderStatus.pending:
+      return 'pending';
+    case OrderStatus.purchased:
+      return 'purchased';
+    case OrderStatus.underReview:
+      return 'under review';
+    case OrderStatus.rejected:
+      return 'rejected';
+    case OrderStatus.shipped:
+      return 'shipped';
+    case OrderStatus.delivered:
+      return 'delivered';
+    case OrderStatus.returned:
+      return 'returned';
+    case OrderStatus.canceled:
+      return 'canceled';
+    case OrderStatus.completed:
+      return 'completed';
+    default:
+      return 'pending';
+  }
+}
+

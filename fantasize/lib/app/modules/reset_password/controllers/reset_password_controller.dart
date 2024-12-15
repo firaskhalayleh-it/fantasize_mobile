@@ -32,9 +32,8 @@ class ResetPasswordController extends GetxController {
           borderRadius: 12,
         );
 
-        
-        // Optional: Navigate back or to another screen
-        Get.back();
+        // Navigate to change password view
+        Get.toNamed('/change-password');
       } else {
         final errorMessage = json.decode(response.body)['message'] ?? 'An error occurred';
         Get.snackbar(

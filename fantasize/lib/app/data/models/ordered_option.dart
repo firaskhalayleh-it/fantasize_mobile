@@ -3,7 +3,7 @@ import 'package:get/get_rx/src/rx_types/rx_types.dart';
 class OrderedOption {
   String name;
   String type;
-  final List<OrderedOptionValue> optionValues;
+   List<OrderedOptionValue> optionValues;
 
   OrderedOption({
     required this.name,

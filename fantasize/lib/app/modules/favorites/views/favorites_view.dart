@@ -13,6 +13,7 @@ class FavoritesView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        
         title: Text(
           'Favorites',
           style: TextStyle(
@@ -26,10 +27,8 @@ class FavoritesView extends StatelessWidget {
         centerTitle: true,
         backgroundColor: Colors.white,
         elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_rounded, color: Colors.redAccent),
-          onPressed: () => Get.back(),
-        ),
+      
+        
       ),
       body: Container(
         decoration: BoxDecoration(

@@ -6,12 +6,13 @@ import 'package:collection/collection.dart';
 
 class ImageHandler {
   static String getImageUrl(List<ResourcesModel> resources) {
+    // map until you find the image resource
     final imageResource = resources.firstWhereOrNull(
-      (resource) => resource.fileType.startsWith('image/'),
+      (resource) =>  resource.fileType.contains('image'),
     );
 
     return imageResource != null
         ? '${Strings().resourceUrl}/${imageResource.entityName}'
-        : 'assets/images/placeholder.png';
+        : '${Strings().resourceUrl}/placeholder.jpg';
   }
 }

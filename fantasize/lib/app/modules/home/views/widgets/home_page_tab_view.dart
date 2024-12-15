@@ -1,3 +1,5 @@
+// lib/app/modules/home/views/home_tab_view.dart
+
 import 'package:fantasize/app/modules/home/views/widgets/all_tab/all_tab.dart';
 import 'package:fantasize/app/modules/home/views/widgets/new_arrivals/new_arrival_view.dart';
 import 'package:fantasize/app/modules/home/views/widgets/offers/offer_view.dart';
@@ -19,28 +21,25 @@ class HomeTabView extends StatelessWidget {
       appBar: CustomAppBar(
         screenHeight: screenHeight,
         screenWidth: screenWidth,
-        tabController: homeController
-            .tabController, // Pass the GetX-controlled TabController
+        tabController: homeController.tabController,
       ),
       body: TabBarView(
-        controller:
-            homeController.tabController, // Bind TabBarView to TabController
+        controller: homeController.tabController,
         children: List.generate(homeController.categories.length, (index) {
-          if (index == 0) {
-            return AllTab();
+          switch (index) {
+            case 0:
+              return AllTab();
+            case 1:
+              return NewArrivalView();
+            case 2:
+              return OfferView();
+            case 3:
+              return RecommendedForYouView();
+            default:
+              return Center(
+                child: Text('Page ${index + 1}'),
+              );
           }
-          if (index == 1) {
-            return NewArrivalView();
-          }
-          if (index == 2) {
-            return OfferView();
-          }
-          if (index == 3) {
-            return RecommendedForYouView();
-          }
-          return Center(
-            child: Text('Page ${index + 1}'),
-          );
         }),
       ),
     );

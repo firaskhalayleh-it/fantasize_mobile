@@ -169,7 +169,7 @@ class ExploreController extends GetxController {
         // Toggle like for Product
         if (likedProducts[index]) {
           // Currently liked, so remove from favorites
-          url = Uri.parse('${Strings().apiUrl}/favorites/products/$id');
+          url = Uri.parse('${Strings().apiUrl}/favorites/$id');
           var response = await http.delete(
             url,
             headers: {
@@ -183,13 +183,13 @@ class ExploreController extends GetxController {
           statusCode = response.statusCode;
           if (statusCode == 200) {
             likedProducts[index] = false;
-            Get.snackbar('Success', 'Product removed from favorites');
+            Get.snackbar('Success', 'Product removed from favorites',);
           } else {
             Get.snackbar('Error', 'Failed to remove product from favorites');
           }
         } else {
           // Not liked, so add to favorites
-          url = Uri.parse('${Strings().apiUrl}/favorites/products/$id');
+          url = Uri.parse('${Strings().apiUrl}/product/$id/favorites');
           var response = await http.post(
             url,
             headers: {
@@ -212,7 +212,7 @@ class ExploreController extends GetxController {
         // Toggle like for Package
         if (likedPackages[index]) {
           // Currently liked, so remove from favorites
-          url = Uri.parse('${Strings().apiUrl}/favorites/packages/$id');
+          url = Uri.parse('${Strings().apiUrl}/favoritePackages/$id');
           var response = await http.delete(
             url,
             headers: {
@@ -232,7 +232,7 @@ class ExploreController extends GetxController {
           }
         } else {
           // Not liked, so add to favorites
-          url = Uri.parse('${Strings().apiUrl}/favorites/packages/$id');
+          url = Uri.parse('${Strings().apiUrl}/favoritePackages/$id');
           var response = await http.post(
             url,
             headers: {
@@ -269,9 +269,9 @@ class ExploreController extends GetxController {
 
       // Fetch all favorite products
       var favoriteProductsUrl =
-          Uri.parse('${Strings().apiUrl}/favorites/products');
+          Uri.parse('${Strings().apiUrl}/favorites');
       var favoritePackagesUrl =
-          Uri.parse('${Strings().apiUrl}/favorites/packages');
+          Uri.parse('${Strings().apiUrl}/favoritePackages');
 
       var [productsResponse, packagesResponse] = await Future.wait([
         http.get(
@@ -303,8 +303,9 @@ class ExploreController extends GetxController {
         favoriteProductIds = favoriteProducts.map((fav) {
           return fav['Product']['ProductID'] as int;
         }).toList();
+        print('Favorite products: $favoriteProductIds');
       } else {
-        Get.snackbar('Error', 'Failed to fetch favorite products');
+        Get.snackbar('Error', 'Failed to fetch favorite products${productsResponse.body}');
       }
 
       if (packagesResponse.statusCode == 200) {
@@ -313,8 +314,10 @@ class ExploreController extends GetxController {
         favoritePackageIds = favoritePackagesData.map((fav) {
           return fav['Package']['PackageID'] as int;
         }).toList();
+        print('Favorite packages: $favoritePackageIds');
       } else {
-        Get.snackbar('Error', 'Failed to fetch favorite packages');
+
+        Get.snackbar('Error', 'Failed to fetch favorite packages${packagesResponse.body}');
       }
 
       // Update likedProducts and likedPackages lists
@@ -328,7 +331,7 @@ class ExploreController extends GetxController {
       }
     } catch (e) {
       print('Error checking liked status: $e');
-      Get.snackbar('Error', 'An error occurred while checking favorites');
+      Get.snackbar('Error', 'An error occurred while checking favorites$e');
     }
   }
 

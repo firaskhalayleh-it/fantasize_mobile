@@ -15,8 +15,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../../../data/models/user_model.dart';
 
-class HomeController extends GetxController
-    with GetSingleTickerProviderStateMixin {
+class HomeController extends GetxController with GetSingleTickerProviderStateMixin {
   late TabController tabController;
   final FlutterSecureStorage secureStorage = const FlutterSecureStorage();
   late ExploreController exploreController;
@@ -40,7 +39,7 @@ class HomeController extends GetxController
   ];
 
   @override
-  void onInit() async {
+  void onInit() {
     super.onInit();
     // Use Get.put with fenix to ensure a singleton instance
     Get.put(ExploreController(), permanent: true);
@@ -49,9 +48,12 @@ class HomeController extends GetxController
     tabController = TabController(length: categories.length, vsync: this);
 
     tabController.addListener(() {
-      currentIndexTabBar.value = tabController.index;
+      if (tabController.indexIsChanging) {
+        currentIndexTabBar.value = tabController.index;
+      }
     });
 
+    // Initiate asynchronous operations without marking onInit as async
     fetchOffers();
     fetchNewArrivals();
     loadUserData();
@@ -68,11 +70,14 @@ class HomeController extends GetxController
 
   Future<void> fetchOffers() async {
     String? token = await secureStorage.read(key: 'jwt_token');
-    final response = await http
-        .get(Uri.parse('${Strings().apiUrl}/offers_homeOffers'), headers: {
-      'Content-Type': 'application/json',
-      'cookie': 'authToken=$token',
-    });
+    final response = await http.get(
+      Uri.parse('${Strings().apiUrl}/offers_homeOffers'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token', // Added Authorization header
+        'cookie': 'authToken=$token',
+      },
+    );
 
     if (response.statusCode == 200) {
       List<dynamic> data = jsonDecode(response.body);
@@ -92,6 +97,7 @@ class HomeController extends GetxController
           .toList(); // Filter out any null values
     } else {
       print('Failed to load offers');
+      Get.snackbar('Error', 'Failed to load offers'); // Added snackbar for feedback
     }
   }
 
@@ -112,6 +118,7 @@ class HomeController extends GetxController
       Uri.parse('${Strings().apiUrl}/categories/newCollection'),
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token', // Added Authorization header
         'cookie': 'authToken=$token',
       },
     );
@@ -134,6 +141,7 @@ class HomeController extends GetxController
           .toList(); // Filter out any null values
     } else {
       print('Failed to load new arrivals');
+      Get.snackbar('Error', 'Failed to load new arrivals'); // Added snackbar for feedback
     }
   }
 
@@ -159,8 +167,10 @@ class HomeController extends GetxController
   }
 
   void changeTabBarIndex(int index) {
-    currentIndexTabBar.value = index;
-    tabController.animateTo(index);
+    if (index < categories.length && index >= 0) {
+      currentIndexTabBar.value = index;
+      tabController.animateTo(index);
+    }
   }
 
   void changeNavigationBarIndex(int index) {

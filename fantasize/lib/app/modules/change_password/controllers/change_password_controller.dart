@@ -21,7 +21,7 @@ class ChangePasswordController extends GetxController {
 
       final response = await http.put(
         Uri.parse(
-            '${Strings().apiUrl}/reset_password/${tokenController.text.trim()}'),
+            '${Strings().apiUrl}/reset_password/${tokenController.text}'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'password': passwordController.text,
