@@ -1,17 +1,21 @@
+// lib/app/modules/order_product_edit/views/widgets/customization_widget.dart
+
 import 'dart:io';
 
+import 'package:fantasize/app/data/models/customization_model.dart';
 import 'package:fantasize/app/data/models/ordered_customization.dart';
 import 'package:fantasize/app/data/models/ordered_option.dart';
 import 'package:fantasize/app/global/strings.dart';
 import 'package:fantasize/app/modules/order_history/controllers/order_product_edit_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:mime/mime.dart';
 import 'package:image_picker/image_picker.dart';
 
 class CustomizationWidget extends StatelessWidget {
-  final OrderedCustomization orderedCustomization;
+  final List<OrderedCustomization> orderedCustomizations;
 
-  const CustomizationWidget({Key? key, required this.orderedCustomization})
+  const CustomizationWidget({Key? key, required this.orderedCustomizations})
       : super(key: key);
 
   @override
@@ -21,23 +25,27 @@ class CustomizationWidget extends StatelessWidget {
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Customization Name
-        Text(
-          _getCustomizationName(orderedCustomization.orderedCustomizationId),
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-            color: Colors.grey[700],
-          ),
-        ),
-        SizedBox(height: 8),
-        // Options
-        ...orderedCustomization.selectedOptions.map((option) {
-          return _buildOptionWidget(controller, option);
-        }).toList(),
-        SizedBox(height: 16),
-      ],
+      children: orderedCustomizations.map((orderedCustomization) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              _getCustomizationName(
+                  orderedCustomization.orderedCustomizationId),
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: Colors.grey[700],
+              ),
+            ),
+            SizedBox(height: 8),
+            ...orderedCustomization.selectedOptions.map((option) {
+              return _buildOptionWidget(controller, orderedCustomization, option);
+            }).toList(),
+            SizedBox(height: 16),
+          ],
+        );
+      }).toList(),
     );
   }
 
@@ -48,35 +56,39 @@ class CustomizationWidget extends StatelessWidget {
     return 'Customization $customizationId';
   }
 
-  /// Builds individual option widgets based on their type
-  Widget _buildOptionWidget(OrderProductEditController controller, OrderedOption option) {
+  Widget _buildOptionWidget(OrderProductEditController controller,
+      OrderedCustomization customization, OrderedOption option) {
     switch (option.type.toLowerCase()) {
       case 'button':
-        return _buildButtonOptions(controller, option);
+        return _buildButtonOptions(controller, customization, option);
       case 'color':
-        return _buildColorOptions(controller, option);
+        return _buildColorOptions(controller, customization, option);
       case 'image':
-        return _buildImageOptions(controller, option);
+        return _buildImageOptions(controller, customization, option);
       case 'uploadpicture':
-        return _buildUploadPictureOption(controller, option);
+        return _buildUploadPictureOption(controller, customization, option);
       case 'attachmessage':
-        return _buildAttachMessageOption(controller, option);
+        return _buildAttachMessageOption(controller, customization, option);
       default:
         return SizedBox.shrink();
     }
   }
 
-  /// Builds Button Type Options
-  Widget _buildButtonOptions(OrderProductEditController controller, OrderedOption option) {
+  Widget _buildButtonOptions(OrderProductEditController controller,
+      OrderedCustomization customization, OrderedOption option) {
     return Wrap(
       spacing: 8.0,
       runSpacing: 8.0,
       children: option.optionValues.map((optionValue) {
         return Obx(() {
-          final isSelected = controller.isOptionSelected(option.name, optionValue.value);
+          final isSelected = optionValue.isSelected.value;
           return ElevatedButton(
             onPressed: () {
-              controller.updateSelectedOption(option.name, optionValue.value);
+              controller.updateSelectedOption(
+                customization.orderedCustomizationId,
+                option.name,
+                optionValue.value,
+              );
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: isSelected ? Colors.redAccent : Colors.white,
@@ -94,7 +106,8 @@ class CustomizationWidget extends StatelessWidget {
               optionValue.value,
               style: TextStyle(
                 fontSize: 14,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                fontWeight:
+                    isSelected ? FontWeight.w600 : FontWeight.w500,
               ),
             ),
           );
@@ -103,17 +116,21 @@ class CustomizationWidget extends StatelessWidget {
     );
   }
 
-  /// Builds Color Type Options
-  Widget _buildColorOptions(OrderProductEditController controller, OrderedOption option) {
+  Widget _buildColorOptions(OrderProductEditController controller,
+      OrderedCustomization customization, OrderedOption option) {
     return Wrap(
       spacing: 12.0,
       runSpacing: 12.0,
       children: option.optionValues.map((optionValue) {
         return Obx(() {
-          final isSelected = controller.isOptionSelected(option.name, optionValue.value);
+          final isSelected = optionValue.isSelected.value;
           return GestureDetector(
             onTap: () {
-              controller.updateSelectedOption(option.name, optionValue.value);
+              controller.updateSelectedOption(
+                customization.orderedCustomizationId,
+                option.name,
+                optionValue.value,
+              );
             },
             child: AnimatedContainer(
               duration: Duration(milliseconds: 200),
@@ -148,18 +165,22 @@ class CustomizationWidget extends StatelessWidget {
     );
   }
 
-  /// Builds Image Type Options
-  Widget _buildImageOptions(OrderProductEditController controller, OrderedOption option) {
+  Widget _buildImageOptions(OrderProductEditController controller,
+      OrderedCustomization customization, OrderedOption option) {
     return Container(
       height: 100,
       child: ListView(
         scrollDirection: Axis.horizontal,
         children: option.optionValues.map((optionValue) {
           return Obx(() {
-            final isSelected = controller.isOptionSelected(option.name, optionValue.value);
+            final isSelected = optionValue.isSelected.value;
             return GestureDetector(
               onTap: () {
-                controller.updateSelectedOption(option.name, optionValue.value);
+                controller.updateSelectedOption(
+                  customization.orderedCustomizationId,
+                  option.name,
+                  optionValue.value,
+                );
               },
               child: Container(
                 margin: EdgeInsets.only(right: 12),
@@ -182,10 +203,10 @@ class CustomizationWidget extends StatelessWidget {
                   child: Stack(
                     children: [
                       Image.network(
-                        '${Strings().resourceUrl}/${optionValue.fileName}',
+                        '${Strings().resourceUrl}${optionValue.filePath}',
                         width: 80,
                         height: 80,
-                        fit: BoxFit.fill,
+                        fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
                           return Container(
                             width: 80,
@@ -220,11 +241,13 @@ class CustomizationWidget extends StatelessWidget {
     );
   }
 
-  /// Builds Attach Message Option
-  Widget _buildAttachMessageOption(OrderProductEditController controller, OrderedOption option) {
-    final textController = controller.getTextController(option.name);
-    final isVisible = controller.getAttachMessageVisibility(option.name);
-    
+  Widget _buildAttachMessageOption(OrderProductEditController controller,
+      OrderedCustomization customization, OrderedOption option) {
+    final textController = controller.getTextController(
+        customization.orderedCustomizationId, option.name);
+    final isVisible = controller.getAttachMessageVisibility(
+        customization.orderedCustomizationId, option.name);
+
     return Obx(() {
       final hasText = textController.text.isNotEmpty;
       final buttonText =
@@ -241,7 +264,8 @@ class CustomizationWidget extends StatelessWidget {
           children: [
             ElevatedButton.icon(
               onPressed: () {
-                controller.toggleAttachMessageVisibility(option.name);
+                controller.toggleAttachMessageVisibility(
+                    customization.orderedCustomizationId, option.name);
               },
               icon: Icon(
                 hasText ? Icons.edit : Icons.add,
@@ -298,9 +322,10 @@ class CustomizationWidget extends StatelessWidget {
     });
   }
 
-  /// Builds Upload Picture Option
-  Widget _buildUploadPictureOption(OrderProductEditController controller, OrderedOption option) {
-    final imagePathRx = controller.getUploadedImagePath(option.name);
+  Widget _buildUploadPictureOption(OrderProductEditController controller,
+      OrderedCustomization customization, OrderedOption option) {
+    final imagePathRx = controller.getUploadedImagePath(
+        customization.orderedCustomizationId, option.name);
 
     return Obx(() {
       final imagePath = imagePathRx.value;
@@ -329,10 +354,20 @@ class CustomizationWidget extends StatelessWidget {
                     final image =
                         await picker.pickImage(source: ImageSource.gallery);
                     if (image != null) {
-                      controller.updateUploadedImage(
-                        option.name,
-                        image.path,
-                      );
+                      // Validate mime type
+                      String? mimeType = lookupMimeType(image.path);
+                      if (mimeType != null &&
+                          (mimeType == 'image/jpeg' ||
+                              mimeType == 'image/jpg' ||
+                              mimeType == 'image/png')) {
+                        controller.updateUploadedImage(
+                          customization.orderedCustomizationId,
+                          option.name,
+                          image.path,
+                        );
+                      } else {
+                        Get.snackbar('Error', 'Unsupported file type: $mimeType');
+                      }
                     }
                   },
                   style: ElevatedButton.styleFrom(
@@ -351,6 +386,7 @@ class CustomizationWidget extends StatelessWidget {
                     icon: Icon(Icons.delete_outline),
                     onPressed: () {
                       controller.updateUploadedImage(
+                        customization.orderedCustomizationId,
                         option.name,
                         '',
                       );
@@ -405,12 +441,26 @@ class CustomizationWidget extends StatelessWidget {
     });
   }
 
-  /// Parses color string to Color object
+  /// Enhanced color parsing to handle various formats
   Color _parseColor(String colorString) {
     try {
-      // Adjust based on actual format from backend
-      // Assuming ARGB hex string like "0xFFFF0000" for red
-      return Color(int.parse(colorString));
+      String hexColor = colorString.trim();
+
+      if (hexColor.startsWith('0x')) {
+        hexColor = hexColor.substring(2);
+      } else if (hexColor.startsWith('#')) {
+        hexColor = hexColor.substring(1);
+      }
+
+      if (hexColor.length == 6) {
+        hexColor = 'FF$hexColor'; // Add alpha if missing
+      } else if (hexColor.length == 8) {
+        // Already has alpha
+      } else {
+        throw FormatException('Invalid color format');
+      }
+
+      return Color(int.parse('0x$hexColor'));
     } catch (e) {
       return Colors.grey;
     }

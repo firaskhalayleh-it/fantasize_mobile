@@ -212,7 +212,7 @@ class CustomizationWidgets extends StatelessWidget {
                   child: Stack(
                     children: [
                       Image.network(
-                        '${Strings().resourceUrl}/${optionValue.fileName}',
+                        '${Strings().resourceUrl}/${optionValue.filePath}',
                         width: 80,
                         height: 80,
                         fit: BoxFit.fill,

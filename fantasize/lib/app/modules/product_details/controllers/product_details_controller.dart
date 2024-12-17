@@ -101,7 +101,7 @@ class ProductDetailsController extends GetxController {
                   name: optionValue.name,
                   value: optionValue.value,
                   isSelected: false, // Initially not selected
-                  fileName: '',
+                  filePath: '',
                 );
               }).toList(),
             );
@@ -402,7 +402,6 @@ class ProductDetailsController extends GetxController {
                             child: ElevatedButton(
                               onPressed: () {
                                 Get.back();
-                                Get.until((route) => route.settings.name == '/products');
                               },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.white,
@@ -520,7 +519,7 @@ class ProductDetailsController extends GetxController {
           return OrderedOptionValue(
             name: optionValue.value,
             value: optionValue.value,
-            isSelected: optionValue.isSelected,
+            isSelected: optionValue.isSelected.value,
           );
         }).toList(),
       );
@@ -566,7 +565,7 @@ class ProductDetailsController extends GetxController {
         } else if (selectedOption.type == 'uploadPicture') {
           // For image upload
           var optionValue = selectedOption.optionValues.first;
-          optionValue.fileName = selectedValue;
+          optionValue.filePath = selectedValue;
         }
       }
     }

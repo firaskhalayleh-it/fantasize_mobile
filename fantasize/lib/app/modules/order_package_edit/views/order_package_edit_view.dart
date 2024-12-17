@@ -11,7 +11,7 @@ class OrderPackageEditView extends GetView<OrderPackageEditController> {
   @override
   Widget build(BuildContext context) {
     // Ensure the controller is properly initialized via bindings
-    final controller = Get.find<OrderPackageEditController>();
+    final controller = Get.put<OrderPackageEditController>(OrderPackageEditController());
 
     return Scaffold(
       appBar: AppBar(
@@ -33,7 +33,7 @@ class OrderPackageEditView extends GetView<OrderPackageEditController> {
                 children: [
                   // Package Information
                   Text(
-                    'Package ID: ${controller.currentPackageId}', // Replace with actual package name if available
+                    'Package ID: ${controller.currentPackageId.value}', // Accessed with .value
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -59,7 +59,7 @@ class OrderPackageEditView extends GetView<OrderPackageEditController> {
                             onPressed: () => controller.decrementQuantity(),
                           ),
                           Obx(() => Text(
-                                controller.currentQuantity.toString(),
+                                controller.currentQuantity.value.toString(),
                                 style: TextStyle(fontSize: 18),
                               )),
                           IconButton(

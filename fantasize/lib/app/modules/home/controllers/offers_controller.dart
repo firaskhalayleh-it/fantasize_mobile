@@ -39,9 +39,9 @@ class OffersController extends GetxController {
 
       // Parse response data into Product and Package models
       for (var item in responseData) {
-        if (item.containsKey('ProductID')) {
+        if (item != null && item.containsKey('ProductID')) {
           productList.add(Product.fromJson(item));
-        } else if (item.containsKey('PackageID')) {
+        } else if (item != null && item.containsKey('PackageID')) {
           packageList.add(Package.fromJson(item));
         }
       }

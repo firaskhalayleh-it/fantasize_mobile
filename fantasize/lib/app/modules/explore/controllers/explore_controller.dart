@@ -1,6 +1,7 @@
 import 'package:chewie/chewie.dart';
 import 'package:fantasize/app/data/models/video_model.dart';
 import 'package:fantasize/app/global/strings.dart';
+import 'package:fantasize/app/modules/favorites/controllers/favorites_controller.dart';
 import 'package:get/get.dart';
 import 'package:video_player/video_player.dart';
 import 'package:http/http.dart' as http;
@@ -183,7 +184,11 @@ class ExploreController extends GetxController {
           statusCode = response.statusCode;
           if (statusCode == 200) {
             likedProducts[index] = false;
-            Get.snackbar('Success', 'Product removed from favorites',);
+            Get.find<FavoritesController>().fetchFavorites();
+            Get.snackbar(
+              'Success',
+              'Product removed from favorites',
+            );
           } else {
             Get.snackbar('Error', 'Failed to remove product from favorites');
           }
@@ -203,6 +208,8 @@ class ExploreController extends GetxController {
           statusCode = response.statusCode;
           if (statusCode == 200 || statusCode == 201) {
             likedProducts[index] = true;
+            Get.find<FavoritesController>().fetchFavorites();
+
             Get.snackbar('Success', 'Product added to favorites');
           } else {
             Get.snackbar('Error', 'Failed to add product to favorites');
@@ -226,6 +233,8 @@ class ExploreController extends GetxController {
           statusCode = response.statusCode;
           if (statusCode == 200) {
             likedPackages[index] = false;
+            Get.find<FavoritesController>().fetchFavorites();
+
             Get.snackbar('Success', 'Package removed from favorites');
           } else {
             Get.snackbar('Error', 'Failed to remove package from favorites');
@@ -246,6 +255,8 @@ class ExploreController extends GetxController {
           statusCode = response.statusCode;
           if (statusCode == 200 || statusCode == 201) {
             likedPackages[index] = true;
+            Get.find<FavoritesController>().fetchFavorites();
+
             Get.snackbar('Success', 'Package added to favorites');
           } else {
             Get.snackbar('Error', 'Failed to add package to favorites');
@@ -268,8 +279,7 @@ class ExploreController extends GetxController {
       }
 
       // Fetch all favorite products
-      var favoriteProductsUrl =
-          Uri.parse('${Strings().apiUrl}/favorites');
+      var favoriteProductsUrl = Uri.parse('${Strings().apiUrl}/favorites');
       var favoritePackagesUrl =
           Uri.parse('${Strings().apiUrl}/favoritePackages');
 
@@ -305,7 +315,8 @@ class ExploreController extends GetxController {
         }).toList();
         print('Favorite products: $favoriteProductIds');
       } else {
-        Get.snackbar('Error', 'Failed to fetch favorite products${productsResponse.body}');
+        Get.snackbar('Error',
+            'Failed to fetch favorite products${productsResponse.body}');
       }
 
       if (packagesResponse.statusCode == 200) {
@@ -316,8 +327,8 @@ class ExploreController extends GetxController {
         }).toList();
         print('Favorite packages: $favoritePackageIds');
       } else {
-
-        Get.snackbar('Error', 'Failed to fetch favorite packages${packagesResponse.body}');
+        Get.snackbar('Error',
+            'Failed to fetch favorite packages${packagesResponse.body}');
       }
 
       // Update likedProducts and likedPackages lists

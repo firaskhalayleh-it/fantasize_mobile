@@ -50,7 +50,7 @@ class PaymentMethod {
       'Method': method,
       'CardholderName': cardholderName,
       'CardNumber': cardNumber,
-      'ExpirationDate': expirationDate?.toIso8601String(),
+      'ExpiryDate': expirationDate?.toIso8601String(),
       'CVV': cvv,
       'CardType': cardType,
       'CreatedAt': createdAt?.toIso8601String(),

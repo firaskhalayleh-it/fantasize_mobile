@@ -33,13 +33,12 @@ void main() async {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-  Get.lazyPut(() => LoginController());
+    Get.put(LoginController());
     final box = GetStorage();
 
     return GetMaterialApp(
       title: "Application",
-      initialRoute: box.read('lastRoute') ??
-          AppPages.INITIAL, 
+      initialRoute: box.read('lastRoute') ?? AppPages.INITIAL,
       initialBinding: LoginBinding(),
       theme: ThemeData(
         scaffoldBackgroundColor: Colors.white,

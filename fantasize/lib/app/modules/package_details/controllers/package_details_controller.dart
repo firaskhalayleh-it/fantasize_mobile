@@ -412,6 +412,7 @@ class PackageDetailsController extends GetxController {
         }),
       );
 
+
       print('Response status: ${response.statusCode}');
       print('Response body: ${response.body}');
       print(
@@ -447,7 +448,7 @@ class PackageDetailsController extends GetxController {
               return OrderedOptionValue(
                 name: optionValue.name,
                 value: optionValue.value,
-                isSelected: optionValue.isSelected,
+                isSelected: optionValue.isSelected.value,
               );
             }).toList(),
           );
@@ -530,7 +531,7 @@ class PackageDetailsController extends GetxController {
     } else if (option.type == 'uploadPicture') {
       // For image upload, update the fileName
       final optionValue = option.optionValues.first;
-      optionValue.fileName = selectedValue; // selectedValue is image path
+      optionValue.filePath = selectedValue; // selectedValue is image path
     } else {
       // For other types, handle selection
       // Deselect all options first
@@ -646,7 +647,6 @@ class AddToCartBottomSheet extends StatelessWidget {
             ElevatedButton(
               onPressed: () {
                 Get.back();
-                Get.until((route) => route.settings.name == '/products');
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.redAccent,

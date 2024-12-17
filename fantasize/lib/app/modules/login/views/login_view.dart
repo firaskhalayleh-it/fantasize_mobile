@@ -103,24 +103,30 @@ class LoginView extends GetView<LoginController> {
                   ],
                 )),
             SizedBox(height: screenHeight * 0.01),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton(
-                  onPressed: () {
-                    controller.goToResetPassword();
-                  },
-                  child: Text(
-                    'Forgot Password?',
-                    style: TextStyle(
-                      color: Color(0xFF7C8AA0),
-                      fontSize: DynamicFont().getSmallFont(),
-                      fontFamily: 'Poppins',
-                      fontWeight: FontWeight.w400,
+            Obx(
+              () => Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () {
+                      controller.goToResetPassword();
+                    },
+                    child: Text(
+                      'Forgot Password?',
+                      style: TextStyle(
+                        color: controller.forgotPassword.value == true
+                            ? Color(0xFFFF4C5E)
+                            : Color(0xFF3A4053),
+                        fontSize: controller.forgotPassword.value == true
+                            ? DynamicFont().getMediumFont()
+                            : DynamicFont().getSmallFont(),
+                        fontFamily: 'Poppins',
+                        fontWeight: FontWeight.w400,
+                      ),
                     ),
-                  ),
-                )
-              ],
+                  )
+                ],
+              ),
             ),
             SizedBox(height: screenHeight * 0.02),
             ElevatedButton(

@@ -1,4 +1,5 @@
 import 'package:fantasize/app/data/models/resources_model.dart';
+import 'package:get/get.dart';
 
 class Customization {
   final int customizationId;
@@ -80,22 +81,22 @@ class Option {
 class OptionValue {
   final String value;
   final String name;
-  late bool isSelected;
-  String fileName;
+  RxBool isSelected;
+  String filePath;
 
   OptionValue({
     required this.value,
     required this.name,
     required this.isSelected,
-    this.fileName = '',
+    this.filePath = '',
   });
 
   factory OptionValue.fromJson(Map<String, dynamic> json) {
     return OptionValue(
       name: json['name'],
       value: json['value'],
-      isSelected: json['isSelected'] ?? false,
-      fileName: json['fileName'] ?? '',
+      isSelected: RxBool(json['isSelected'] ?? false),
+      filePath: json['filePath'] ?? '',
     );
   }
 
@@ -104,7 +105,7 @@ class OptionValue {
       'name': name,
       'value': value,
       'isSelected': isSelected,
-      'fileName': fileName,
+      'filePath': filePath,
     };
   }
 }

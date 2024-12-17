@@ -1,27 +1,33 @@
 // lib/app/modules/order_package_edit/controllers/order_package_edit_controller.dart
 
+import 'package:fantasize/app/data/models/customization_model.dart';
 import 'package:fantasize/app/data/models/order_package_model.dart';
+import 'package:fantasize/app/data/models/ordered_customization.dart';
+import 'package:fantasize/app/data/models/ordered_option.dart';
 import 'package:fantasize/app/modules/order_history/controllers/order_history_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:fantasize/app/data/models/ordered_customization.dart';
 import 'package:fantasize/app/global/strings.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:io';
 import 'package:collection/collection.dart'; // For firstWhereOrNull
+import 'package:mime/mime.dart'; // For mime type checking
+import 'package:http_parser/http_parser.dart'; // For MediaType
+import 'package:path/path.dart' as path;
 
 class OrderPackageEditController extends GetxController {
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
   var isLoading = true.obs;
-  int orderId = 0;
-  int orderPackageId = 0;
-  int currentPackageId = 0;
-  int currentQuantity = 1;
+  var orderId = 0.obs;
+  var orderPackageId = 0.obs;
+  var currentPackageId = 0.obs; // Observable
+  var currentQuantity = 1.obs; // Observable
   OrderPackage? orderPackage; // To store the fetched OrderPackage
 
-  List<OrderedCustomization> orderedCustomizations = [];
+  RxList<OrderedCustomization> orderedCustomizations =
+      <OrderedCustomization>[].obs;
 
   // Maps for managing UI state
   final Map<String, RxBool> _attachMessageVisibility = {};
@@ -39,10 +45,13 @@ class OrderPackageEditController extends GetxController {
   void fetchArguments() {
     var args = Get.arguments;
     if (args != null) {
-      orderId = int.tryParse(args['orderId'].toString()) ?? 0;
-      orderPackageId = int.tryParse(args['orderPackageId'].toString()) ?? 0;
-      currentPackageId = int.tryParse(args['currentPackageId'].toString()) ?? 0;
-      currentQuantity = int.tryParse(args['currentQuantity'].toString()) ?? 1;
+      orderId.value = int.tryParse(args['orderId'].toString()) ?? 0;
+      orderPackageId.value =
+          int.tryParse(args['orderPackageId'].toString()) ?? 0;
+      currentPackageId.value =
+          int.tryParse(args['currentPackageId'].toString()) ?? 0;
+      currentQuantity.value =
+          int.tryParse(args['currentQuantity'].toString()) ?? 1;
     } else {
       Get.snackbar('Error', 'No order package data provided');
     }
@@ -58,7 +67,8 @@ class OrderPackageEditController extends GetxController {
         return;
       }
 
-      var url = Uri.parse('${Strings().apiUrl}/order/$orderId/package/$orderPackageId');
+      var url =
+          Uri.parse('${Strings().apiUrl}/orderpackage/${orderPackageId.value}');
       var response = await http.get(
         url,
         headers: {
@@ -74,7 +84,7 @@ class OrderPackageEditController extends GetxController {
         // Assuming the API returns a single OrderPackage object
         orderPackage = OrderPackage.fromJson(data);
         if (orderPackage?.orderedCustomization != null) {
-          orderedCustomizations = [orderPackage!.orderedCustomization!];
+          orderedCustomizations.value = [orderPackage!.orderedCustomization!];
         }
       } else {
         Get.snackbar('Error',
@@ -90,40 +100,165 @@ class OrderPackageEditController extends GetxController {
   /// Update the order package via API
   Future<void> updateOrderPackage() async {
     try {
+      isLoading.value = true; // Show loading indicator
+
       String? token = await _storage.read(key: 'jwt_token');
       if (token == null) {
         Get.snackbar('Error', 'User is not authenticated');
+        isLoading.value = false;
         return;
       }
 
-      var url = Uri.parse('${Strings().apiUrl}/order/$orderId/package/$orderPackageId');
-      var response = await http.put(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-          'Accept': 'application/json',
-          'cookie': 'authToken=$token',
-        },
-        body: json.encode({
-          'packageId': currentPackageId,
-          'quantity': currentQuantity,
-          'OrderedCustomizations': orderedCustomizations
-              .map((customization) => customization.toJson())
-              .toList(),
-        }),
-      );
+      // Flatten orderedOptions from orderedCustomizations
+      List<OrderedOption> flattenedOptions = orderedCustomizations
+          .map((customization) => customization.selectedOptions)
+          .expand((options) => options)
+          .toList();
 
-      if (response.statusCode == 200) {
-        Get.snackbar('Success', 'Order package updated successfully');
-        Get.back(); // Navigate back to order history
-        Get.find<OrderHistoryController>().fetchOrderHistory(); // Refresh order list
+      // Check if there are any uploadPicture options
+      bool hasUploadPicture = flattenedOptions.any((option) =>
+          option.type.toLowerCase() == 'uploadpicture' &&
+          option.optionValues.any((val) => val.filePath != null && val.filePath!.isNotEmpty));
+
+      if (hasUploadPicture) {
+        // Use MultipartRequest
+        var uri = Uri.parse(
+            '${Strings().apiUrl}/orderpackage/${orderPackageId.value}');
+        var request = http.MultipartRequest('PUT', uri);
+        request.headers.addAll({
+          'Authorization': 'Bearer $token',
+          'cookie': 'authToken=$token',
+        });
+
+        // Prepare orderedOptions JSON
+        List<Map<String, dynamic>> orderedOptionsJson = [];
+        for (var option in flattenedOptions) {
+          Map<String, dynamic> optionJson = {
+            'name': option.name,
+            'type': option.type,
+            'optionValues': option.optionValues.map((val) {
+              Map<String, dynamic> valJson = {
+                'name': val.name,
+                'value': val.value,
+                'isSelected': val.isSelected.value,
+              };
+              // Include filePath if present and relevant
+              if (option.type.toLowerCase() == 'uploadpicture') {
+                valJson['filePath'] = val.filePath ?? '';
+              } else if (option.type.toLowerCase() == 'image') {
+                valJson['filePath'] = val.filePath ?? '';
+              }
+              return valJson;
+            }).toList(),
+          };
+          orderedOptionsJson.add(optionJson);
+        }
+
+        // Add JSON as a field
+        Map<String, dynamic> jsonFields = {
+          'quantity': currentQuantity.value,
+          'orderedOptions': orderedOptionsJson,
+        };
+
+        request.fields['data'] = json.encode(jsonFields);
+
+        // Attach files
+        for (var option in flattenedOptions) {
+          if (option.type.toLowerCase() == 'uploadpicture') {
+            for (var optionValue in option.optionValues) {
+              if (optionValue.filePath != null && optionValue.filePath!.isNotEmpty) {
+                File file = File(optionValue.filePath!);
+                if (await file.exists()) {
+                  // Validate mime type
+                  String? mimeType = lookupMimeType(file.path);
+                  if (mimeType != null &&
+                      (mimeType == 'image/jpeg' ||
+                          mimeType == 'image/jpg' ||
+                          mimeType == 'image/png')) {
+                    request.files.add(await http.MultipartFile.fromPath(
+                      'file', // Adjust field name as per API
+                      file.path,
+                      filename: path.basename(file.path),
+                      contentType: MediaType.parse(mimeType),
+                    ));
+                  } else {
+                    Get.snackbar('Error', 'Unsupported file type: $mimeType');
+                    isLoading.value = false;
+                    return;
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        // Send the request
+        var streamedResponse = await request.send();
+        var response = await http.Response.fromStream(streamedResponse);
+
+        if (response.statusCode == 200) {
+          Get.snackbar('Success', 'Order package updated successfully');
+          Get.back(); // Navigate back to order history
+          Get.find<OrderHistoryController>()
+              .fetchOrderHistory(); // Refresh order list
+        } else {
+          Get.snackbar('Error',
+              'Failed to update order package: ${response.statusCode} ${response.body}');
+        }
       } else {
-        Get.snackbar('Error',
-            'Failed to update order package: ${response.statusCode} ${response.body}');
+        // No uploadPicture options, proceed with standard PUT request
+        // Prepare orderedOptions JSON
+        List<Map<String, dynamic>> orderedOptionsJson = [];
+        for (var option in flattenedOptions) {
+          Map<String, dynamic> optionJson = {
+            'name': option.name,
+            'type': option.type,
+            'optionValues': option.optionValues.map((val) {
+              Map<String, dynamic> valJson = {
+                'name': val.name,
+                'value': val.value,
+                'isSelected': val.isSelected.value,
+              };
+              // For 'image' type options, include filePath
+              if (option.type.toLowerCase() == 'image') {
+                valJson['filePath'] = val.filePath ?? '';
+              }
+              return valJson;
+            }).toList(),
+          };
+          orderedOptionsJson.add(optionJson);
+        }
+
+        var url = Uri.parse(
+            '${Strings().apiUrl}/orderpackage/${orderPackageId.value}');
+        var response = await http.put(
+          url,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+            'Accept': 'application/json',
+            'cookie': 'authToken=$token',
+          },
+          body: json.encode({
+            'quantity': currentQuantity.value,
+            'orderedOptions': orderedOptionsJson,
+          }),
+        );
+
+        if (response.statusCode == 200) {
+          Get.snackbar('Success', 'Order package updated successfully');
+          Get.back(); // Navigate back to order history
+          Get.find<OrderHistoryController>()
+              .fetchOrderHistory(); // Refresh order list
+        } else {
+          Get.snackbar('Error',
+              'Failed to update order package: ${response.statusCode} ${response.body}');
+        }
       }
     } catch (e) {
       Get.snackbar('Error', 'Failed to update order package: $e');
+    } finally {
+      isLoading.value = false; // Hide loading indicator
     }
   }
 
@@ -149,15 +284,16 @@ class OrderPackageEditController extends GetxController {
     if (!_textControllers.containsKey(key)) {
       _textControllers[key] = TextEditingController();
       // Initialize with existing value if any
-      var customization = orderedCustomizations.firstWhereOrNull(
-          (c) => c.orderedCustomizationId == customizationId);
+      var customization = orderedCustomizations
+          .firstWhereOrNull((c) => c.orderedCustomizationId == customizationId);
       if (customization != null) {
-        var existingOption = customization.selectedOptions.firstWhereOrNull(
-            (opt) => opt.name == optionName);
+        var existingOption = customization.selectedOptions
+            .firstWhereOrNull((opt) => opt.name == optionName);
         if (existingOption != null &&
             existingOption.optionValues.isNotEmpty &&
             existingOption.optionValues.first.value.isNotEmpty) {
-          _textControllers[key]!.text = existingOption.optionValues.first.value;
+          _textControllers[key]!.text =
+              existingOption.optionValues.first.value;
         }
       }
       // Listen to changes and update the orderedCustomizations accordingly
@@ -174,16 +310,18 @@ class OrderPackageEditController extends GetxController {
     final key = '$customizationId-$optionName';
     if (!_uploadedImages.containsKey(key)) {
       _uploadedImages[key] = ''.obs;
-      // Initialize with existing fileName if any
-      var customization = orderedCustomizations.firstWhereOrNull(
-          (c) => c.orderedCustomizationId == customizationId);
+      // Initialize with existing filePath if any
+      var customization = orderedCustomizations
+          .firstWhereOrNull((c) => c.orderedCustomizationId == customizationId);
       if (customization != null) {
-        var existingOption = customization.selectedOptions.firstWhereOrNull(
-            (opt) => opt.name == optionName);
+        var existingOption = customization.selectedOptions
+            .firstWhereOrNull((opt) => opt.name == optionName);
         if (existingOption != null &&
             existingOption.optionValues.isNotEmpty &&
-            existingOption.optionValues.first.fileName!.isNotEmpty) {
-          _uploadedImages[key]!.value = existingOption.optionValues.first.fileName.toString();
+            existingOption.optionValues.first.filePath != null &&
+            existingOption.optionValues.first.filePath!.isNotEmpty) {
+          _uploadedImages[key]!.value =
+              existingOption.optionValues.first.filePath!;
         }
       }
     }
@@ -203,14 +341,14 @@ class OrderPackageEditController extends GetxController {
   void updateSelectedOption(
       int customizationId, String optionName, String selectedValue) {
     // Find the customization
-    final customization = orderedCustomizations.firstWhereOrNull(
-        (c) => c.orderedCustomizationId == customizationId);
+    final customization = orderedCustomizations
+        .firstWhereOrNull((c) => c.orderedCustomizationId == customizationId);
 
     if (customization == null) return;
 
     // Find the specific option
-    final option = customization.selectedOptions.firstWhereOrNull(
-        (opt) => opt.name == optionName);
+    final option = customization.selectedOptions
+        .firstWhereOrNull((opt) => opt.name == optionName);
 
     if (option == null) return;
 
@@ -235,9 +373,9 @@ class OrderPackageEditController extends GetxController {
         }
         break;
       case 'uploadpicture':
-        // Update the fileName or image path
+        // Update the filePath
         if (option.optionValues.isNotEmpty) {
-          option.optionValues.first.fileName = selectedValue;
+          option.optionValues.first.filePath = selectedValue;
         }
         break;
       default:
@@ -247,24 +385,24 @@ class OrderPackageEditController extends GetxController {
 
   /// Check if an option is selected
   bool isOptionSelected(int customizationId, String optionValue) {
-    final customization = orderedCustomizations.firstWhereOrNull(
-        (c) => c.orderedCustomizationId == customizationId);
+    final customization = orderedCustomizations
+        .firstWhereOrNull((c) => c.orderedCustomizationId == customizationId);
 
     if (customization == null) return false;
 
-    return customization.selectedOptions.any((opt) =>
-        opt.optionValues.any((v) =>
+    return customization.selectedOptions.any((opt) => opt.optionValues.any(
+        (v) =>
             v.value == optionValue &&
-            (v.isSelected.value || (v.fileName?.isNotEmpty ?? false))));
+            (v.isSelected.value || v.filePath?.isNotEmpty == true)));
   }
 
   /// Increment Quantity
   void incrementQuantity() {
-    currentQuantity++;
+    currentQuantity.value++;
   }
 
   /// Decrement Quantity
   void decrementQuantity() {
-    if (currentQuantity > 1) currentQuantity--;
+    if (currentQuantity.value > 1) currentQuantity.value--;
   }
 }

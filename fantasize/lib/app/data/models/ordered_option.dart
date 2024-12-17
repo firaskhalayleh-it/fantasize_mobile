@@ -37,20 +37,20 @@ class OrderedOptionValue {
   final String name;
    String value;
    RxBool isSelected;
-  String? fileName;
+  String? filePath;
 
   OrderedOptionValue({
     required this.name,
     required this.value,
     bool isSelected = false,
-    this.fileName = '',
+    this.filePath = '',
   }) : isSelected = RxBool(isSelected);
   factory OrderedOptionValue.fromJson(Map<String, dynamic> json) {
     return OrderedOptionValue(
       name: json['name'],
       value: json['value'],
       isSelected: json['isSelected'],
-      fileName: json['fileName'],
+      filePath: json['filePath'],
     );
   }
 
@@ -59,7 +59,7 @@ class OrderedOptionValue {
       "name": name,
       "value": value,
       "isSelected": isSelected.value,
-      "fileName": fileName ?? '',
+      "filePath": filePath ?? '',
     };
   }
 }

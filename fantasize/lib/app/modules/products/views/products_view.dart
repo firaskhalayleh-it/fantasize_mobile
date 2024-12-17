@@ -1,3 +1,4 @@
+// products_view.dart
 import 'package:fantasize/app/modules/products/views/widgets/package_card.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -6,7 +7,7 @@ import 'package:fantasize/app/modules/products/views/widgets/product_card.dart';
 import 'package:fantasize/app/modules/products/views/widgets/custom_app_bar.dart'; // Import CustomAppBar
 
 class ProductsView extends StatelessWidget {
-  final ProductsController controller = Get.put(ProductsController());
+  final ProductsController controller = Get.find<ProductsController>();
 
   @override
   Widget build(BuildContext context) {
@@ -24,9 +25,19 @@ class ProductsView extends StatelessWidget {
             child: Obx(() {
               if (controller.isLoading.value) {
                 return Center(child: CircularProgressIndicator());
-              } else if (controller.tabBarIndex.value ==
-                  controller.subCategoryNames.indexOf("Packages")) {
-                // Display packages
+              }
+
+              // Determine current tab
+              String currentTab = controller.subCategoryNames[controller.tabBarIndex.value].toLowerCase();
+
+              if (currentTab == "packages") {
+                // Use filteredPackageList for display
+                final packages = controller.filteredPackageList;
+
+                if (packages.isEmpty) {
+                  return Center(child: Text("No packages found."));
+                }
+
                 return GridView.builder(
                   padding: const EdgeInsets.all(10),
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -35,28 +46,25 @@ class ProductsView extends StatelessWidget {
                     crossAxisSpacing: 10,
                     mainAxisSpacing: 10,
                   ),
-                  itemCount: controller.packageList.length,
+                  itemCount: packages.length,
                   itemBuilder: (context, index) {
-                    final package = controller.packageList[index];
-                    if (controller.packageList.isEmpty) {
-                      return Container(
-                        color: Colors.grey[200],
-                        child: Center(
-                          child: Text("No packages available"),
-                        ),
-                      );
-                    }
+                    final package = packages[index];
                     return InkWell(
                       onTap: () {
-                        Get.toNamed('/package-details',
-                            arguments: package.packageId);
+                        controller.navigateToPackageDetails(package.packageId);
                       },
                       child: PackageCard(package: package),
                     );
                   },
                 );
               } else {
-                // Display products
+                // Use filteredProductList for display
+                final products = controller.filteredProductList;
+
+                if (products.isEmpty) {
+                  return Center(child: Text("No products found."));
+                }
+
                 return GridView.builder(
                   padding: const EdgeInsets.all(10),
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -65,13 +73,12 @@ class ProductsView extends StatelessWidget {
                     crossAxisSpacing: 10,
                     mainAxisSpacing: 10,
                   ),
-                  itemCount: controller.productList.length,
+                  itemCount: products.length,
                   itemBuilder: (context, index) {
-                    final product = controller.productList[index];
+                    final product = products[index];
                     return InkWell(
                       onTap: () {
-                        Get.toNamed('/product-details',
-                            arguments: [product.productId]);
+                        controller.navigateToProductDetails(index);
                       },
                       child: ProductCard(product: product),
                     );

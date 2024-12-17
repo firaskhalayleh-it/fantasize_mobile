@@ -1,5 +1,7 @@
 // lib/app/modules/order_history/views/order_history_view.dart
 
+// [No changes required based on the current requirements. Ensure that navigation to edit views passes the necessary arguments, especially for `uploadPicture` options.]
+
 import 'package:fantasize/app/data/models/order_model.dart';
 import 'package:fantasize/app/data/models/order_package_model.dart';
 import 'package:fantasize/app/data/models/order_product_model.dart';
@@ -538,7 +540,7 @@ class OrderHistoryView extends GetView<OrderHistoryController> {
       'orderProductId': orderProduct.orderProductId,
       'currentProductId': orderProduct.product.productId,
       'currentQuantity': orderProduct.quantity,
-      'orderedOptions': orderProduct.orderedCustomization?.selectedOptions.map((option) => option.toJson()).toList() ?? [],
+      'OrderedCustomizations': orderProduct.orderedCustomization?.toJson() ?? [],
     });
   }
 
@@ -549,7 +551,7 @@ class OrderHistoryView extends GetView<OrderHistoryController> {
       'orderPackageId': orderPackage.orderPackageId,
       'currentPackageId': orderPackage.package.packageId,
       'currentQuantity': orderPackage.quantity,
-      'orderedOptions': orderPackage.orderedCustomization?.selectedOptions.map((option) => option.toJson()).toList() ?? [],
+      'OrderedCustomizations': orderPackage.orderedCustomization?.toJson() ?? [],
     });
   }
 
@@ -565,7 +567,15 @@ class OrderHistoryView extends GetView<OrderHistoryController> {
         TextButton.icon(
           onPressed: () {
             // Navigate to product/package details for editing
-            Get.toNamed('/order-edit', arguments: order);
+            // Example for package editing
+            // Replace with actual logic based on order content
+            if (order.ordersPackages.isNotEmpty) {
+              var package = order.ordersPackages.first;
+              _navigateToEditOrderPackage(package, order.orderId.toString());
+            } else if (order.ordersProducts.isNotEmpty) {
+              var product = order.ordersProducts.first;
+              _navigateToEditOrderProduct(product, order.orderId.toString());
+            }
           },
           icon: Icon(Icons.edit, color: Colors.blueAccent),
           label: Text(

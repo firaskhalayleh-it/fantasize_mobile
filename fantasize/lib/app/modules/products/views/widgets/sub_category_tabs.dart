@@ -1,4 +1,5 @@
-// Second File: subcategory_tabs.dart
+// File: subcategory_tabs.dart
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:fantasize/app/modules/products/controllers/products_controller.dart';
@@ -48,7 +49,8 @@ class SubCategoryTabs extends StatelessWidget {
                     if (controller.isLoading.value) {
                       return Center(
                         child: CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.redAccent),
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(Colors.redAccent),
                         ),
                       );
                     } else {
@@ -63,7 +65,8 @@ class SubCategoryTabs extends StatelessWidget {
                               borderRadius: BorderRadius.circular(12),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.redAccent.withOpacity(0.1),
+                                  color:
+                                      Colors.redAccent.withOpacity(0.1),
                                   blurRadius: 8,
                                   spreadRadius: 0,
                                 ),

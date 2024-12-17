@@ -20,6 +20,8 @@ class LoginController extends GetxController {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
 
+  var forgotPassword = false.obs;
+
   var emailController = TextEditingController();
   var passwordController = TextEditingController();
   var errorMessage = ''.obs;
@@ -424,8 +426,10 @@ class LoginController extends GetxController {
         print('going to home');
         Get.offNamed('/home');
       } else {
-        errorMessage.value = 'Login failed. Please check your credentials.';
-        Get.snackbar('Login Failed', '${response.body}');
+        if (response.statusCode == 401) {
+          forgotPassword.value = true;
+          Get.snackbar('Login Failed1', response.body);
+        }
       }
     } catch (e) {
       errorMessage.value = 'An error occurred. Please try again later.';

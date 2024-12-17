@@ -148,7 +148,7 @@ class AppPages {
     ),
     GetPage(
       name: _Paths.ORDER_PRODUCT_EDIT,
-      page: () => const OrderProductEditView(),
+      page: () =>  OrderProductEditView(),
     ),
     GetPage(
       name: _Paths.ORDER_PACKAGE_EDIT,

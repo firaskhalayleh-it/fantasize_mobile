@@ -2,10 +2,11 @@
 
 import 'dart:io';
 
+import 'package:fantasize/app/data/models/customization_model.dart';
 import 'package:fantasize/app/data/models/ordered_customization.dart';
-import 'package:fantasize/app/data/models/ordered_option.dart';
 import 'package:fantasize/app/global/strings.dart';
 import 'package:fantasize/app/modules/order_history/controllers/order_package_edit_controller.dart';
+import 'package:fantasize/app/modules/order_package_edit/controllers/order_package_edit_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
@@ -28,7 +29,8 @@ class CustomizationWidget extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              _getCustomizationName(orderedCustomization.orderedCustomizationId),
+              _getCustomizationName(
+                  orderedCustomization.orderedCustomizationId),
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
@@ -36,8 +38,20 @@ class CustomizationWidget extends StatelessWidget {
               ),
             ),
             SizedBox(height: 8),
-            ...orderedCustomization.selectedOptions.map((option) {
-              return _buildOptionWidget(controller, orderedCustomization, option);
+            ...orderedCustomization.selectedOptions.map((orderedOption) {
+              final option = Option(
+                  type: orderedOption.type,
+                  name: orderedOption.name,
+                  optionValues: orderedOption.optionValues
+                      .map((ov) => OptionValue(
+                            name: ov.name,
+                            value: ov.value,
+                            filePath: ov.filePath ?? '',
+                            isSelected: ov.isSelected,
+                          ))
+                      .toList());
+              return _buildOptionWidget(
+                  controller, orderedCustomization, option);
             }).toList(),
             SizedBox(height: 16),
           ],
@@ -54,7 +68,7 @@ class CustomizationWidget extends StatelessWidget {
   }
 
   Widget _buildOptionWidget(OrderPackageEditController controller,
-      OrderedCustomization customization, OrderedOption option) {
+      OrderedCustomization customization, Option option) {
     switch (option.type.toLowerCase()) {
       case 'button':
         return _buildButtonOptions(controller, customization, option);
@@ -72,16 +86,13 @@ class CustomizationWidget extends StatelessWidget {
   }
 
   Widget _buildButtonOptions(OrderPackageEditController controller,
-      OrderedCustomization customization, OrderedOption option) {
+      OrderedCustomization customization, Option option) {
     return Wrap(
       spacing: 8.0,
       runSpacing: 8.0,
       children: option.optionValues.map((optionValue) {
         return Obx(() {
-          final isSelected = controller.isOptionSelected(
-            customization.orderedCustomizationId,
-            optionValue.value,
-          );
+          final isSelected = optionValue.isSelected.value;
           return ElevatedButton(
             onPressed: () {
               controller.updateSelectedOption(
@@ -106,8 +117,7 @@ class CustomizationWidget extends StatelessWidget {
               optionValue.value,
               style: TextStyle(
                 fontSize: 14,
-                fontWeight:
-                    isSelected ? FontWeight.w600 : FontWeight.w500,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
               ),
             ),
           );
@@ -117,16 +127,13 @@ class CustomizationWidget extends StatelessWidget {
   }
 
   Widget _buildColorOptions(OrderPackageEditController controller,
-      OrderedCustomization customization, OrderedOption option) {
+      OrderedCustomization customization, Option option) {
     return Wrap(
       spacing: 12.0,
       runSpacing: 12.0,
       children: option.optionValues.map((optionValue) {
         return Obx(() {
-          final isSelected = controller.isOptionSelected(
-            customization.orderedCustomizationId,
-            optionValue.value,
-          );
+          final isSelected = optionValue.isSelected.value;
           return GestureDetector(
             onTap: () {
               controller.updateSelectedOption(
@@ -169,17 +176,14 @@ class CustomizationWidget extends StatelessWidget {
   }
 
   Widget _buildImageOptions(OrderPackageEditController controller,
-      OrderedCustomization customization, OrderedOption option) {
+      OrderedCustomization customization, Option option) {
     return Container(
       height: 100,
       child: ListView(
         scrollDirection: Axis.horizontal,
         children: option.optionValues.map((optionValue) {
           return Obx(() {
-            final isSelected = controller.isOptionSelected(
-              customization.orderedCustomizationId,
-              optionValue.value,
-            );
+            final isSelected = optionValue.isSelected.value;
             return GestureDetector(
               onTap: () {
                 controller.updateSelectedOption(
@@ -209,10 +213,10 @@ class CustomizationWidget extends StatelessWidget {
                   child: Stack(
                     children: [
                       Image.network(
-                        '${Strings().resourceUrl}/${optionValue.fileName}',
+                        '${Strings().resourceUrl}${optionValue.filePath}',
                         width: 80,
                         height: 80,
-                        fit: BoxFit.fill,
+                        fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
                           return Container(
                             width: 80,
@@ -248,7 +252,7 @@ class CustomizationWidget extends StatelessWidget {
   }
 
   Widget _buildAttachMessageOption(OrderPackageEditController controller,
-      OrderedCustomization customization, OrderedOption option) {
+      OrderedCustomization customization, Option option) {
     final textController = controller.getTextController(
         customization.orderedCustomizationId, option.name);
     final isVisible = controller.getAttachMessageVisibility(
@@ -329,7 +333,7 @@ class CustomizationWidget extends StatelessWidget {
   }
 
   Widget _buildUploadPictureOption(OrderPackageEditController controller,
-      OrderedCustomization customization, OrderedOption option) {
+      OrderedCustomization customization, Option option) {
     final imagePathRx = controller.getUploadedImagePath(
         customization.orderedCustomizationId, option.name);
 
@@ -353,8 +357,7 @@ class CustomizationWidget extends StatelessWidget {
                     hasImage ? Icons.edit : Icons.upload_file,
                     size: 18,
                   ),
-                  label:
-                      Text(hasImage ? 'Change Picture' : 'Upload Picture'),
+                  label: Text(hasImage ? 'Change Picture' : 'Upload Picture'),
                   onPressed: () async {
                     final picker = ImagePicker();
                     final image =
@@ -370,8 +373,7 @@ class CustomizationWidget extends StatelessWidget {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.redAccent,
                     elevation: 0,
-                    padding:
-                        EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -438,13 +440,25 @@ class CustomizationWidget extends StatelessWidget {
     });
   }
 
+  /// Enhanced color parsing to handle various formats
   Color _parseColor(String colorString) {
     try {
-      // Handle color strings in ARGB (e.g., "0xFFFF0000") or HEX (e.g., "#FF0000")
-      String hexColor = colorString.replaceAll('#', '');
+      String hexColor = colorString.trim();
+
+      if (hexColor.startsWith('0x')) {
+        hexColor = hexColor.substring(2);
+      } else if (hexColor.startsWith('#')) {
+        hexColor = hexColor.substring(1);
+      }
+
       if (hexColor.length == 6) {
         hexColor = 'FF$hexColor'; // Add alpha if missing
+      } else if (hexColor.length == 8) {
+        // Already has alpha
+      } else {
+        throw FormatException('Invalid color format');
       }
+
       return Color(int.parse('0x$hexColor'));
     } catch (e) {
       return Colors.grey;
