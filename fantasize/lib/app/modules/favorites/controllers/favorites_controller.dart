@@ -1,6 +1,7 @@
 import 'package:fantasize/app/data/models/product_model.dart';
 import 'package:fantasize/app/data/models/package_model.dart';
 import 'package:fantasize/app/global/strings.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
@@ -74,8 +75,21 @@ class FavoritesController extends GetxController {
             .toList();
         favoritePackages.assignAll(packages);
       }
+
+      // some delay
+      await Future.delayed(Duration(seconds: 1));
+
+      if (productResponse.statusCode == 404 ||
+          packageResponse.statusCode == 404) {
+        Get.snackbar('Message', 'No favorites found');
+      }
     } catch (e) {
-      Get.snackbar('Error', 'Something went wrong');
+      Get.snackbar(
+        'Error',
+        'Something went wrong',
+        snackStyle: SnackStyle.FLOATING,
+        backgroundColor: Colors.red,
+      );
     } finally {
       isLoading(false);
     }

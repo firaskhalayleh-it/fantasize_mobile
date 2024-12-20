@@ -63,13 +63,13 @@ class UserInfoView extends GetView<UserInfoController> {
           children: [
             const Center(
               child: Text(
-                'Profile Information',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFFFF4C5E),
-                  letterSpacing: 0.5,
-                ),
+          'Profile Information',
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFFFF4C5E),
+            letterSpacing: 0.5,
+          ),
               ),
             ),
             const SizedBox(height: 32),
@@ -100,13 +100,29 @@ class UserInfoView extends GetView<UserInfoController> {
               icon: Icons.phone_outlined,
             ),
             const SizedBox(height: 20),
-            BuildInfoField(
-              label: 'Gender',
-              textController: controller.genderController,
-              isEditing: controller.isEditingGender,
-              onEditPressed: controller.toggleEditingGender,
-              inputType: TextInputType.text,
-              icon: Icons.person_outline,
+            Row(
+              children: [
+          Expanded(
+            child: RadioListTile<String>(
+              title: const Text('Male'),
+              value: 'Male',
+              groupValue: controller.genderController.text,
+              onChanged: (value) {
+                controller.genderController.text = value!;
+              },
+            ),
+          ),
+          Expanded(
+            child: RadioListTile<String>(
+              title: const Text('Female'),
+              value: 'Female',
+              groupValue: controller.genderController.text,
+              onChanged: (value) {
+                controller.genderController.text = value!;
+              },
+            ),
+          ),
+              ],
             ),
             const SizedBox(height: 20),
             BuildDateField(
