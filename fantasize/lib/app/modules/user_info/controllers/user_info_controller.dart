@@ -45,6 +45,8 @@ class UserInfoController extends GetxController {
     var userPhone = parameters['phonenumber'];
     var userGender = parameters['gender'];
     var userDateOfBirth = parameters['DOB'];
+    Gender.value = userGender?.toString().toLowerCase() ??
+        'male'; // Initialize the Gender value
 
     userNameController.text = userUsername.toString();
     emailController.text = userEmail.toString();
@@ -68,18 +70,6 @@ class UserInfoController extends GetxController {
 
   void toggleEditingPhone() {
     isEditingPhone.value = !isEditingPhone.value;
-  }
-
-  void toggleEditingGender() {
-    isEditingGender.value = !isEditingGender.value;
-  }
-
-  void changeGender(String newGender) {
-    if (newGender.isEmpty) {
-      Get.snackbar('error', 'must be male or female');
-      return;
-    }
-    Gender.value = newGender;
   }
 
   Future<void> updateUserProfile() async {
@@ -133,6 +123,8 @@ class UserInfoController extends GetxController {
 
         await secureStorage.write(
             key: 'user_data', value: json.encode(jsonResponse['user']));
+
+            Get.find<HomeController>().loadUserData();
         Get.snackbar('Success', 'Profile updated successfully');
       }
     } else {

@@ -4,11 +4,11 @@ import 'package:fantasize/app/data/models/payment_method.dart';
 
 class User {
   String username;
-  final String email;
+  String? email;
   final String? dateOfBirth;
   final String? phoneNumber;
   final String? gender;
-   String? deviceToken;
+  String? deviceToken;
   final UserProfilePicture?
       userProfilePicture; // Use the UserProfilePicture model
   final List<PaymentMethod>? paymentMethods;
@@ -18,7 +18,7 @@ class User {
   // Constructor
   User({
     required this.username,
-    required this.email,
+    this.email,
     this.dateOfBirth,
     this.phoneNumber,
     this.gender,
@@ -68,7 +68,7 @@ class User {
 
 class UserProfilePicture {
   final int? resourceID;
-  final String? entityName; 
+  final String? entityName;
   final String? fileType;
   final String? filePath;
 

@@ -19,110 +19,77 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.redAccent.withOpacity(0.05),
-            Colors.white.withOpacity(0.95),
-          ],
-        ),
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+        Colors.redAccent.withOpacity(0.05),
+        Colors.white.withOpacity(0.95),
+        ],
+      ),
       ),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Top Section with Back Button, Logo, and Profile Picture
-          Padding(
-            padding: EdgeInsets.only(
-              top: screenHeight * 0.05,
-              left: screenWidth * 0.04,
-              right: screenWidth * 0.04,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Top Section with Back Button, Logo, and Profile Picture
+        Padding(
+        padding: EdgeInsets.only(
+          top: screenHeight * 0.05,
+          left: screenWidth * 0.04,
+          right: screenWidth * 0.04,
+        ),
+        child: Stack(
+          children: [
+          // Back Button
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Container(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white,
+              boxShadow: [
+              BoxShadow(
+                color: Colors.redAccent.withOpacity(0.1),
+                blurRadius: 8,
+                spreadRadius: 0,
+              ),
+              ],
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Back Button
-                Container(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.redAccent.withOpacity(0.1),
-                        blurRadius: 8,
-                        spreadRadius: 0,
-                      ),
-                    ],
-                  ),
-                  child: IconButton(
-                    icon: Icon(
-                      Icons.arrow_back_ios_new_rounded,
-                      size: 20,
-                      color: Colors.redAccent,
-                    ),
-                    onPressed: () => Get.back(),
-                  ),
-                ),
+            child: IconButton(
+              icon: Icon(
+              Icons.arrow_back_ios_new_rounded,
+              size: 20,
+              color: Colors.redAccent,
+              ),
+              onPressed: () => Get.back(),
+            ),
+            ),
+          ),
 
-                // Center Logo
-                Container(
-                  padding: EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(15),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.redAccent.withOpacity(0.1),
-                        blurRadius: 15,
-                        spreadRadius: 2,
-                      ),
-                    ],
-                  ),
-                  child: Image.asset(
-                    'assets/icons/fantasize.png',
-                    width: screenWidth * 0.15,
-                    height: screenHeight * 0.05,
-                  ),
-                ),
-
+          // Center Logo
+          Center(
+            child: Container(
+            padding: EdgeInsets.all(2),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(15),
+              boxShadow: [
+              BoxShadow(
+                color: Colors.redAccent.withOpacity(0.1),
+                blurRadius: 15,
+                spreadRadius: 2,
+              ),
+              ],
+            ),
+            child: Image.asset(
+              'assets/icons/fantasize.png',
+              width: screenWidth * 0.18,
+              height: screenHeight * 0.05,
+            ),
+            ),
+          ),
+       
                 // Right Profile Picture
-                InkWell(
-                  onTap: () => Get.toNamed('/profile'),
-                  child: Obx(() {
-                    return Hero(
-                      tag: 'profile',
-                      child: Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: const Color(0xFFFF5252).withOpacity(0.2),
-                            width: 2,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color.fromRGBO(255, 82, 82, 1)
-                                  .withOpacity(0.1),
-                              blurRadius: 10,
-                              spreadRadius: 2,
-                            ),
-                          ],
-                        ),
-                        child: CircleAvatar(
-                          radius: screenWidth * 0.06,
-                          backgroundColor: Colors.white,
-                          child: CircleAvatar(
-                            radius: screenWidth * 0.055,
-                            backgroundImage: productsController
-                                    .userProfilePicture.isNotEmpty
-                                ? NetworkImage(
-                                    '${Strings().resourceUrl}/${productsController.userProfilePicture.value}')
-                                : const AssetImage('assets/images/profile.jpg')
-                                    as ImageProvider,
-                          ),
-                        ),
-                      ),
-                    );
-                  }),
-                ),
+               
               ],
             ),
           ),
@@ -254,80 +221,157 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 
     Get.bottomSheet(
       Container(
-        padding: EdgeInsets.all(20),
+        padding: EdgeInsets.all(24),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.redAccent.withOpacity(0.1),
+              blurRadius: 20,
+              spreadRadius: 5,
+            ),
+          ],
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Filter by Price',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
             ),
             SizedBox(height: 20),
-            // Minimum Price Field
-            TextField(
-              controller: minController,
-              keyboardType: TextInputType.numberWithOptions(decimal: true),
-              decoration: InputDecoration(
-                labelText: 'Minimum Price',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.attach_money),
+            Row(
+              children: [
+                Icon(Icons.filter_list_rounded, color: Colors.redAccent),
+                SizedBox(width: 10),
+                Text(
+                  'Price Range Filter',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey[800],
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 25),
+            Text(
+              'Set your price range',
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 14,
               ),
             ),
             SizedBox(height: 15),
-            // Maximum Price Field
-            TextField(
-              controller: maxController,
-              keyboardType: TextInputType.numberWithOptions(decimal: true),
-              decoration: InputDecoration(
-                labelText: 'Maximum Price',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.attach_money),
-              ),
-            ),
-            SizedBox(height: 20),
-            // Action Buttons
             Row(
-              mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                TextButton(
-                  onPressed: () {
-                    // Reset filters
-                    controller.resetPriceRange();
-                    Get.back();
-                  },
-                  child: Text(
-                    'Reset',
-                    style: TextStyle(color: Colors.redAccent),
+                Expanded(
+                  child: TextField(
+                    controller: minController,
+                    keyboardType: TextInputType.numberWithOptions(decimal: true),
+                    decoration: InputDecoration(
+                      labelText: 'Min Price',
+                      prefixIcon: Icon(Icons.remove_rounded, color: Colors.redAccent),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(15),
+                        borderSide: BorderSide(color: Colors.grey[300]!),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(15),
+                        borderSide: BorderSide(color: Colors.redAccent),
+                      ),
+                      filled: true,
+                      fillColor: Colors.grey[50],
+                    ),
                   ),
                 ),
-                SizedBox(width: 10),
-                ElevatedButton(
-                  onPressed: () {
-                    double? min = double.tryParse(minController.text.trim());
-                    double? max = double.tryParse(maxController.text.trim());
+                SizedBox(width: 15),
+                Expanded(
+                  child: TextField(
+                    controller: maxController,
+                    keyboardType: TextInputType.numberWithOptions(decimal: true),
+                    decoration: InputDecoration(
+                      labelText: 'Max Price',
+                      prefixIcon: Icon(Icons.add_rounded, color: Colors.redAccent),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(15),
+                        borderSide: BorderSide(color: Colors.grey[300]!),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(15),
+                        borderSide: BorderSide(color: Colors.redAccent),
+                      ),
+                      filled: true,
+                      fillColor: Colors.grey[50],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 25),
+            Row(
+              children: [
+                Expanded(
+                  child: TextButton(
+                    onPressed: () {
+                      controller.resetPriceRange();
+                      Get.back();
+                    },
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.symmetric(vertical: 15),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                        side: BorderSide(color: Colors.redAccent),
+                      ),
+                    ),
+                    child: Text(
+                      'Reset',
+                      style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 15),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      double? min = double.tryParse(minController.text.trim());
+                      double? max = double.tryParse(maxController.text.trim());
 
-                    if (min != null && max != null && min > max) {
-                      Get.snackbar('Invalid Range', 'Minimum price cannot exceed maximum price',
+                      if (min != null && max != null && min > max) {
+                        Get.snackbar(
+                          'Invalid Range',
+                          'Minimum price cannot exceed maximum price',
                           snackPosition: SnackPosition.BOTTOM,
                           backgroundColor: Colors.redAccent,
-                          colorText: Colors.white);
-                      return;
-                    }
+                          colorText: Colors.white,
+                        );
+                        return;
+                      }
 
-                    controller.applyPriceFilter(min, max);
-                    Get.back();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.redAccent,
+                      controller.applyPriceFilter(min, max);
+                      Get.back();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.redAccent,
+                      padding: EdgeInsets.symmetric(vertical: 15),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      elevation: 2,
+                    ),
+                    child: Text(
+                      'Apply Filter',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
                   ),
-                  child: Text('Apply'),
                 ),
               ],
             ),
@@ -335,6 +379,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         ),
       ),
       isScrollControlled: true,
+      backgroundColor: Colors.transparent,
     );
   }
 

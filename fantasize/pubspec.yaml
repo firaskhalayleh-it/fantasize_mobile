@@ -81,7 +81,7 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 icons_launcher:
-    image_path: "assets/icons/fantasize.png"
+    image_path: "assets/icons/logo.png"
     platforms:
       android:
         enable: true

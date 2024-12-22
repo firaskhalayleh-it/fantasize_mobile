@@ -1,5 +1,8 @@
+// File: payment_method_controller.dart
+
 import 'package:fantasize/app/data/models/payment_method.dart';
 import 'package:fantasize/app/global/strings.dart';
+import 'package:fantasize/app/modules/cart/controllers/cart_controller.dart';
 import 'package:fantasize/app/modules/profile/controllers/profile_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -9,7 +12,9 @@ import 'dart:convert';
 
 class PaymentMethodController extends GetxController {
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
-  ProfileController profileController = Get.find();
+  final ProfileController profileController = Get.isRegistered()
+      ? Get.find<ProfileController>()
+      : Get.put(ProfileController());
   // Observables for form data
   var paymentMethod = PaymentMethod().obs;
   TextEditingController cardNumberController = TextEditingController();
@@ -19,9 +24,8 @@ class PaymentMethodController extends GetxController {
 
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
-  // Observables for checkbox states
+  // Observable for checkbox state
   var agreeToTerms = false.obs;
-  var saveCardDetails = false.obs;
 
   // Base API URL
   final String baseUrl = Strings().apiUrl;
@@ -53,23 +57,29 @@ class PaymentMethodController extends GetxController {
         method?.cvv = int.tryParse(cvvController.text);
         method?.method = 'Credit Card';
         method?.cardType = determineCardType(cardNumberController.text);
-        updateExpirationDate(expirationDateController.text);
+        // expirationDate is already updated in the onChanged callback
       });
 
-      // If "saveCardDetails" is checked, call the API to save the payment
-      if (saveCardDetails.value) {
-        if (paymentMethod.value.paymentMethodID == null) {
-          await postPaymentMethod();
-          profileController.fetchUserData();
-        } else {
-          await updatePaymentMethod();
-          profileController.fetchUserData();
-        }
+      // Proceed to save the payment method via API
+      if (paymentMethod.value.paymentMethodID == null) {
+        await postPaymentMethod();
       } else {
-        Get.snackbar('Info', 'Card details not saved as per your preference.');
+        await updatePaymentMethod();
       }
+
+      // Refresh user data
+      profileController.fetchUserData();
     } else {
-      Get.snackbar('Error', 'Please complete all fields and agree to terms');
+      if (!agreeToTerms.value) {
+        Get.snackbar(
+          'Agreement Required',
+          'Please agree to the terms and conditions',
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      } else {
+        Get.snackbar('Error', 'Please complete all fields',
+            snackPosition: SnackPosition.BOTTOM);
+      }
     }
   }
 
@@ -99,13 +109,17 @@ class PaymentMethodController extends GetxController {
 
       // Handle response
       if (response.statusCode == 201 || response.statusCode == 200) {
-        Get.snackbar('Success', 'Payment method saved successfully');
+        Get.snackbar('Success', 'Payment method saved successfully',
+            snackPosition: SnackPosition.TOP);
+
+        Get.find<CartController>().fetchPaymentMethods();
       } else {
-        Get.snackbar(
-            'Error', 'Failed to save payment method: ${response.body}');
+        Get.snackbar('Error', 'Failed to save payment method: ${response.body}',
+            snackPosition: SnackPosition.BOTTOM);
       }
     } catch (e) {
-      Get.snackbar('Error', 'An error occurred while saving payment method');
+      Get.snackbar('Error', 'An error occurred while saving payment method: $e',
+          snackPosition: SnackPosition.BOTTOM);
     }
   }
 
@@ -117,7 +131,8 @@ class PaymentMethodController extends GetxController {
 
       // Ensure paymentMethodID is available
       if (paymentMethod.value.paymentMethodID == null) {
-        Get.snackbar('Error', 'No PaymentMethodID to update');
+        Get.snackbar('Error', 'No PaymentMethodID to update',
+            snackPosition: SnackPosition.BOTTOM);
         return;
       }
 
@@ -141,20 +156,25 @@ class PaymentMethodController extends GetxController {
 
       // Handle response
       if (response.statusCode == 200) {
-        Get.snackbar('Success', 'Payment method updated successfully');
+        Get.snackbar('Success', 'Payment method updated successfully',
+            snackPosition: SnackPosition.TOP);
       } else {
         Get.snackbar(
-            'Error', 'Failed to update payment method: ${response.body}');
+            'Error', 'Failed to update payment method: ${response.body}',
+            snackPosition: SnackPosition.BOTTOM);
       }
     } catch (e) {
-      Get.snackbar('Error', 'An error occurred while updating payment method');
+      Get.snackbar(
+          'Error', 'An error occurred while updating payment method: $e',
+          snackPosition: SnackPosition.BOTTOM);
     }
   }
 
   // New function to delete payment method
   Future<void> deletePaymentMethod() async {
     if (paymentMethod.value.paymentMethodID == null) {
-      Get.snackbar('Error', 'No PaymentMethodID to delete');
+      Get.snackbar('Error', 'No PaymentMethodID to delete',
+          snackPosition: SnackPosition.BOTTOM);
       return;
     }
 
@@ -184,15 +204,29 @@ class PaymentMethodController extends GetxController {
 
       // Handle response
       if (response.statusCode == 200) {
-        Get.snackbar('Success', 'Payment method deleted successfully');
+        Get.snackbar('Success', 'Payment method deleted successfully',
+            snackPosition: SnackPosition.TOP);
 
+        // Reset paymentMethod observable
+        paymentMethod.value = PaymentMethod();
+
+        // Clear form fields
+        cardNumberController.clear();
+        cardholderNameController.clear();
+        expirationDateController.clear();
+        cvvController.clear();
+
+        // Refresh user data
         profileController.fetchUserData();
       } else {
         Get.snackbar(
-            'Error', 'Failed to delete payment method: ${response.body}');
+            'Error', 'Failed to delete payment method: ${response.body}',
+            snackPosition: SnackPosition.BOTTOM);
       }
     } catch (e) {
-      Get.snackbar('Error', 'An error occurred while deleting payment method');
+      Get.snackbar(
+          'Error', 'An error occurred while deleting payment method: $e',
+          snackPosition: SnackPosition.BOTTOM);
     }
   }
 
@@ -202,33 +236,6 @@ class PaymentMethodController extends GetxController {
     if (cardNumber.startsWith('5')) return 'MasterCard';
     if (cardNumber.startsWith('3')) return 'American Express';
     return 'Unknown';
-  }
-
-  void updateExpirationDate(String value) {
-    try {
-      final parts = value.split('/');
-      if (parts.length == 2 && parts[0].length == 2) {
-        final month = int.tryParse(parts[0]);
-        final yearPart = parts[1];
-        final year = yearPart.length == 2
-            ? (int.tryParse(yearPart) != null
-                ? int.parse(yearPart) + 2000
-                : null)
-            : int.tryParse(yearPart);
-
-        if (month != null && month >= 1 && month <= 12 && year != null) {
-          paymentMethod.update((val) {
-            val?.expirationDate = DateTime(year, month);
-          });
-        } else {
-          throw FormatException('Invalid month or year');
-        }
-      } else {
-        throw FormatException('Invalid format');
-      }
-    } catch (e) {
-      Get.snackbar('Error', 'Invalid date format. Please use MM/YY or MM/YYYY');
-    }
   }
 
   // Clean up resources

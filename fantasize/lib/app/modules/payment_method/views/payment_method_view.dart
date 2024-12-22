@@ -1,4 +1,7 @@
+// File: payment_method_view.dart
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // Import for input formatters
 import 'package:intl/intl.dart';
 import 'package:u_credit_card/u_credit_card.dart';
 import 'package:get/get.dart';
@@ -72,12 +75,15 @@ class PaymentMethodView extends GetView<PaymentMethodController> {
       child: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Obx(() => CreditCardUi(
-              cardHolderFullName: controller.paymentMethod.value.cardholderName ?? '',
+              cardHolderFullName:
+                  controller.paymentMethod.value.cardholderName ?? '',
               cardNumber: controller.paymentMethod.value.cardNumber ?? '',
               validThru: controller.paymentMethod.value.expirationDate != null
-                  ? DateFormat('MM/yy').format(controller.paymentMethod.value.expirationDate!)
+                  ? DateFormat('MM/yy')
+                      .format(controller.paymentMethod.value.expirationDate!)
                   : '',
-              cvvNumber: controller.paymentMethod.value.cvv?.toString() ?? '',
+              cvvNumber:
+                  controller.paymentMethod.value.cvv?.toString() ?? '',
               topLeftColor: const Color(0xFFFF4C5E),
               bottomRightColor: const Color(0xFF2D3142),
               placeNfcIconAtTheEnd: true,
@@ -123,6 +129,11 @@ class PaymentMethodView extends GetView<PaymentMethodController> {
                 controller: controller.cardNumberController,
                 icon: Icons.credit_card,
                 hint: 'XXXX XXXX XXXX XXXX',
+                keyboardType: TextInputType.number,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(16),
+                ],
                 validator: (value) => value != null && value.length == 16
                     ? null
                     : 'Enter a valid card number',
@@ -136,6 +147,10 @@ class PaymentMethodView extends GetView<PaymentMethodController> {
                 label: 'Cardholder Name',
                 controller: controller.cardholderNameController,
                 icon: Icons.person_outline,
+                validator: (value) =>
+                    value != null && value.isNotEmpty
+                        ? null
+                        : 'Enter cardholder name',
                 onChanged: (value) {
                   controller.paymentMethod.update((val) {
                     val?.cardholderName = value;
@@ -150,6 +165,46 @@ class PaymentMethodView extends GetView<PaymentMethodController> {
                       controller: controller.expirationDateController,
                       icon: Icons.calendar_today_outlined,
                       hint: 'MM/YY',
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        LengthLimitingTextInputFormatter(4),
+                        ExpiryDateInputFormatter(), // Custom formatter
+                      ],
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Enter expiry date';
+                        }
+                        final regex = RegExp(r'^(0[1-9]|1[0-2])\/\d{2}$');
+                        if (!regex.hasMatch(value)) {
+                          return 'Enter valid expiry date';
+                        }
+                        return null;
+                      },
+                      onChanged: (value) {
+                        // Update expirationDate in controller if needed
+                        if (value.length == 5) {
+                          final parts = value.split('/');
+                          if (parts.length == 2) {
+                            final month = int.tryParse(parts[0]);
+                            final year = int.tryParse(parts[1]);
+                            if (month != null && year != null) {
+                              // Assuming current century
+                              final fourDigitYear = 2000 + year;
+                              controller.paymentMethod.update((val) {
+                                val?.expirationDate = DateTime(
+                                  fourDigitYear,
+                                  month,
+                                );
+                              });
+                            }
+                          }
+                        } else {
+                          controller.paymentMethod.update((val) {
+                            val?.expirationDate = null;
+                          });
+                        }
+                      },
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -159,6 +214,14 @@ class PaymentMethodView extends GetView<PaymentMethodController> {
                       controller: controller.cvvController,
                       icon: Icons.lock_outline,
                       hint: 'XXX',
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        LengthLimitingTextInputFormatter(3),
+                      ],
+                      validator: (value) => value != null && value.length == 3
+                          ? null
+                          : 'Enter a valid CVV',
                       onChanged: (value) {
                         controller.paymentMethod.update((val) {
                           val?.cvv = int.tryParse(value);
@@ -173,10 +236,7 @@ class PaymentMethodView extends GetView<PaymentMethodController> {
                 value: controller.agreeToTerms,
                 title: 'I agree to the terms and conditions',
               ),
-              _buildCheckboxTile(
-                value: controller.saveCardDetails,
-                title: 'Save card details for future use',
-              ),
+              // Removed the "Save card details for future use" checkbox
               const SizedBox(height: 32),
               _buildButtons(),
             ],
@@ -191,6 +251,8 @@ class PaymentMethodView extends GetView<PaymentMethodController> {
     required TextEditingController controller,
     required IconData icon,
     String? hint,
+    TextInputType? keyboardType,
+    List<TextInputFormatter>? inputFormatters,
     String? Function(String?)? validator,
     void Function(String)? onChanged,
   }) {
@@ -227,6 +289,8 @@ class PaymentMethodView extends GetView<PaymentMethodController> {
           controller: controller,
           validator: validator,
           onChanged: onChanged,
+          keyboardType: keyboardType,
+          inputFormatters: inputFormatters,
           style: const TextStyle(
             fontSize: 16,
             color: Colors.black87,
@@ -275,11 +339,13 @@ class PaymentMethodView extends GetView<PaymentMethodController> {
               ),
             ),
             const SizedBox(width: 8),
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 14,
-                color: Color(0xFF2D3142),
+            Expanded(
+              child: Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Color(0xFF2D3142),
+                ),
               ),
             ),
           ],
@@ -294,9 +360,18 @@ class PaymentMethodView extends GetView<PaymentMethodController> {
           child: ElevatedButton(
             onPressed: () {
               if (controller.formKey.currentState!.validate()) {
-                controller.savePaymentMethod();
+                if (controller.agreeToTerms.value) {
+                  controller.savePaymentMethod();
+                } else {
+                  Get.snackbar(
+                    'Agreement Required',
+                    'Please agree to the terms and conditions',
+                    snackPosition: SnackPosition.BOTTOM,
+                  );
+                }
               } else {
-                Get.snackbar('Error', 'Please complete all fields');
+                Get.snackbar('Error', 'Please complete all fields',
+                    snackPosition: SnackPosition.BOTTOM);
               }
             },
             style: ElevatedButton.styleFrom(
@@ -344,6 +419,36 @@ class PaymentMethodView extends GetView<PaymentMethodController> {
           ),
         ],
       ],
+    );
+  }
+}
+
+// Custom TextInputFormatter for Expiry Date (MM/YY)
+class ExpiryDateInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+      TextEditingValue oldValue, TextEditingValue newValue) {
+    var text = newValue.text;
+
+    // If user is deleting, allow it
+    if (newValue.selection.baseOffset < oldValue.selection.baseOffset) {
+      return newValue;
+    }
+
+    // Remove any character that is not a digit
+    text = text.replaceAll(RegExp(r'[^\d]'), '');
+
+    if (text.length > 4) {
+      text = text.substring(0, 4);
+    }
+
+    if (text.length > 2) {
+      text = '${text.substring(0, 2)}/${text.substring(2)}';
+    }
+
+    return TextEditingValue(
+      text: text,
+      selection: TextSelection.collapsed(offset: text.length),
     );
   }
 }

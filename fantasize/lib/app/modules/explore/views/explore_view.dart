@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'widgets/video_player_widget.dart';
 import '../controllers/explore_controller.dart';
+import 'package:flutter/gestures.dart';
 
 class ExploreView extends StatelessWidget {
   @override
@@ -11,19 +12,7 @@ class ExploreView extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.black,
       extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: Container(),
-        title: const Text(
-          'Explore',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
+      appBar: _buildAppBar(),
       body: Obx(() {
         if (controller.isLoading.value) {
           return _buildLoadingState();
@@ -48,21 +37,83 @@ class ExploreView extends StatelessWidget {
         controller.showHeartAnimation.length == controller.videos.length;
   }
 
+  PreferredSizeWidget _buildAppBar() {
+    return AppBar(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      flexibleSpace: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.black.withOpacity(0.7),
+              Colors.transparent,
+            ],
+          ),
+        ),
+      ),
+      title: ShaderMask(
+        shaderCallback: (bounds) => LinearGradient(
+          colors: [Color(0xFFFF4C5E), Color(0xFFFF8F9C)],
+        ).createShader(bounds),
+        child: const Text(
+          'Explore',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1.2,
+          ),
+        ),
+      ),
+      centerTitle: true,
+    );
+  }
+
   Widget _buildLoadingState() {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+          TweenAnimationBuilder(
+            tween: Tween(begin: 0.0, end: 1.0),
+            duration: Duration(milliseconds: 1000),
+            builder: (context, double value, child) {
+              return Transform.scale(
+                scale: value,
+                child: Container(
+                  padding: EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFF4C5E)),
+                    strokeWidth: 3,
+                  ),
+                ),
+              );
+            },
           ),
-          const SizedBox(height: 16),
-          Text(
-            'Loading videos...',
-            style: TextStyle(
-              color: Colors.white.withOpacity(0.8),
-              fontSize: 16,
-            ),
+          const SizedBox(height: 24),
+          TweenAnimationBuilder(
+            tween: Tween(begin: 0.0, end: 1.0),
+            duration: Duration(milliseconds: 1000),
+            builder: (context, double value, child) {
+              return Opacity(
+                opacity: value,
+                child: Text(
+                  'Loading videos...',
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.9),
+                    fontSize: 18,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              );
+            },
           ),
         ],
       ),
@@ -74,18 +125,43 @@ class ExploreView extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.videocam_off,
-            color: Colors.white.withOpacity(0.5),
-            size: 64,
+          TweenAnimationBuilder(
+            tween: Tween(begin: 0.0, end: 1.0),
+            duration: Duration(milliseconds: 800),
+            builder: (context, double value, child) {
+              return Transform.scale(
+                scale: value,
+                child: Container(
+                  padding: EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.videocam_off,
+                    color: Color(0xFFFF4C5E),
+                    size: 64,
+                  ),
+                ),
+              );
+            },
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
           Text(
-            'No videos available',
+            'No Videos Available',
             style: TextStyle(
-              color: Colors.white.withOpacity(0.8),
-              fontSize: 18,
-              fontWeight: FontWeight.w500,
+              color: Colors.white,
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Check back later for new content',
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.7),
+              fontSize: 16,
             ),
           ),
         ],
@@ -99,7 +175,10 @@ class ExploreView extends StatelessWidget {
         PageView.builder(
           scrollDirection: Axis.vertical,
           itemCount: controller.videos.length,
-          onPageChanged: controller.handleVideoSwitch,
+          onPageChanged: (index) {
+            print('Page changed to: $index'); // Debugging log
+            controller.handleVideoSwitch(index);
+          },
           itemBuilder: (context, index) {
             if (!_isValidIndex(controller, index)) {
               return _buildErrorState();
@@ -123,17 +202,26 @@ class ExploreView extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.error_outline,
-            color: Colors.white.withOpacity(0.5),
-            size: 48,
+          Container(
+            padding: EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.error_outline,
+              color: Color(0xFFFF4C5E),
+              size: 48,
+            ),
           ),
           const SizedBox(height: 16),
           Text(
             'Error loading video',
             style: TextStyle(
-              color: Colors.white.withOpacity(0.8),
-              fontSize: 16,
+              color: Colors.white.withOpacity(0.9),
+              fontSize: 18,
+              fontWeight: FontWeight.w500,
+              letterSpacing: 0.5,
             ),
           ),
         ],
@@ -142,14 +230,26 @@ class ExploreView extends StatelessWidget {
   }
 
   Widget _buildVideoItem(ExploreController controller, int index) {
-    return GestureDetector(
-      onDoubleTap: () => controller.likeVideo(index),
-      onTap: () => controller.toggleVideoPlayPause(index),
+    return RawGestureDetector(
+      gestures: {
+        TapGestureRecognizer: GestureRecognizerFactoryWithHandlers<TapGestureRecognizer>(
+          () => TapGestureRecognizer(),
+          (TapGestureRecognizer instance) {
+            instance.onTap = () => controller.toggleVideoPlayPause(index);
+          },
+        ),
+        DoubleTapGestureRecognizer: GestureRecognizerFactoryWithHandlers<DoubleTapGestureRecognizer>(
+          () => DoubleTapGestureRecognizer(),
+          (DoubleTapGestureRecognizer instance) {
+            instance.onDoubleTap = () => controller.likeVideo(index);
+          },
+        ),
+      },
+      behavior: HitTestBehavior.translucent, // Allow gestures to pass through
       child: Stack(
         children: [
           VideoPlayerWidget(videoIndex: index),
           _buildVideoOverlay(controller, index),
-          
           if (controller.showHeartAnimation[index]) _buildHeartAnimation(),
         ],
       ),
@@ -159,14 +259,14 @@ class ExploreView extends StatelessWidget {
   Widget _buildVideoOverlay(ExploreController controller, int index) {
     return Positioned(
       right: 16,
-      bottom: 80,
+      bottom: 100,
       child: Column(
         children: [
           _buildInteractionButton(
             icon: controller.isLiked(index)
                 ? Icons.favorite
                 : Icons.favorite_border,
-            color: controller.isLiked(index) ? Colors.red : Colors.white,
+            color: controller.isLiked(index) ? Color(0xFFFF4C5E) : Colors.white,
             onTap: () => controller.likeVideo(index),
           ),
           const SizedBox(height: 20),
@@ -184,24 +284,40 @@ class ExploreView extends StatelessWidget {
     required VoidCallback onTap,
     Color color = Colors.white,
   }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.3),
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: Colors.white.withOpacity(0.2),
-            width: 1,
+    return TweenAnimationBuilder(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: Duration(milliseconds: 300),
+      builder: (context, double value, child) {
+        return Transform.scale(
+          scale: value,
+          child: GestureDetector(
+            onTap: onTap,
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.3),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.2),
+                  width: 1.5,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: color.withOpacity(0.3),
+                    blurRadius: 8,
+                    spreadRadius: 0,
+                  ),
+                ],
+              ),
+              child: Icon(
+                icon,
+                color: color,
+                size: 28,
+              ),
+            ),
           ),
-        ),
-        child: Icon(
-          icon,
-          color: color,
-          size: 28,
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -215,10 +331,17 @@ class ExploreView extends StatelessWidget {
             scale: 2 * value * (1 - value) + 1,
             child: Opacity(
               opacity: value > 0.5 ? 2 * (1 - value) : 2 * value,
-              child: const Icon(
-                Icons.favorite,
-                color: Colors.red,
-                size: 100,
+              child: Container(
+                padding: EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.favorite,
+                  color: Color(0xFFFF4C5E),
+                  size: 100,
+                ),
               ),
             ),
           );

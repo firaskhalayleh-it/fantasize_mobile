@@ -24,8 +24,8 @@ class PackageProduct {
       packageProductId: json['PackageProductId'],
       productName: json['ProductName'],
       quantity: json['Quantity'],
-      package: Package.fromJson(json['Package']),
-      product: Product.fromJson(json['Product']),
+      package: json['Package'] != null ? Package.fromJson(json['Package']) : Package.defaultPackage(),
+      product: json['Product'] != null ? Product.fromJson(json['Product']) : Product.defaultProduct(),
     );
   }
 

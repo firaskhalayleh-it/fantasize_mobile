@@ -19,7 +19,7 @@ class ProfileController extends GetxController {
   TextEditingController usernameController = TextEditingController();
   TextEditingController newpasswordController = TextEditingController();
   TextEditingController confirmpasswordController = TextEditingController();
-  GlobalKey formKey = GlobalKey<FormState>();
+  GlobalKey profileFormKey = GlobalKey<FormState>();
   var newpassword = ''.obs;
 
   var confirmpassword = ''.obs;
@@ -128,7 +128,7 @@ class ProfileController extends GetxController {
     var response = await request.send();
     var responseBody = await response.stream.bytesToString();
 
-    if (response.statusCode == 200) {
+    if (response.statusCode == 200 || response.statusCode == 201) {
       var jsonResponse = json.decode(responseBody);
       print('Response: $jsonResponse');
 
@@ -178,6 +178,7 @@ class ProfileController extends GetxController {
   }
 
   void showResetPasswordDialog() {
+    var dialogFormKey = GlobalKey<FormState>();
     Get.dialog(
       Dialog(
         shape: RoundedRectangleBorder(
@@ -191,7 +192,7 @@ class ProfileController extends GetxController {
             borderRadius: BorderRadius.circular(20),
           ),
           child: Form(
-            key: formKey,
+            key: dialogFormKey,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -290,7 +291,7 @@ class ProfileController extends GetxController {
                       child: _buildButton(
                         title: 'Reset Password',
                         onPressed: () {
-                          if ((formKey.currentState as FormState).validate()) {
+                          if ((dialogFormKey.currentState as FormState).validate()) {
                             newpassword.value = newpasswordController.text;
                             confirmpassword.value =
                                 confirmpasswordController.text;
@@ -353,13 +354,14 @@ class ProfileController extends GetxController {
       List<String> keysToDelete =
           allKeys.where((key) => !keysToKeep.contains(key)).toList();
 
+          
       // Delete the unwanted keys
       for (String key in keysToDelete) {
         await secureStorage.delete(key: key);
         print('Deleted key: $key');
       }
 
-      Get.offAllNamed('/login');
+      Get.offAllNamed('/splash');
     } catch (e) {
       print('Error deleting keys except DeviceToken: $e');
     }

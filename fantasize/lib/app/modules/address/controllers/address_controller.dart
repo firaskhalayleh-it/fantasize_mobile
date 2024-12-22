@@ -1,6 +1,7 @@
 // lib/app/modules/address/controllers/address_controller.dart
 
 import 'package:fantasize/app/global/strings.dart';
+import 'package:fantasize/app/modules/cart/controllers/cart_controller.dart';
 import 'package:fantasize/app/modules/profile/controllers/profile_controller.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get/get.dart';
@@ -18,7 +19,9 @@ class AddressController extends GetxController {
   TextEditingController countryController = TextEditingController();
 
   FlutterSecureStorage secureStorage = const FlutterSecureStorage();
-  ProfileController profileController = Get.find();
+  ProfileController profileController = Get.isRegistered()
+      ? Get.find<ProfileController>()
+      : Get.put(ProfileController());
   // Store the AddressId if updating an existing address
   int? addressId;
   Address? address;
@@ -131,8 +134,10 @@ class AddressController extends GetxController {
             'Address saved successfully.',
           );
           profileController.fetchUserData();
-          print('Address saved successfully');
 
+          Get.find<CartController>().fetchAddresses();
+
+          print('Address saved successfully');
         } else {
           Get.snackbar('Error', 'Failed to save address.');
         }
@@ -173,7 +178,6 @@ class AddressController extends GetxController {
             );
             profileController.fetchUserData();
             print('Address deleted successfully');
-
           } else {
             print('Error: ${response.statusCode}');
             print('Response body: ${response.body}');

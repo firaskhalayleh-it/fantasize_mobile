@@ -82,8 +82,6 @@ class ProductsController extends GetxController with GetSingleTickerProviderStat
     // Fetch initial data
     fetchData();
 
-    // Load user data
-    loadUserData();
   }
 
   @override
@@ -96,26 +94,13 @@ class ProductsController extends GetxController with GetSingleTickerProviderStat
   // Fetch Data Based on Current Tab
   void fetchData() {
     String currentTab = subCategoryNames[tabBarIndex.value].toLowerCase();
-    if (currentTab == "packages") {
+    if (currentTab == "packages" || currentTab == "package" ) {
       fetchPackages(categoryId, subCategoryId.value);
     } else {
       fetchProducts(categoryId, subCategoryId.value);
     }
   }
 
-  // Load User Data from Secure Storage
-  Future<void> loadUserData() async {
-    String? userData = await _secureStorage.read(key: 'user_data');
-
-    if (userData != null) {
-      user.value = User.fromJson(jsonDecode(userData));
-      userName.value = user.value!.username;
-      userProfilePicture.value =
-          user.value!.userProfilePicture?.entityName?.toString() ?? 'profile.jpg';
-    }
-  }
-
-  // Update Search Query with Debounce
   void updateSearchQuery(String query) {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 300), () {
@@ -144,7 +129,7 @@ class ProductsController extends GetxController with GetSingleTickerProviderStat
     double? min = minPrice.value;
     double? max = maxPrice.value;
 
-    if (currentTab == "packages") {
+    if (currentTab == "packages" || currentTab == "package") {
       Iterable<Package> tempPackages = packageList;
 
       // Apply Search Query Filter
@@ -226,7 +211,7 @@ class ProductsController extends GetxController with GetSingleTickerProviderStat
       } else if (response.statusCode == 401) {
         Get.snackbar('Unauthorized', 'Invalid or missing token');
       } else if (response.statusCode == 404) {
-        Get.snackbar('Error', 'No products found');
+        Get.snackbar('Message', 'No products found');
         productList.clear();
         filteredProductList.clear();
       } else if (response.statusCode == 500) {

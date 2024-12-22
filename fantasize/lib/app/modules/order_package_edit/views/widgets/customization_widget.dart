@@ -30,7 +30,8 @@ class CustomizationWidget extends StatelessWidget {
           children: [
             Text(
               _getCustomizationName(
-                  orderedCustomization.orderedCustomizationId),
+                orderedCustomization.orderedCustomizationId,
+              ),
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
@@ -40,18 +41,24 @@ class CustomizationWidget extends StatelessWidget {
             SizedBox(height: 8),
             ...orderedCustomization.selectedOptions.map((orderedOption) {
               final option = Option(
-                  type: orderedOption.type,
-                  name: orderedOption.name,
-                  optionValues: orderedOption.optionValues
-                      .map((ov) => OptionValue(
-                            name: ov.name,
-                            value: ov.value,
-                            filePath: ov.filePath ?? '',
-                            isSelected: ov.isSelected,
-                          ))
-                      .toList());
+                type: orderedOption.type,
+                name: orderedOption.name,
+                optionValues: orderedOption.optionValues
+                    .map(
+                      (ov) => OptionValue(
+                        name: ov.name,
+                        value: ov.value,
+                        filePath: ov.filePath ?? '',
+                        isSelected: ov.isSelected,
+                      ),
+                    )
+                    .toList(),
+              );
               return _buildOptionWidget(
-                  controller, orderedCustomization, option);
+                controller,
+                orderedCustomization,
+                option,
+              );
             }).toList(),
             SizedBox(height: 16),
           ],
@@ -67,8 +74,11 @@ class CustomizationWidget extends StatelessWidget {
     return 'Customization $customizationId';
   }
 
-  Widget _buildOptionWidget(OrderPackageEditController controller,
-      OrderedCustomization customization, Option option) {
+  Widget _buildOptionWidget(
+    OrderPackageEditController controller,
+    OrderedCustomization customization,
+    Option option,
+  ) {
     switch (option.type.toLowerCase()) {
       case 'button':
         return _buildButtonOptions(controller, customization, option);
@@ -85,8 +95,11 @@ class CustomizationWidget extends StatelessWidget {
     }
   }
 
-  Widget _buildButtonOptions(OrderPackageEditController controller,
-      OrderedCustomization customization, Option option) {
+  Widget _buildButtonOptions(
+    OrderPackageEditController controller,
+    OrderedCustomization customization,
+    Option option,
+  ) {
     return Wrap(
       spacing: 8.0,
       runSpacing: 8.0,
@@ -126,8 +139,11 @@ class CustomizationWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildColorOptions(OrderPackageEditController controller,
-      OrderedCustomization customization, Option option) {
+  Widget _buildColorOptions(
+    OrderPackageEditController controller,
+    OrderedCustomization customization,
+    Option option,
+  ) {
     return Wrap(
       spacing: 12.0,
       runSpacing: 12.0,
@@ -175,8 +191,13 @@ class CustomizationWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildImageOptions(OrderPackageEditController controller,
-      OrderedCustomization customization, Option option) {
+  /// Modified to handle hex color strings when [optionValue.value]
+  /// comes through as a color code instead of an image URL.
+  Widget _buildImageOptions(
+    OrderPackageEditController controller,
+    OrderedCustomization customization,
+    Option option,
+  ) {
     return Container(
       height: 100,
       child: ListView(
@@ -184,6 +205,8 @@ class CustomizationWidget extends StatelessWidget {
         children: option.optionValues.map((optionValue) {
           return Obx(() {
             final isSelected = optionValue.isSelected.value;
+            final isHex = _isHexColor(optionValue.value);
+
             return GestureDetector(
               onTap: () {
                 controller.updateSelectedOption(
@@ -210,38 +233,53 @@ class CustomizationWidget extends StatelessWidget {
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(10),
-                  child: Stack(
-                    children: [
-                      Image.network(
-                        '${Strings().resourceUrl}${optionValue.filePath}',
-                        width: 80,
-                        height: 80,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            width: 80,
-                            height: 80,
-                            color: Colors.grey[200],
-                            child: Icon(
-                              Icons.image_not_supported,
-                              color: Colors.grey[400],
+                  child: isHex
+                      // If the value is detected as hex, show a color box
+                      ? Container(
+                          width: 80,
+                          height: 80,
+                          color: _parseColor(optionValue.value),
+                          child: isSelected
+                              ? Icon(
+                                  Icons.check_circle,
+                                  color: Colors.white,
+                                  size: 24,
+                                )
+                              : null,
+                        )
+                      // Otherwise, treat it as an image
+                      : Stack(
+                          children: [
+                            Image.network(
+                              '${Strings().resourceUrl}${optionValue.filePath}',
+                              width: 80,
+                              height: 80,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  width: 80,
+                                  height: 80,
+                                  color: Colors.grey[200],
+                                  child: Icon(
+                                    Icons.image_not_supported,
+                                    color: Colors.grey[400],
+                                  ),
+                                );
+                              },
                             ),
-                          );
-                        },
-                      ),
-                      if (isSelected)
-                        Positioned.fill(
-                          child: Container(
-                            color: Colors.black.withOpacity(0.3),
-                            child: Icon(
-                              Icons.check_circle,
-                              color: Colors.white,
-                              size: 24,
-                            ),
-                          ),
+                            if (isSelected)
+                              Positioned.fill(
+                                child: Container(
+                                  color: Colors.black.withOpacity(0.3),
+                                  child: Icon(
+                                    Icons.check_circle,
+                                    color: Colors.white,
+                                    size: 24,
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
-                    ],
-                  ),
                 ),
               ),
             );
@@ -251,12 +289,19 @@ class CustomizationWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildAttachMessageOption(OrderPackageEditController controller,
-      OrderedCustomization customization, Option option) {
+  Widget _buildAttachMessageOption(
+    OrderPackageEditController controller,
+    OrderedCustomization customization,
+    Option option,
+  ) {
     final textController = controller.getTextController(
-        customization.orderedCustomizationId, option.name);
+      customization.orderedCustomizationId,
+      option.name,
+    );
     final isVisible = controller.getAttachMessageVisibility(
-        customization.orderedCustomizationId, option.name);
+      customization.orderedCustomizationId,
+      option.name,
+    );
 
     return Obx(() {
       final hasText = textController.text.isNotEmpty;
@@ -275,7 +320,9 @@ class CustomizationWidget extends StatelessWidget {
             ElevatedButton.icon(
               onPressed: () {
                 controller.toggleAttachMessageVisibility(
-                    customization.orderedCustomizationId, option.name);
+                  customization.orderedCustomizationId,
+                  option.name,
+                );
               },
               icon: Icon(
                 hasText ? Icons.edit : Icons.add,
@@ -332,10 +379,15 @@ class CustomizationWidget extends StatelessWidget {
     });
   }
 
-  Widget _buildUploadPictureOption(OrderPackageEditController controller,
-      OrderedCustomization customization, Option option) {
+  Widget _buildUploadPictureOption(
+    OrderPackageEditController controller,
+    OrderedCustomization customization,
+    Option option,
+  ) {
     final imagePathRx = controller.getUploadedImagePath(
-        customization.orderedCustomizationId, option.name);
+      customization.orderedCustomizationId,
+      option.name,
+    );
 
     return Obx(() {
       final imagePath = imagePathRx.value;
@@ -360,8 +412,9 @@ class CustomizationWidget extends StatelessWidget {
                   label: Text(hasImage ? 'Change Picture' : 'Upload Picture'),
                   onPressed: () async {
                     final picker = ImagePicker();
-                    final image =
-                        await picker.pickImage(source: ImageSource.gallery);
+                    final image = await picker.pickImage(
+                      source: ImageSource.gallery,
+                    );
                     if (image != null) {
                       controller.updateUploadedImage(
                         customization.orderedCustomizationId,
@@ -440,7 +493,16 @@ class CustomizationWidget extends StatelessWidget {
     });
   }
 
-  /// Enhanced color parsing to handle various formats
+  /// Checks if [colorString] is a valid 6 or 8 digit hex color code
+  /// (with or without 0x or # prefix).
+  bool _isHexColor(String colorString) {
+    final trimmed = colorString.trim();
+    final pattern = RegExp(r'^(#|0x)?[A-Fa-f0-9]{6}([A-Fa-f0-9]{2})?$');
+    return pattern.hasMatch(trimmed);
+  }
+
+  /// Enhanced color parsing to handle various formats.
+  /// Falls back to [Colors.grey] on invalid input.
   Color _parseColor(String colorString) {
     try {
       String hexColor = colorString.trim();
@@ -452,7 +514,8 @@ class CustomizationWidget extends StatelessWidget {
       }
 
       if (hexColor.length == 6) {
-        hexColor = 'FF$hexColor'; // Add alpha if missing
+        // Add alpha if missing
+        hexColor = 'FF$hexColor';
       } else if (hexColor.length == 8) {
         // Already has alpha
       } else {

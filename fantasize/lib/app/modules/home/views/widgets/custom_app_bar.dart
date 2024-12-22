@@ -1,11 +1,14 @@
 // lib/app/modules/home/views/widgets/custom_app_bar.dart
 
-import 'package:fantasize/app/modules/search/views/search_view.dart';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'dart:ui';
+import 'package:fantasize/app/data/models/package_model.dart';
+import 'package:fantasize/app/data/models/product_model.dart';
+import 'package:fantasize/app/global/widgets/image_handler.dart';
 import 'package:fantasize/app/global/strings.dart';
 import 'package:fantasize/app/modules/home/controllers/home_controller.dart';
+import 'package:fantasize/app/modules/search/views/search_view.dart';
 
 class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
   final double screenHeight;
@@ -22,8 +25,7 @@ class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
   _CustomAppBarState createState() => _CustomAppBarState();
 
   @override
-  Size get preferredSize =>
-      Size.fromHeight(screenHeight * 0.28); // Reduced height
+  Size get preferredSize => Size.fromHeight(screenHeight * 0.28);
 }
 
 class _CustomAppBarState extends State<CustomAppBar>
@@ -44,7 +46,6 @@ class _CustomAppBarState extends State<CustomAppBar>
       vsync: this,
     );
 
-    // Define slide animation from top
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, -1),
       end: Offset.zero,
@@ -53,21 +54,13 @@ class _CustomAppBarState extends State<CustomAppBar>
       curve: Curves.easeOutCubic,
     ));
 
-    // Define fade-in animation
-    _fadeAnimation = Tween<double>(
-      begin: 0,
-      end: 1,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOut,
-    ));
+    _fadeAnimation = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+    );
 
-    // Initialize GlobalKeys for category items
     for (int i = 0; i < homeController.categories.length; i++) {
       _itemKeys[i] = GlobalKey();
     }
-
-    // Start the animations
     _animationController.forward();
   }
 
@@ -81,21 +74,21 @@ class _CustomAppBarState extends State<CustomAppBar>
   /// Scrolls the selected category into the center of the view
   void _scrollToCenter(int index) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      RenderBox? renderBox =
+      final renderBox =
           _itemKeys[index]?.currentContext?.findRenderObject() as RenderBox?;
       if (renderBox != null && _scrollController.hasClients) {
-        Offset position = renderBox.localToGlobal(Offset.zero, ancestor: null);
-        double itemPosition = position.dx;
-        double screenWidth = MediaQuery.of(context).size.width;
-        double itemWidth = renderBox.size.width;
-        double offset = itemPosition + itemWidth / 2 - screenWidth / 2;
+        final position = renderBox.localToGlobal(Offset.zero, ancestor: null);
+        final double itemPosition = position.dx;
+        final double screenWidth = MediaQuery.of(context).size.width;
+        final double itemWidth = renderBox.size.width;
+        final double offset = itemPosition + itemWidth / 2 - screenWidth / 2;
 
         _scrollController.animateTo(
           (_scrollController.offset + offset).clamp(
             _scrollController.position.minScrollExtent,
             _scrollController.position.maxScrollExtent,
           ),
-          duration: Duration(milliseconds: 300),
+          duration: const Duration(milliseconds: 300),
           curve: Curves.easeOutCubic,
         );
       }
@@ -104,28 +97,33 @@ class _CustomAppBarState extends State<CustomAppBar>
 
   @override
   Widget build(BuildContext context) {
-    return SlideTransition(
-      position: _slideAnimation,
-      child: FadeTransition(
-        opacity: _fadeAnimation,
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Colors.redAccent.withOpacity(0.05),
-                Colors.white.withOpacity(0.95),
-              ],
+    return Stack(
+      children: [
+        SlideTransition(
+          position: _slideAnimation,
+          child: FadeTransition(
+            opacity: _fadeAnimation,
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Colors.redAccent.withOpacity(0.05),
+                    Colors.white.withOpacity(0.95),
+                  ],
+                ),
+              ),
+              child: _buildContent(),
             ),
           ),
-          child: _buildContent(),
         ),
-      ),
+        // Remove the Obx and SearchOverlay from here
+      ],
     );
   }
 
-  /// Builds the main content of the AppBar, organized into sections
+  /// Builds the main content of the AppBar
   Widget _buildContent() {
     final screenHeight = widget.screenHeight;
     final screenWidth = widget.screenWidth;
@@ -134,22 +132,17 @@ class _CustomAppBarState extends State<CustomAppBar>
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Header Section (Logo, Greeting, Profile)
         _buildHeader(screenHeight, screenWidth),
-
         SizedBox(height: 10),
-        // Search Section (Search Bar and Filter Button)
         _buildSearchSection(screenHeight, screenWidth),
-
         SizedBox(height: 10),
-        // Categories Section
         _buildCategories(screenWidth, tabController),
         SizedBox(height: 10),
       ],
     );
   }
 
-  /// Builds the header section with logo, greeting, and profile avatar
+  /// Builds the header section (Logo, Greeting, Profile Avatar)
   Widget _buildHeader(double screenHeight, double screenWidth) {
     return AnimatedBuilder(
       animation: _animationController,
@@ -157,10 +150,12 @@ class _CustomAppBarState extends State<CustomAppBar>
         final headerSlide = Tween<Offset>(
           begin: const Offset(0, -1),
           end: Offset.zero,
-        ).animate(CurvedAnimation(
-          parent: _animationController,
-          curve: const Interval(0.0, 0.6, curve: Curves.easeOutCubic),
-        ));
+        ).animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: const Interval(0.0, 0.6, curve: Curves.easeOutCubic),
+          ),
+        );
 
         return SlideTransition(
           position: headerSlide,
@@ -192,53 +187,7 @@ class _CustomAppBarState extends State<CustomAppBar>
     );
   }
 
-  /// Builds the search section with search bar and filter button
-  Widget _buildSearchSection(double screenHeight, double screenWidth) {
-    return AnimatedBuilder(
-      animation: _animationController,
-      builder: (context, child) {
-        final searchSlide = Tween<Offset>(
-          begin: const Offset(0, 1),
-          end: Offset.zero,
-        ).animate(CurvedAnimation(
-          parent: _animationController,
-          curve: const Interval(0.3, 0.9, curve: Curves.easeOut),
-        ));
-
-        final searchFade = Tween<double>(
-          begin: 0,
-          end: 1,
-        ).animate(CurvedAnimation(
-          parent: _animationController,
-          curve: const Interval(0.3, 0.9, curve: Curves.easeOut),
-        ));
-
-        return SlideTransition(
-          position: searchSlide,
-          child: FadeTransition(
-            opacity: searchFade,
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.04),
-              child: Row(
-                children: [
-                  // Search Bar
-                  Expanded(
-                    flex: 7,
-                    child: _buildSearchBar(screenHeight, screenWidth),
-                  ),
-                  SizedBox(width: 10),
-                  // Filter Button
-                  _buildFilterButton(screenHeight, screenWidth),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  /// Builds the greeting section with user's name and emoji
+  /// Builds the greeting section with user's name
   Widget _buildGreetingSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -256,17 +205,15 @@ class _CustomAppBarState extends State<CustomAppBar>
               ),
             ),
             const SizedBox(width: 4),
-            Text(
-              '👋',
-              style: TextStyle(fontSize: 14),
-            ),
+            Text('👋', style: TextStyle(fontSize: 14)),
           ],
         ),
         Obx(() {
+          final username = homeController.user.value?.username ?? '';
           return Container(
             constraints: BoxConstraints(maxWidth: 130),
             child: Text(
-              homeController.user.value?.username ?? '',
+              username,
               style: TextStyle(
                 color: Colors.black87,
                 fontSize: 15,
@@ -282,10 +229,10 @@ class _CustomAppBarState extends State<CustomAppBar>
     );
   }
 
-  /// Builds the centered logo with decoration
+  /// Centered logo
   Widget _buildLogo(double screenWidth, double screenHeight) {
     return Container(
-      padding: EdgeInsets.all(8),
+      padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(15),
         boxShadow: [
@@ -300,6 +247,7 @@ class _CustomAppBarState extends State<CustomAppBar>
         'assets/icons/fantasize.png',
         width: screenWidth * 0.15,
         height: screenHeight * 0.05,
+        fit: BoxFit.contain,
       ),
     );
   }
@@ -309,17 +257,19 @@ class _CustomAppBarState extends State<CustomAppBar>
     return InkWell(
       onTap: () => homeController.goToProfile(),
       child: Obx(() {
+       
         return Hero(
           tag: 'profile',
           child: Container(
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                  color: const Color(0xFFFF5252).withOpacity(0.2), width: 2),
+                color: const Color(0xFFFF5252).withOpacity(0.2),
+                width: 2,
+              ),
               boxShadow: [
                 BoxShadow(
-                  color:
-                      const Color.fromRGBO(255, 82, 82, 1).withOpacity(0.1),
+                  color: const Color.fromRGBO(255, 82, 82, 1).withOpacity(0.1),
                   blurRadius: 10,
                   spreadRadius: 2,
                 ),
@@ -330,14 +280,11 @@ class _CustomAppBarState extends State<CustomAppBar>
               backgroundColor: Colors.white,
               child: CircleAvatar(
                 radius: screenWidth * 0.055,
-                backgroundImage:
-                    homeController.user.value?.userProfilePicture?.entityName !=
-                            null
-                        ? NetworkImage(
-                            '${Strings().resourceUrl}/${homeController.user.value!.userProfilePicture!.entityName}',
-                          )
-                        : const AssetImage('assets/images/profile.jpg')
-                            as ImageProvider,
+                backgroundImage: homeController.user.value?.userProfilePicture?.entityName != null
+                    ? NetworkImage(
+                        '${Strings().resourceUrl}/${homeController.user.value?.userProfilePicture?.entityName}')
+                    : const AssetImage('assets/images/profile.jpg')
+                        as ImageProvider,
               ),
             ),
           ),
@@ -346,78 +293,223 @@ class _CustomAppBarState extends State<CustomAppBar>
     );
   }
 
-  /// Builds the search bar with input decoration
-  Widget _buildSearchBar(double screenHeight, double screenWidth) {
-    return GestureDetector(
-      onTap: () {
-        Get.toNamed('/search'); // Use named route for consistency
-      },
-      child: Container(
-        height: screenHeight * 0.06,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.redAccent.withOpacity(0.1),
-              blurRadius: 8,
-              spreadRadius: 0,
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            SizedBox(width: 15),
-            Icon(
-              Icons.search_rounded,
-              color: Colors.redAccent,
-              size: 22,
-            ),
-            SizedBox(width: 10),
-            Text(
-              'Search products...',
-              style: TextStyle(
-                color: Colors.grey[400],
-                fontSize: 14,
-                fontWeight: FontWeight.w400,
+  /// Search section with a TextField and filter button
+  Widget _buildSearchSection(double screenHeight, double screenWidth) {
+    return AnimatedBuilder(
+      animation: _animationController,
+      builder: (context, child) {
+        final searchSlide = Tween<Offset>(
+          begin: const Offset(0, 1),
+          end: Offset.zero,
+        ).animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: const Interval(0.3, 0.9, curve: Curves.easeOut),
+          ),
+        );
+
+        final searchFade = Tween<double>(begin: 0, end: 1).animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: const Interval(0.3, 0.9, curve: Curves.easeOut),
+          ),
+        );
+
+        final searchScale = Tween<double>(begin: 0.95, end: 1.0).animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: const Interval(0.3, 0.9, curve: Curves.easeOut),
+          ),
+        );
+
+        return SlideTransition(
+          position: searchSlide,
+          child: FadeTransition(
+            opacity: searchFade,
+            child: ScaleTransition(
+              scale: searchScale,
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.04),
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 7,
+                      child: _buildSearchBar(screenHeight, screenWidth),
+                    ),
+                    const SizedBox(width: 12),
+                    _buildFilterButton(screenHeight, screenWidth),
+                  ],
+                ),
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// Builds the filter button
-  Widget _buildFilterButton(double screenHeight, double screenWidth) {
-    return GestureDetector(
-      onTap: () {
-        Get.toNamed('/search'); // Use named route for consistency
+          ),
+        );
       },
-      child: Container(
-        height: screenHeight * 0.06,
-        width: screenWidth * 0.12,
-        decoration: BoxDecoration(
-          color: Colors.redAccent,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.redAccent.withOpacity(0.3),
-              blurRadius: 8,
-              spreadRadius: 0,
-            ),
+    );
+  }
+
+  Widget _buildSearchBar(double screenHeight, double screenWidth) {
+    return Container(
+      height: screenHeight * 0.06,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.white,
+            Colors.grey[50]!,
           ],
         ),
-        child: Icon(
-          Icons.filter_list_rounded,
-          color: Colors.white,
-          size: 22,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            spreadRadius: 0,
+            offset: Offset(0, 4),
+          ),
+          BoxShadow(
+            color: Colors.redAccent.withOpacity(0.05),
+            blurRadius: 20,
+            spreadRadius: 0,
+            offset: Offset(0, 2),
+          ),
+        ],
+        border: Border.all(
+          color: Colors.grey[200]!,
+          width: 1,
+        ),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: TextField(
+          controller: homeController.searchController,
+          onChanged: homeController.performQuickSearch,
+          style: TextStyle(
+            fontSize: 15,
+            color: Colors.grey[800],
+            fontWeight: FontWeight.w500,
+          ),
+          decoration: InputDecoration(
+            border: InputBorder.none,
+            hintText: 'Search products...',
+            hintStyle: TextStyle(
+              color: Colors.grey[400],
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+            prefixIcon: Container(
+              padding: EdgeInsets.all(12),
+              child: ShaderMask(
+                shaderCallback: (bounds) => LinearGradient(
+                  colors: [
+                    Colors.redAccent,
+                    Colors.redAccent.shade400,
+                  ],
+                ).createShader(bounds),
+                child: Icon(
+                  Icons.search_rounded,
+                  color: Colors.white,
+                  size: 22,
+                ),
+              ),
+            ),
+            suffixIcon: Obx(() {
+              return homeController.searchText.value.isNotEmpty
+                  ? Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(50),
+                        onTap: homeController.clearSearch,
+                        child: Container(
+                          padding: EdgeInsets.all(8),
+                          child: Icon(
+                            Icons.close_rounded,
+                            color: Colors.grey[400],
+                            size: 20,
+                          ),
+                        ),
+                      ),
+                    )
+                  : const SizedBox.shrink();
+            }),
+            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          ),
         ),
       ),
     );
   }
 
-  /// Builds the categories list with horizontal scrolling and animations
+  Widget _buildFilterButton(double screenHeight, double screenWidth) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () => Get.toNamed('/search'),
+        child: Ink(
+          height: screenHeight * 0.06,
+          width: screenWidth * 0.12,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.redAccent,
+                Colors.redAccent.shade400,
+              ],
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.redAccent.withOpacity(0.3),
+                blurRadius: 8,
+                spreadRadius: 0,
+                offset: Offset(0, 4),
+              ),
+              BoxShadow(
+                color: Colors.redAccent.withOpacity(0.2),
+                blurRadius: 12,
+                spreadRadius: -2,
+                offset: Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.white.withOpacity(0.15),
+                  Colors.white.withOpacity(0),
+                ],
+              ),
+            ),
+            child: Center(
+              child: ShaderMask(
+                shaderCallback: (bounds) => LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Colors.white,
+                    Colors.white.withOpacity(0.8),
+                  ],
+                ).createShader(bounds),
+                child: Icon(
+                  Icons.filter_list_rounded,
+                  color: Colors.white,
+                  size: 22,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Builds the horizontal list of categories
   Widget _buildCategories(double screenWidth, TabController tabController) {
     return AnimatedBuilder(
       animation: _animationController,
@@ -425,37 +517,37 @@ class _CustomAppBarState extends State<CustomAppBar>
         final categoriesSlide = Tween<Offset>(
           begin: const Offset(0, 1),
           end: Offset.zero,
-        ).animate(CurvedAnimation(
-          parent: _animationController,
-          curve: const Interval(0.5, 1.0, curve: Curves.easeOut),
-        ));
+        ).animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: const Interval(0.5, 1.0, curve: Curves.easeOut),
+          ),
+        );
 
-        final categoriesFade = Tween<double>(
-          begin: 0,
-          end: 1,
-        ).animate(CurvedAnimation(
-          parent: _animationController,
-          curve: const Interval(0.5, 1.0, curve: Curves.easeOut),
-        ));
+        final categoriesFade = Tween<double>(begin: 0, end: 1).animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: const Interval(0.5, 1.0, curve: Curves.easeOut),
+          ),
+        );
 
         return SlideTransition(
           position: categoriesSlide,
           child: FadeTransition(
             opacity: categoriesFade,
-            child: Container(
+            child: SizedBox(
               height: 45,
               child: ListView.builder(
                 controller: _scrollController,
                 scrollDirection: Axis.horizontal,
-                physics: BouncingScrollPhysics(),
-                padding:
-                    EdgeInsets.symmetric(horizontal: screenWidth * 0.04),
+                physics: const BouncingScrollPhysics(),
+                padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.04),
                 itemCount: homeController.categories.length,
                 itemBuilder: (context, index) {
                   final category = homeController.categories[index];
                   return Padding(
-                    padding: EdgeInsets.only(right: 10),
-                    child: Obx(() { // Wrap each category button with Obx
+                    padding: const EdgeInsets.only(right: 10),
+                    child: Obx(() {
                       final isSelected =
                           homeController.currentIndexTabBar.value == index;
                       return _buildCategoryButton(
@@ -482,7 +574,7 @@ class _CustomAppBarState extends State<CustomAppBar>
     );
   }
 
-  /// Builds individual category buttons with animations
+  /// Category button
   Widget _buildCategoryButton({
     required Key key,
     required double screenWidth,
@@ -495,13 +587,12 @@ class _CustomAppBarState extends State<CustomAppBar>
       key: key,
       onTap: onTap,
       child: AnimatedContainer(
-        duration: Duration(milliseconds: 200),
+        duration: const Duration(milliseconds: 200),
         decoration: BoxDecoration(
           color: selected ? Colors.redAccent : Colors.white,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color:
-                selected ? Colors.redAccent : Colors.grey.withOpacity(0.2),
+            color: selected ? Colors.redAccent : Colors.grey.withOpacity(0.2),
             width: 1.5,
           ),
           boxShadow: [
@@ -511,14 +602,11 @@ class _CustomAppBarState extends State<CustomAppBar>
                   : Colors.black.withOpacity(0.03),
               blurRadius: 8,
               spreadRadius: selected ? 1 : 0,
-              offset: Offset(0, 4),
+              offset: const Offset(0, 4),
             ),
           ],
         ),
-        padding: EdgeInsets.symmetric(
-          vertical: 8,
-          horizontal: 16,
-        ),
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
         child: Row(
           children: [
             Icon(
@@ -542,7 +630,7 @@ class _CustomAppBarState extends State<CustomAppBar>
     );
   }
 
-  /// Handles navigation based on the selected category and current tab
+  /// Handles what happens when you tap a category
   void _handleCategoryNavigation(
       TabController tabController, String categoryText) {
     switch (tabController.index) {
@@ -563,4 +651,185 @@ class _CustomAppBarState extends State<CustomAppBar>
     }
   }
 }
-  
+
+class SearchOverlay extends StatelessWidget {
+  final List<dynamic> results;
+  final bool isLoading;
+  final VoidCallback onClose;
+
+  const SearchOverlay({
+    Key? key,
+    required this.results,
+    required this.isLoading,
+    required this.onClose,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: Stack(
+        children: [
+          /// Backdrop
+          GestureDetector(
+            onTap: onClose,
+            child: Container(color: Colors.black.withOpacity(0.3)),
+          ),
+
+          /// Results panel
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 140,
+            left: 16,
+            right: 16,
+            child: Container(
+              constraints: const BoxConstraints(maxHeight: 400),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 10,
+                    spreadRadius: 2,
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: _buildContent(context),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContent(BuildContext context) {
+    if (isLoading) {
+      return const SizedBox(
+        height: 100,
+        child: Center(
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Colors.redAccent),
+          ),
+        ),
+      );
+    }
+
+    if (results.isEmpty) {
+      return const SizedBox(
+        height: 100,
+        child: Center(
+          child: Text(
+            'No results found',
+            style: TextStyle(color: Colors.grey, fontSize: 16),
+          ),
+        ),
+      );
+    }
+
+    return ListView.separated(
+      padding: EdgeInsets.zero,
+      shrinkWrap: true,
+      itemCount: results.length,
+      separatorBuilder: (context, index) => const Divider(height: 1),
+      itemBuilder: (context, index) {
+        final item = results[index];
+        return _buildSearchResultItem(item);
+      },
+    );
+  }
+
+  Widget _buildSearchResultItem(dynamic item) {
+    final String imageUrl = ImageHandler.getImageUrl(item.resources);
+    final bool hasOffer = item.offer != null;
+
+    return InkWell(
+      onTap: () {
+        onClose();
+        if (item is Product) {
+          Get.toNamed('/product-details', arguments: [item.productId]);
+        } else if (item is Package) {
+          Get.toNamed('/package-details', arguments: item.packageId);
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            /// Item Image
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.network(
+                imageUrl,
+                width: 60,
+                height: 60,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => Container(
+                  width: 60,
+                  height: 60,
+                  color: Colors.grey[200],
+                  child:
+                      const Icon(Icons.image_not_supported, color: Colors.grey),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+
+            /// Item Details
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.name,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Text(
+                        '\$${item.price}',
+                        style: TextStyle(
+                          color: Colors.green[700],
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                      if (hasOffer) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.red[50],
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            '${item.offer!.discount}% OFF',
+                            style: const TextStyle(
+                              color: Colors.red,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+          ],
+        ),
+      ),
+    );
+  }
+}

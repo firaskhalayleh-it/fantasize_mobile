@@ -13,7 +13,7 @@ class ProfileView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -120,59 +120,162 @@ class ProfileView extends StatelessWidget {
   }
 
   Widget _buildProfileHeader(dynamic user) {
-    return Container(
-      color: Colors.white,
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        children: [
-          Stack(
-            children: [
-              CircleAvatar(
-                radius: 50,
-                backgroundImage: user.userProfilePicture != null
-                    ? CachedNetworkImageProvider(
-                        '${Strings().resourceUrl}/${user.userProfilePicture!.entityName}')
-                    : const AssetImage('assets/images/profile.jpg')
-                        as ImageProvider,
+  return Container(
+    color: Colors.white,
+    padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 24),
+    child: Column(
+      children: [
+        // Profile Image Stack
+        Stack(
+          alignment: Alignment.center,
+          children: [
+            // Decorative background circle
+            Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    const Color(0xFFFF4C5E).withOpacity(0.1),
+                    const Color(0xFFFF4C5E).withOpacity(0.05),
+                  ],
+                ),
               ),
-              Positioned(
-                right: 0,
-                bottom: 0,
-                child: GestureDetector(
-                  onTap: controller.pickImage,
+            ),
+            // Profile Image
+            Container(
+              padding: const EdgeInsets.all(3),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFFFF4C5E),
+                    Color(0xFFFF8F9C),
+                  ],
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFFF4C5E).withOpacity(0.3),
+                    blurRadius: 15,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: CircleAvatar(
+                radius: 55,
+                backgroundColor: Colors.white,
+                child: CircleAvatar(
+                  radius: 52,
+                  backgroundImage: user.userProfilePicture != null
+                      ? CachedNetworkImageProvider(
+                          '${Strings().resourceUrl}/${user.userProfilePicture!.entityName}')
+                      : const AssetImage('assets/images/profile.jpg')
+                          as ImageProvider,
+                ),
+              ),
+            ),
+            // Camera Button
+            Positioned(
+              right: 5,
+              bottom: 5,
+              child: GestureDetector(
+                onTap: controller.pickImage,
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
                   child: Container(
                     padding: const EdgeInsets.all(8),
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFFF4C5E),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Color(0xFFFF4C5E),
+                          Color(0xFFFF8F9C),
+                        ],
+                      ),
                       shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFFFF4C5E).withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
-                    child:
-                        const Icon(Icons.camera_alt, color: Colors.white, size: 20),
+                    child: const Icon(
+                      Icons.camera_alt,
+                      color: Colors.white,
+                      size: 18,
+                    ),
                   ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 3),
+        // Username Container
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color(0xFFFF4C5E),
+                Color(0xFFFF8F9C),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(30),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFFFF4C5E).withOpacity(0.3),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.person,
+                color: Colors.white,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                user.username,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.5,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFF4C5E),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              user.username,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
+}
 
   Widget _buildSection(String title, List<Widget> children) {
     return Container(

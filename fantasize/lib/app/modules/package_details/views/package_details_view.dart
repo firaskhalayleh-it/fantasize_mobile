@@ -1,7 +1,9 @@
 // lib/app/modules/package_details/views/package_details_view.dart
 
+import 'package:fantasize/app/data/models/material_package.dart';
 import 'package:fantasize/app/data/models/reviews_model.dart';
 import 'package:fantasize/app/global/strings.dart';
+import 'package:fantasize/app/modules/login/views/widgets/devider.dart';
 import 'package:fantasize/app/modules/package_details/views/widgets/customization_widget.dart';
 import 'package:fantasize/app/modules/package_details/views/widgets/review_form.dart';
 
@@ -57,8 +59,7 @@ class PackageDetailsView extends StatelessWidget {
         if (controller.package.value != null) {
           return FloatingPriceButtonPackage(
             price: controller.package.value!.price.toString(),
-            onAddToCart: () => controller.addToCart(controller.package.value!,
-                controller.orderedCustomizations, controller.quantity.value),
+            onAddToCart: () => controller.addToCart(),
           );
         }
         return SizedBox.shrink();
@@ -148,7 +149,7 @@ class PackageDetailsView extends StatelessWidget {
 
                     // Quantity Selector
                     Padding(
-                      padding: EdgeInsets.all(20),
+                      padding: EdgeInsets.symmetric(horizontal: 16),
                       child: Row(
                         children: [
                           Text(
@@ -163,7 +164,10 @@ class PackageDetailsView extends StatelessWidget {
                         ],
                       ),
                     ),
-
+                    Padding(
+                      padding: EdgeInsets.all(20),
+                      child: _buildMaterialChip(package.materialPackages ?? []),
+                    ),
                     // Customization Section
                     if (package.customizations.isNotEmpty)
                       Padding(
@@ -204,7 +208,10 @@ class PackageDetailsView extends StatelessWidget {
                           ],
                         ),
                       ),
-
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal:20),
+                      child: Divider(),
+                    ),
                     // Reviews Section
                     Padding(
                       padding: EdgeInsets.all(20),
@@ -379,11 +386,13 @@ class PackageDetailsView extends StatelessWidget {
     }
 
     return Column(
-      children: package.reviews.map<Widget>((review) {
+      children: package.reviews.asMap().entries.map<Widget>((entry) {
+        final index = entry.key;
+        final review = entry.value;
         return Dismissible(
           key: Key(review.reviewId.toString()),
-          background: _buildDismissBackground(Colors.red, Icons.delete),
-          secondaryBackground: _buildDismissBackground(Colors.blue, Icons.edit),
+          background: _buildDismissBackground(Colors.red, Icons.delete, index),
+          secondaryBackground: _buildDismissBackground(Colors.blue, Icons.edit, index),
           confirmDismiss: (direction) async {
             if (direction == DismissDirection.startToEnd) {
               return await _showDeleteConfirmation(context, review);
@@ -408,7 +417,7 @@ class PackageDetailsView extends StatelessWidget {
                   Row(
                     children: [
                       CircleAvatar(
-                       backgroundImage: NetworkImage(
+                        backgroundImage: NetworkImage(
                           review.user!.userProfilePicture != null
                               ? '${Strings().resourceUrl}/${review.user!.userProfilePicture!.entityName}'
                               : '${Strings().resourceUrl}/profile.jpg',
@@ -458,14 +467,19 @@ class PackageDetailsView extends StatelessWidget {
     );
   }
 
-  Widget _buildDismissBackground(Color color, IconData icon) {
-    return Container(
-      color: color,
-      alignment:
-          icon == Icons.delete ? Alignment.centerLeft : Alignment.centerRight,
-      padding: EdgeInsets.symmetric(horizontal: 20),
-      child: Icon(icon, color: Colors.white),
-    );
+  Widget _buildDismissBackground(Color color, IconData icon, int index) {
+    return controller.package.value?.reviews[index].user?.username ==
+            controller.currentUsername.value
+        ? Container(
+            color: color,
+            padding: EdgeInsets.symmetric(horizontal: 20),
+            alignment: Alignment.centerLeft,
+            child: Icon(
+              icon,
+              color: Colors.white,
+            ),
+          )
+        : SizedBox.shrink();
   }
 
   Future<bool?> _showDeleteConfirmation(BuildContext context, Review review) {
@@ -498,5 +512,34 @@ class PackageDetailsView extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Widget _buildMaterialChip(List<MaterialPackageModel> material) {
+    return material.isNotEmpty
+        ? Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Materials',
+                textAlign: TextAlign.start,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: material
+                    .map((material) => Chip(
+                          label: Text(
+                              '${material.material.name} (${material.percentage}%)'),
+                          backgroundColor: Colors.white,
+                        ))
+                    .toList(),
+              ),
+            ],
+          )
+        : SizedBox.shrink();
   }
 }

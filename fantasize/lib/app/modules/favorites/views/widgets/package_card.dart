@@ -1,130 +1,109 @@
 import 'package:fantasize/app/global/strings.dart';
+import 'package:fantasize/app/global/widgets/image_handler.dart';
 import 'package:flutter/material.dart';
 import 'package:fantasize/app/data/models/package_model.dart';
 
 class PackageCard extends StatelessWidget {
   final Package package;
-  
+
   const PackageCard({Key? key, required this.package}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
       ),
       child: Stack(
         children: [
-          // Package Image
+          // Package Image with gradient
           ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Image.network(
-              '${Strings().resourceUrl}/${package.resources.first.entityName}',
-              height: double.infinity,
-              width: double.infinity,
-              fit: BoxFit.cover,
-            ),
-          ),
-          
-          // Gradient Overlay
-          Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              gradient: LinearGradient(
-                begin: Alignment.center,
+            borderRadius: BorderRadius.circular(16),
+            child: ShaderMask(
+              shaderCallback: (bounds) => LinearGradient(
+                begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  const Color.fromARGB(0, 209, 78, 78),
-                  Colors.black.withOpacity(0.7),
+                  Colors.transparent,
+                  Colors.black.withOpacity(0.8),
                 ],
+                stops: [0.5, 1.0], // Changed to match ProductCard
+              ).createShader(bounds),
+              blendMode: BlendMode.darken,
+              child: Image.network(
+                ImageHandler.getImageUrl(package.resources),
+                height: double.infinity,
+                width: double.infinity,
+                fit: BoxFit.cover,
               ),
             ),
           ),
-          
-          // Content
+
+          // Content Overlay
           Padding(
-            padding: EdgeInsets.all(8),
+            padding: EdgeInsets.all(16),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Top Row with Package Label and Price
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // Package Label
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.redAccent,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        'PACKAGE',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          fontFamily: 'Poppins',
-                          letterSpacing: 0.5,
-                        ),
-                      ),
+                // Price Tag (Moved to top like ProductCard)
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Color(0xFFFF4C5E),
+                        Color(0xFFFF8F9C),
+                      ],
                     ),
-                    
-                    // Price Tag
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.5),
-                        borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 4,
+                        offset: Offset(0, 2),
                       ),
-                      child: Text(
-                        '\$${package.price}',
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.attach_money,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                      Text(
+                        '${package.price}',
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: 14,
+                          fontSize: 16,
                           fontWeight: FontWeight.w600,
                           fontFamily: 'Poppins',
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-                
-                // Package Info at bottom
+
+                // Package Info
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       package.name,
                       style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
                         fontFamily: 'Poppins',
                         color: Colors.white,
+                        letterSpacing: 0.5,
                         shadows: [
                           Shadow(
-                            color: Colors.black.withOpacity(0.3),
-                            offset: Offset(0, 1),
-                            blurRadius: 3,
-                          ),
-                        ],
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      package.description,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.white.withOpacity(0.8),
-                        fontFamily: 'Poppins',
-                        shadows: [
-                          Shadow(
-                            color: Colors.black.withOpacity(0.3),
-                            offset: Offset(0, 1),
-                            blurRadius: 3,
+                            color: Colors.black.withOpacity(0.5),
+                            offset: Offset(0, 2),
+                            blurRadius: 4,
                           ),
                         ],
                       ),
@@ -132,32 +111,23 @@ class PackageCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                     SizedBox(height: 8),
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.inventory_2_outlined,
-                            size: 14,
-                            color: Colors.white,
-                          ),
-                          SizedBox(width: 4),
-                          Text(
-                            '${package.packageProducts.length} Products',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.white,
-                              fontWeight: FontWeight.w500,
-                              fontFamily: 'Poppins',
-                            ),
+                    Text(
+                      package.description,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.white.withOpacity(0.9),
+                        fontFamily: 'Poppins',
+                        height: 1.4,
+                        shadows: [
+                          Shadow(
+                            color: Colors.black.withOpacity(0.5),
+                            offset: Offset(0, 1),
+                            blurRadius: 3,
                           ),
                         ],
                       ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),

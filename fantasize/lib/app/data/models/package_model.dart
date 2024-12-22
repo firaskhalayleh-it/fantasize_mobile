@@ -1,4 +1,5 @@
 import 'package:fantasize/app/data/models/customization_model.dart';
+import 'package:fantasize/app/data/models/material_package.dart';
 import 'package:fantasize/app/data/models/offer_model.dart';
 import 'package:fantasize/app/data/models/package_product_model.dart';
 import 'package:fantasize/app/data/models/product_model.dart';
@@ -15,11 +16,13 @@ class Package {
   final String status;
   final double avgRating;
   Offer? offer;
+  
   final SubCategory? subCategory;
   final List<PackageProduct> packageProducts;
   final List<ResourcesModel> resources;
   final List<Customization> customizations;
   final List<Review> reviews;
+  final List<MaterialPackageModel>? materialPackages;
 
   Package({
     required this.packageId,
@@ -35,6 +38,7 @@ class Package {
     this.resources = const [],
     this.customizations = const [],
     this.reviews = const [],
+    this.materialPackages ,
   });
 
   // JSON deserialization
@@ -66,6 +70,11 @@ class Package {
       reviews:
           (json['Reviews'] as List?)?.map((e) => Review.fromJson(e)).toList() ??
               [],
+
+      materialPackages: (json['MaterialPackage'] as List?)
+              ?.map((e) => MaterialPackageModel.fromJson(e))
+              .toList() ??
+          [],
     );
   }
 
@@ -85,6 +94,19 @@ class Package {
       'Resource': resources.map((e) => e.toJson()).toList(),
       'Customization': customizations.map((e) => e.toJson()).toList(),
       'Reviews': reviews.map((e) => e.toJson()).toList(),
+      'MaterialPackage': materialPackages?.map((e) => e.toJson()).toList(),
     };
+  }
+
+  static defaultPackage() {
+    return Package(
+      packageId: 0,
+      name: '',
+      description: '',
+      price: 0.0,
+      quantity: 0,
+      status: 'unknown',
+      avgRating: 0.0, 
+    );
   }
 }

@@ -1,3 +1,4 @@
+import 'package:fantasize/app/modules/user_info/views/widgets/build_gender_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg_provider/flutter_svg_provider.dart';
 import 'package:get/get.dart';
@@ -63,13 +64,13 @@ class UserInfoView extends GetView<UserInfoController> {
           children: [
             const Center(
               child: Text(
-          'Profile Information',
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFFFF4C5E),
-            letterSpacing: 0.5,
-          ),
+                'Profile Information',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFFFF4C5E),
+                  letterSpacing: 0.5,
+                ),
               ),
             ),
             const SizedBox(height: 32),
@@ -100,30 +101,7 @@ class UserInfoView extends GetView<UserInfoController> {
               icon: Icons.phone_outlined,
             ),
             const SizedBox(height: 20),
-            Row(
-              children: [
-          Expanded(
-            child: RadioListTile<String>(
-              title: const Text('Male'),
-              value: 'Male',
-              groupValue: controller.genderController.text,
-              onChanged: (value) {
-                controller.genderController.text = value!;
-              },
-            ),
-          ),
-          Expanded(
-            child: RadioListTile<String>(
-              title: const Text('Female'),
-              value: 'Female',
-              groupValue: controller.genderController.text,
-              onChanged: (value) {
-                controller.genderController.text = value!;
-              },
-            ),
-          ),
-              ],
-            ),
+            BuildGenderField(),
             const SizedBox(height: 20),
             BuildDateField(
               onDateSelected: () => _showDatePicker(context),

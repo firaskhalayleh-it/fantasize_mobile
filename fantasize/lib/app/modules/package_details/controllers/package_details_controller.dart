@@ -1,17 +1,16 @@
 import 'package:fantasize/app/data/models/customization_model.dart';
 import 'package:fantasize/app/data/models/ordered_customization.dart';
 import 'package:fantasize/app/data/models/ordered_option.dart';
+import 'package:fantasize/app/data/models/package_model.dart';
 import 'package:fantasize/app/data/models/reviews_model.dart';
+import 'package:fantasize/app/global/strings.dart';
 import 'package:fantasize/app/modules/cart/controllers/cart_controller.dart';
 import 'package:fantasize/app/modules/favorites/controllers/favorites_controller.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:fantasize/app/data/models/package_model.dart';
-import 'package:fantasize/app/global/strings.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-
 import 'package:jwt_decoder/jwt_decoder.dart';
 
 class PackageDetailsController extends GetxController {
@@ -33,6 +32,7 @@ class PackageDetailsController extends GetxController {
   final Map<String, RxString> _uploadedImages = {};
   final cartController = Get.find<CartController>();
   var InitialPrice = 0.0;
+
   @override
   void onInit() {
     super.onInit();
@@ -41,12 +41,22 @@ class PackageDetailsController extends GetxController {
       Get.snackbar('Error', 'No package ID provided.');
       return;
     }
-    int packageId = arguments as int;
+    int packageId;
+    if (arguments is int) {
+      packageId = arguments;
+    } else if (arguments is List && arguments.isNotEmpty && arguments[0] is int) {
+      packageId = arguments[0];
+    } else {
+      Get.snackbar('Error', 'Invalid package ID provided.');
+      return;
+    }
     fetchPackageDetails(packageId);
     checkIfLiked(packageId);
+    fetchCurrentUser();
   }
 
   void incrementQuantity() => quantity.value++;
+  
   void decrementQuantity() {
     if (quantity.value > 1) quantity.value--;
   }
@@ -114,12 +124,12 @@ class PackageDetailsController extends GetxController {
   }
 
   toggleLike() async {
-    final isCurrentlyLiked = isLiked.value ?? false;
+    final isCurrentlyLiked = isLiked.value;
     try {
       String? token = await storage.read(key: 'jwt_token');
       var url;
       if (!isCurrentlyLiked) {
-        // Add product to favorites
+        // Add package to favorites
         url = Uri.parse(
             '${Strings().apiUrl}/favoritePackages/${package.value!.packageId}');
         var response = await http.post(
@@ -143,9 +153,10 @@ class PackageDetailsController extends GetxController {
         print(response.statusCode);
 
         isLiked.value = true;
-        Get.snackbar('Success', 'Package added to favorites', overlayBlur: 3.0);
+        Get.snackbar('Success', 'Package added to favorites',
+            overlayBlur: 3.0);
       } else {
-        // Remove product from favorites
+        // Remove package from favorites
         url = Uri.parse(
             '${Strings().apiUrl}/favoritePackages/${package.value!.packageId}');
         await http.delete(
@@ -161,7 +172,7 @@ class PackageDetailsController extends GetxController {
         Get.snackbar('Success', 'Package removed from favorites');
       }
 
-      // Reload the favorites after the product is added/removed from the list
+      // Reload the favorites after the package is added/removed from the list
       final FavoritesController favoritesController =
           Get.find<FavoritesController>();
       favoritesController.reloadFavorites();
@@ -194,9 +205,14 @@ class PackageDetailsController extends GetxController {
           return favoritePackage != null &&
               favoritePackage['PackageID'] == packageId;
         });
-      } else {
-        Get.snackbar('Error', 'Failed to fetch favorite packages');
+      } if (response.statusCode == 401) {
+        Get.snackbar(
+            'Unauthorized', 'Your session has expired. Please log in again.');
+      } 
+      if (response.statusCode == 404) {
       }
+
+
     } catch (e) {
       Get.snackbar('Error', 'Failed to fetch favorite packages: $e');
     }
@@ -206,13 +222,14 @@ class PackageDetailsController extends GetxController {
     String? token = await storage.read(key: 'jwt_token');
     if (token != null) {
       Map<String, dynamic> decodedToken = JwtDecoder.decode(token);
-      String username = decodedToken['payload']['userName'];
+      // Adjust according to your JWT structure
+      String username = decodedToken['userName'] ?? decodedToken['payload']['userName'] ?? '';
       currentUsername.value = username;
     }
   }
 
   bool isReviewFromCurrentUser(Review review) {
-    return review.user!.username == currentUsername.value;
+    return review.user?.username == currentUsername.value;
   }
 
   bool changeReviewFormVisibility() {
@@ -226,7 +243,7 @@ class PackageDetailsController extends GetxController {
   }
 
   Future<void> addOrUpdateReview(
-      int PackageId, String comment, int rating) async {
+      int packageId, String comment, int rating) async {
     String? token = await storage.read(key: 'jwt_token');
     var url;
     var method;
@@ -256,66 +273,30 @@ class PackageDetailsController extends GetxController {
               'Comment': comment,
             })
           : json.encode({
-              'PackageId': PackageId,
+              'PackageId': packageId,
               'Rating': rating,
               'Comment': comment,
             }),
     );
 
-    if (response.statusCode == 200) {
+    if (response.statusCode == 200 || response.statusCode == 201) {
       // Hide the form after successful submission
       isEditing(false);
       isReviewFormVisible(false);
 
-      // Refresh the product details to reflect the added/updated review
-      await fetchPackageDetails(PackageId);
+      // Refresh the package details to reflect the added/updated review
+      await fetchPackageDetails(packageId);
 
       Get.snackbar(
-          'Success', isEditing.value ? 'Review updated!' : 'Review added!',
+          'Success',
+          isEditing.value ? 'Review updated!' : 'Review added!',
           overlayBlur: 2);
     } else {
       Get.snackbar('Error', 'Failed to add/update review');
     }
   }
 
-  void toggleReviewFormVisibility() {
-    isReviewFormVisible.value = !isReviewFormVisible.value;
-  }
-
-  TextEditingController getTextController(
-      int customizationId, String optionName) {
-    final key = '$customizationId-$optionName';
-    if (!_textControllers.containsKey(key)) {
-      _textControllers[key] = TextEditingController();
-      // Listen to changes and update the option value
-      _textControllers[key]!.addListener(() {
-        updateSelectedOption(
-            customizationId, optionName, _textControllers[key]!.text);
-      });
-    }
-    return _textControllers[key]!;
-  }
-
-  // Method to get image path
-  RxString getUploadedImagePath(int customizationId, String optionName) {
-    final key = '$customizationId-$optionName';
-    if (!_uploadedImages.containsKey(key)) {
-      _uploadedImages[key] = ''.obs;
-    }
-    return _uploadedImages[key]!;
-  }
-
-  // Method to update image path
-  void updateUploadedImage(
-      int customizationId, String optionName, String imagePath) {
-    final key = '$customizationId-$optionName';
-    getUploadedImagePath(customizationId, optionName).value = imagePath;
-    // Update the OptionValue in orderedCustomizations
-    updateSelectedOption(customizationId, optionName, imagePath);
-  }
-  // handle the ordered customizations
-
-  Future<void> deleteReview(int reviewId, int productId) async {
+  Future<void> deleteReview(int reviewId, int packageId) async {
     String? token = await storage.read(key: 'jwt_token');
     var url = Uri.parse('${Strings().apiUrl}/reviews/$reviewId');
 
@@ -330,7 +311,7 @@ class PackageDetailsController extends GetxController {
     );
 
     if (response.statusCode == 200) {
-      fetchPackageDetails(productId); // Refresh product details after deletion
+      fetchPackageDetails(packageId); // Refresh package details after deletion
     } else {
       Get.snackbar('Error', 'Failed to delete review');
     }
@@ -388,73 +369,116 @@ class PackageDetailsController extends GetxController {
     return priceWithDiscount.toStringAsFixed(2);
   }
 
-  void showAddToCartDialog() {
-    Get.bottomSheet(AddToCartBottomSheet());
-  }
+  void updateSelectedOption(
+      int customizationId, String optionName, String selectedValue) {
+    final customization = orderedCustomizations.firstWhere(
+      (c) => c.orderedCustomizationId == customizationId,
+      orElse: () =>
+          OrderedCustomization(orderedCustomizationId: -1, selectedOptions: []),
+    );
 
-  // Function to handle adding a product to the cart
-  Future<void> addToCart(Package package,
-      List<OrderedCustomization> orderedCustomizations, int quantity) async {
-    try {
-      String? token = await storage.read(key: 'jwt_token');
-      var response = await http.post(
-        Uri.parse('${Strings().apiUrl}/orderpackage'),
-        headers: {
-          'Content-Type': 'application/json',
-          'authorization': 'Bearer $token',
-          'cookie': 'authToken=$token',
-        },
-        body: json.encode({
-          "packageId": package.packageId,
-          "quantity": quantity,
-          "orderedOptions":
-              orderedCustomizations.map((option) => option.toJson()).toList(),
-        }),
+    if (customization.orderedCustomizationId == -1) return;
+
+    final option = customization.selectedOptions.firstWhere(
+      (o) => o.name == optionName,
+      orElse: () => OrderedOption(name: '', type: '', optionValues: []),
+    );
+
+    if (option.name.isEmpty) return;
+
+    if (option.type == 'attachMessage') {
+      // For text input, update the value directly
+      final optionValue = option.optionValues.first;
+      optionValue.value = selectedValue;
+    } else if (option.type == 'uploadPicture') {
+      // For image upload, update the filePath
+      final optionValue = option.optionValues.first;
+      optionValue.filePath = selectedValue; // selectedValue is image path
+    } else {
+      // For other types, handle selection
+      // Deselect all options first
+      for (var optionValue in option.optionValues) {
+        optionValue.isSelected.value = false;
+      }
+
+      // Select the specified option value
+      final selectedOptionValue = option.optionValues.firstWhere(
+        (optionValue) => optionValue.value == selectedValue,
+        orElse: () =>
+            OrderedOptionValue(name: '', value: '', isSelected: false),
       );
 
-
-      print('Response status: ${response.statusCode}');
-      print('Response body: ${response.body}');
-      print(
-          'Ordered options: ${json.encode(orderedCustomizations.map((option) => option.toJson()).toList())}');
-      debugPrint(response.statusCode.toString());
-      print('orderedCustomizations: ');
-      orderedCustomizations.forEach((element) {
-        print(element.toJson());
-      });
-
-      if (response.statusCode == 200) {
-        Get.snackbar('Success', 'package added to cart');
-        showAddToCartDialog();
-        cartController.fetchCart();
-      } else {
-        Get.snackbar('Error', 'Failed to add package to cart');
+      if (selectedOptionValue.value.isNotEmpty) {
+        selectedOptionValue.isSelected.value = true;
       }
-    } catch (e) {
-      Get.snackbar('Error', 'Failed to add package to cart: $e');
     }
   }
 
-  List<OrderedCustomization> convertCustomizationsToOrderedCustomization(
-      List<Customization> customizations) {
-    return customizations.map((customization) {
-      return OrderedCustomization(
-        orderedCustomizationId: customization.customizationId,
-        selectedOptions: customization.options.map((option) {
-          return OrderedOption(
-            name: option.name,
-            type: option.type,
-            optionValues: option.optionValues.map((optionValue) {
-              return OrderedOptionValue(
-                name: optionValue.name,
-                value: optionValue.value,
-                isSelected: optionValue.isSelected.value,
-              );
-            }).toList(),
-          );
-        }).toList(),
-      );
-    }).toList();
+  String getOptionValue(int customizationId, String optionName) {
+    final customization = orderedCustomizations.firstWhere(
+      (c) => c.orderedCustomizationId == customizationId,
+      orElse: () =>
+          OrderedCustomization(orderedCustomizationId: -1, selectedOptions: []),
+    );
+
+    if (customization.orderedCustomizationId == -1) return '';
+
+    final option = customization.selectedOptions.firstWhere(
+      (o) => o.name == optionName,
+      orElse: () => OrderedOption(name: '', type: '', optionValues: []),
+    );
+
+    if (option.name.isEmpty) return '';
+
+    final optionValue = option.optionValues.first;
+    return optionValue.value;
+  }
+
+  bool isOptionSelected(int customizationId, String optionValue) {
+    final customization = orderedCustomizations.firstWhere(
+      (c) => c.orderedCustomizationId == customizationId,
+      orElse: () =>
+          OrderedCustomization(orderedCustomizationId: -1, selectedOptions: []),
+    );
+
+    if (customization.orderedCustomizationId == -1)
+      return false; // Return false if customization is not found
+
+    // Check if the option value is selected
+    return customization.selectedOptions.any((o) => o.optionValues
+        .any((v) => v.value == optionValue && v.isSelected.value));
+  }
+
+  TextEditingController getTextController(
+      int customizationId, String optionName) {
+    final key = '$customizationId-$optionName';
+    if (!_textControllers.containsKey(key)) {
+      _textControllers[key] = TextEditingController();
+      // Listen to changes and update the option value
+      _textControllers[key]!.addListener(() {
+        updateSelectedOption(
+            customizationId, optionName, _textControllers[key]!.text);
+      });
+    }
+    return _textControllers[key]!;
+  }
+
+  // Method to get image path
+  RxString getUploadedImagePath(int customizationId, String optionName) {
+    final key = '$customizationId-$optionName';
+    if (!_uploadedImages.containsKey(key)) {
+      _uploadedImages[key] = ''.obs;
+    }
+    return _uploadedImages[key]!;
+  }
+
+  // Method to update image path
+  void updateUploadedImage(
+      int customizationId, String optionName, String imagePath) {
+    final key = '$customizationId-$optionName';
+    getUploadedImagePath(customizationId, optionName).value = imagePath;
+    // Update the OptionValue in orderedCustomizations
+    updateSelectedOption(customizationId, optionName, imagePath);
   }
 
   void initializeOrderedCustomizations() {
@@ -463,8 +487,7 @@ class PackageDetailsController extends GetxController {
     // Use a Set to keep track of customization IDs we've already added
     final Set<int> seenCustomizationIds = {};
 
-    orderedCustomizations =
-        package.value!.customizations.where((customization) {
+    orderedCustomizations = package.value!.customizations.where((customization) {
       if (seenCustomizationIds.contains(customization.customizationId)) {
         return false; // If already seen, exclude it
       } else {
@@ -505,171 +528,250 @@ class PackageDetailsController extends GetxController {
     final key = '$customizationId-$optionName';
     getAttachMessageVisibility(customizationId, optionName).toggle();
   }
-  // Inside PackageDetailsController
 
-  void updateSelectedOption(
-      int customizationId, String optionName, String selectedValue) {
-    final customization = orderedCustomizations.firstWhere(
-      (c) => c.orderedCustomizationId == customizationId,
-      orElse: () =>
-          OrderedCustomization(orderedCustomizationId: -1, selectedOptions: []),
-    );
+  // Function to handle adding a package to the cart
+  Future<void> addToCart() async {
+    try {
+      String? token = await storage.read(key: 'jwt_token');
 
-    if (customization == null) return;
-
-    final option = customization.selectedOptions.firstWhere(
-      (o) => o.name == optionName,
-      orElse: () => OrderedOption(name: '', type: '', optionValues: []),
-    );
-
-    if (option == null) return;
-
-    if (option.type == 'attachMessage') {
-      // For text input, update the value directly
-      final optionValue = option.optionValues.first;
-      optionValue.value = selectedValue;
-    } else if (option.type == 'uploadPicture') {
-      // For image upload, update the fileName
-      final optionValue = option.optionValues.first;
-      optionValue.filePath = selectedValue; // selectedValue is image path
-    } else {
-      // For other types, handle selection
-      // Deselect all options first
-      for (var optionValue in option.optionValues) {
-        optionValue.isSelected.value = false;
+      if (token == null) {
+        Get.snackbar('Error', 'User is not authenticated');
+        return;
       }
 
-      // Select the specified option value
-      final selectedOptionValue = option.optionValues.firstWhere(
-        (optionValue) => optionValue.value == selectedValue,
-        orElse: () =>
-            OrderedOptionValue(name: '', value: '', isSelected: false),
+      if (package.value?.packageId == null || quantity.value == null) {
+        Get.snackbar('Error', 'Package ID or quantity is missing');
+        return;
+      }
+
+      // Serialize orderedOptions correctly
+      var orderedOptions = orderedCustomizations.map((customization) {
+        return {
+          'orderedCustomizationId': customization.orderedCustomizationId,
+          'selectedOptions': customization.selectedOptions.map((option) {
+            return {
+              'name': option.name,
+              'type': option.type,
+              'optionValues': option.optionValues.map((v) => v.toJson()).toList(),
+            };
+          }).toList(),
+        };
+      }).toList();
+
+      var requestBody = {
+        "packageId": package.value!.packageId,
+        "quantity": quantity.value,
+        "orderedOptions": orderedOptions,
+      };
+
+      // Print request body for debugging
+      print('Request Body: ${json.encode(requestBody)}');
+
+      // Send the request
+      var response = await http.post(
+        Uri.parse('${Strings().apiUrl}/orderpackage'),
+        headers: {
+          'Content-Type': 'application/json',
+          'authorization': 'Bearer $token',
+          'cookie': 'authToken=$token',
+        },
+        body: json.encode(requestBody),
       );
 
-      if (selectedOptionValue != null) {
-        selectedOptionValue.isSelected.value = true;
+      print('Response Body: ${response.body}');
+      print('Status Code: ${response.statusCode}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        Get.snackbar('Success', 'Package added to cart');
+        showAddToCartDialog();
+        cartController.fetchCart();
+      } else {
+        var errorResponse = json.decode(response.body);
+        Get.snackbar('Error',
+            'Failed to add package to cart: ${errorResponse['message'] ?? 'Unknown error'}');
       }
+    } catch (e) {
+      Get.snackbar('Error', 'Failed to add package to cart: $e');
     }
   }
 
-// Optional: Helper method to get the current value for text options
-  String getOptionValue(int customizationId, String optionName) {
-    final customization = orderedCustomizations.firstWhere(
-      (c) => c.orderedCustomizationId == customizationId,
-      orElse: () =>
-          OrderedCustomization(orderedCustomizationId: -1, selectedOptions: []),
-    );
-
-    if (customization == null) return '';
-
-    final option = customization.selectedOptions.firstWhere(
-      (o) => o.name == optionName,
-      orElse: () => OrderedOption(name: '', type: '', optionValues: []),
-    );
-
-    if (option == null) return '';
-
-    final optionValue = option.optionValues.first;
-    return optionValue.value;
-  }
-
-  bool isOptionSelected(int customizationId, String optionValue) {
-    final customization = orderedCustomizations.firstWhere(
-      (c) => c.orderedCustomizationId == customizationId,
-      orElse: () =>
-          OrderedCustomization(orderedCustomizationId: -1, selectedOptions: []),
-    );
-
-    if (customization == null)
-      return false; // Return false if customization is not found
-
-    // Check if any option value is selected
-    return customization.selectedOptions.any((o) => o.optionValues
-        .any((v) => v.value == optionValue && v.isSelected.value));
+  List<OrderedCustomization> convertCustomizationsToOrderedCustomization(
+      List<Customization> customizations) {
+    return customizations.map((customization) {
+      return OrderedCustomization(
+        orderedCustomizationId: customization.customizationId,
+        selectedOptions: customization.options.map((option) {
+          return OrderedOption(
+            name: option.name,
+            type: option.type,
+            optionValues: option.optionValues.map((optionValue) {
+              return OrderedOptionValue(
+                name: optionValue.name,
+                value: optionValue.value,
+                isSelected: optionValue.isSelected.value,
+              );
+            }).toList(),
+          );
+        }).toList(),
+      );
+    }).toList();
   }
 
   void navigateToCart() {
     Get.toNamed('/cart');
   }
-}
 
-class AddToCartBottomSheet extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    // Now you have access to MediaQuery and other context-based tools
-    final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
-
-    // Adjust font sizes and paddings based on screen size
-    double fontSizeTitle = screenWidth * 0.05; // Adjust as needed
-    double fontSizeButton = screenWidth * 0.045; // Adjust as needed
-
-    return Container(
-      padding: EdgeInsets.all(20),
-      color: Colors.white,
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Product added to cart',
-              style: TextStyle(
-                fontSize: fontSizeTitle,
-                fontWeight: FontWeight.bold,
+  // Updated showAddToCartDialog method with enhanced UI and animations
+  void showAddToCartDialog() {
+    Get.bottomSheet(
+      Container(
+        padding: const EdgeInsets.all(20),
+        color: Colors.white,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Success Check Mark with fixed animation
+              TweenAnimationBuilder<double>(
+                duration: const Duration(milliseconds: 400),
+                tween: Tween(begin: 0.0, end: 1.0),
+                curve: Curves.easeOutCubic,
+                builder: (context, value, child) {
+                  return Transform.scale(
+                    scale: value,
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.redAccent.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.check_circle_outline,
+                        color: Colors.redAccent,
+                        size: 28,
+                      ),
+                    ),
+                  );
+                },
               ),
-            ),
-            SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: () {
-                Get.back();
-                Get.toNamed('/cart');
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.redAccent,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                padding: EdgeInsets.symmetric(
-                  vertical: screenHeight * 0.015,
-                  horizontal: screenWidth * 0.1,
-                ),
-              ),
-              child: Text(
-                'Go to checkout',
+
+              const SizedBox(height: 8),
+
+              // Title
+              Text(
+                'Package added to cart',
                 style: TextStyle(
-                  color: Colors.white,
+                  fontSize: Get.width < 300 ? 18 : 20,
+                  fontWeight: FontWeight.w600,
                   fontFamily: 'Jost',
-                  fontSize: fontSizeButton,
                 ),
               ),
-            ),
-            SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: () {
-                Get.back();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.redAccent,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                padding: EdgeInsets.symmetric(
-                  vertical: screenHeight * 0.015,
-                  horizontal: screenWidth * 0.1,
-                ),
+
+              const SizedBox(height: 12),
+
+              // Checkout Button with fixed padding
+              TweenAnimationBuilder<double>(
+                duration: const Duration(milliseconds: 400),
+                tween: Tween(begin: 0.0, end: 1.0),
+                curve: Curves.easeOutCubic,
+                builder: (context, value, child) {
+                  return Transform.translate(
+                    offset: Offset(30 * (1 - value), 0),
+                    child: Opacity(
+                      opacity: value,
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () => navigateToCart(),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.redAccent,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 12,
+                            ),
+                          ),
+                          child: Text(
+                            'Go to checkout',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontFamily: 'Jost',
+                              fontSize: Get.width < 400 ? 16 : 18,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
-              child: Text(
-                'Continue shopping',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontFamily: 'Jost',
-                  fontSize: fontSizeButton,
-                ),
+
+              const SizedBox(height: 10),
+
+              // Continue Shopping Button with fixed padding
+              TweenAnimationBuilder<double>(
+                duration: const Duration(milliseconds: 400),
+                tween: Tween(begin: 0.0, end: 1.0),
+                curve: Curves.easeOutCubic,
+                builder: (context, value, child) {
+                  return Transform.translate(
+                    offset: Offset(-30 * (1 - value), 0),
+                    child: Opacity(
+                      opacity: value,
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Get.back();
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              side: const BorderSide(
+                                color: Colors.redAccent,
+                                width: 1,
+                              ),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 12,
+                            ),
+                          ),
+                          child: Text(
+                            'Continue shopping',
+                            style: TextStyle(
+                              color: Colors.redAccent,
+                              fontFamily: 'Jost',
+                              fontSize: Get.width < 400 ? 16 : 18,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
+      isDismissible: true,
+      enableDrag: true,
+      isScrollControlled: true,
     );
+  }
+
+  @override
+  void onClose() {
+    // Dispose of text controllers
+    _textControllers.values.forEach((controller) => controller.dispose());
+    super.onClose();
+  }
+
+  toggleReviewFormVisibility() {
+    isReviewFormVisible.value = !isReviewFormVisible.value;
   }
 }

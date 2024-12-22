@@ -1,5 +1,9 @@
+import 'package:fantasize/app/data/models/brand.dart';
+import 'package:fantasize/app/data/models/matrtial_product.dart';
 import 'package:fantasize/app/data/models/reviews_model.dart';
+import 'package:fantasize/app/global/dynamic_font.dart';
 import 'package:fantasize/app/global/strings.dart';
+import 'package:fantasize/app/modules/login/views/widgets/devider.dart';
 import 'package:fantasize/app/modules/product_details/views/widgets/review_form_product.dart';
 import 'package:fantasize/app/modules/product_details/views/widgets/video_player.dart';
 import 'package:fantasize/app/modules/product_details/views/widgets/customization_widgets.dart';
@@ -10,7 +14,8 @@ import 'package:fantasize/app/modules/product_details/controllers/product_detail
 import 'widgets/floating_price_button.dart';
 
 class ProductDetailsView extends StatelessWidget {
-  final ProductDetailsController controller = Get.put(ProductDetailsController());
+  final ProductDetailsController controller =
+      Get.put(ProductDetailsController());
 
   @override
   Widget build(BuildContext context) {
@@ -143,7 +148,7 @@ class ProductDetailsView extends StatelessWidget {
 
                     // Quantity Selector
                     Padding(
-                      padding: EdgeInsets.all(20),
+                      padding: EdgeInsets.symmetric(horizontal: 20),
                       child: Row(
                         children: [
                           Text(
@@ -158,6 +163,19 @@ class ProductDetailsView extends StatelessWidget {
                         ],
                       ),
                     ),
+
+                    // Brand Chip
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 20),
+                      child: _buildBrandChip(product.brand!),
+                    ),
+
+                    // Material Chip
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 20),
+                      child: _buildMaterialChip(product.materialProducts ?? []),
+                    ),
+
 
                     // Customization Section
                     if (product.customizations.isNotEmpty)
@@ -199,7 +217,9 @@ class ProductDetailsView extends StatelessWidget {
                           ],
                         ),
                       ),
-
+                    Padding(padding: 
+                    EdgeInsets.symmetric(horizontal: 20),
+                    child: Divider(),),
                     // Reviews Section
                     Padding(
                       padding: EdgeInsets.all(20),
@@ -492,5 +512,51 @@ class ProductDetailsView extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Widget _buildMaterialChip(List<MaterialProductModel> material) {
+    return material.isNotEmpty
+        ? Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Material',
+                style: TextStyle(
+                  fontSize: DynamicFont().getMediumFont(),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Wrap(
+                spacing: 8,
+                children: material
+                    .map((mp) => Chip(
+                          label: Text('${mp.material!.name} (${mp.percentage}%)'),
+                          backgroundColor: Colors.white,
+                        ))
+                    .toList(),
+              ),
+            ],
+          )
+        : SizedBox.shrink();
+  }
+
+  Widget _buildBrandChip(Brand brand) {
+    return brand.name != null  ?
+       Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Brand',
+          style: TextStyle(
+            fontSize: DynamicFont().getMediumFont(),
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        Chip(
+          label: Text(brand.name),
+          backgroundColor: Colors.white,
+        ),
+      ],
+    ): SizedBox.shrink();
   }
 }

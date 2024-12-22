@@ -9,9 +9,13 @@ import 'dart:convert';
 
 class FavoritesController extends GetxController {
   var isLoading = true.obs;
-  FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
-  RxList<Product> favoriteProducts = RxList<Product>(); // Updated for products
-  RxList<Package> favoritePackages = RxList<Package>(); // New list for packages
+  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
+
+  /// Stores the list of favorite products.
+  RxList<Product> favoriteProducts = RxList<Product>();
+
+  /// Stores the list of favorite packages.
+  RxList<Package> favoritePackages = RxList<Package>();
 
   @override
   void onReady() {
@@ -19,7 +23,7 @@ class FavoritesController extends GetxController {
     super.onReady();
   }
 
-  // Navigate to details for either product or package based on type
+  /// Navigate to details page, distinguishing between Product and Package.
   void navigateToDetails(dynamic item) {
     if (item is Product && item.productId != null) {
       Get.toNamed('/product-details', arguments: [item.productId]);
@@ -30,58 +34,74 @@ class FavoritesController extends GetxController {
     }
   }
 
+  /// Fetch favorite Products and Packages from your API.
   Future<void> fetchFavorites() async {
     try {
       isLoading(true);
 
-      var jwtToken = await _secureStorage.read(key: 'jwt_token');
+      final jwtToken = await _secureStorage.read(key: 'jwt_token');
+      // If no token, clear lists and prompt login or handle gracefully
+      if (jwtToken == null) {
+        favoriteProducts.clear();
+        favoritePackages.clear();
+        return;
+      }
 
-      // Fetch favorite products
-      var productResponse = await http.get(
-        Uri.parse('${Strings().apiUrl}/favorites'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $jwtToken',
-          'Accept': 'application/json',
-          'cookie': 'authToken=$jwtToken',
-        },
-      );
+      final headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $jwtToken',
+        'Accept': 'application/json',
+        'cookie': 'authToken=$jwtToken',
+      };
 
-      // Fetch favorite packages
-      var packageResponse = await http.get(
-        Uri.parse('${Strings().apiUrl}/favoritePackages'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $jwtToken',
-          'Accept': 'application/json',
-          'cookie': 'authToken=$jwtToken',
-        },
-      );
+      final productUrl = Uri.parse('${Strings().apiUrl}/favorites');
+      final packageUrl = Uri.parse('${Strings().apiUrl}/favoritePackages');
 
-      // Process product favorites
+      // Fetch both in parallel
+      final responses = await Future.wait([
+        http.get(productUrl, headers: headers),
+        http.get(packageUrl, headers: headers),
+      ]);
+
+      final productResponse = responses[0];
+      final packageResponse = responses[1];
+
+      // ---- Handle Products ----
       if (productResponse.statusCode == 200) {
-        var productData = json.decode(productResponse.body);
-        var products = productData
+        final productData = json.decode(productResponse.body);
+        final productList = productData as List;
+        final products = productList
             .map<Product>((item) => Product.fromJson(item['Product']))
             .toList();
         favoriteProducts.assignAll(products);
+      } else if (productResponse.statusCode == 404) {
+        // No favorites found for products
+        favoriteProducts.clear();
+      } else if (productResponse.statusCode == 401) {
+        Get.snackbar('Error', 'Unauthorized for products');
+      } else {
+        // If you need more specific checks, add them here.
+        // Otherwise, throw a generic error
+        throw Exception(
+            'Error fetching product favorites: ${productResponse.statusCode}');
       }
 
-      // Process package favorites
+      // ---- Handle Packages ----
       if (packageResponse.statusCode == 200) {
-        var packageData = json.decode(packageResponse.body);
-        var packages = packageData
+        final packageData = json.decode(packageResponse.body);
+        final packageList = packageData as List;
+        final packages = packageList
             .map<Package>((item) => Package.fromJson(item['Package']))
             .toList();
         favoritePackages.assignAll(packages);
-      }
-
-      // some delay
-      await Future.delayed(Duration(seconds: 1));
-
-      if (productResponse.statusCode == 404 ||
-          packageResponse.statusCode == 404) {
-        Get.snackbar('Message', 'No favorites found');
+      } else if (packageResponse.statusCode == 404) {
+        // No favorites found for packages
+        favoritePackages.clear();
+      } else if (packageResponse.statusCode == 401) {
+        Get.snackbar('Error', 'Unauthorized for packages');
+      } else {
+        throw Exception(
+            'Error fetching package favorites: ${packageResponse.statusCode}');
       }
     } catch (e) {
       Get.snackbar(
@@ -90,11 +110,13 @@ class FavoritesController extends GetxController {
         snackStyle: SnackStyle.FLOATING,
         backgroundColor: Colors.red,
       );
+      debugPrint('Error fetching favorites: $e');
     } finally {
       isLoading(false);
     }
   }
 
+  /// Locally remove item from favorites list
   void removeFromFavorites(int itemId, {bool isPackage = false}) {
     if (isPackage) {
       favoritePackages.removeWhere((item) => item.packageId == itemId);
@@ -103,6 +125,7 @@ class FavoritesController extends GetxController {
     }
   }
 
+  /// Reload all favorites from server
   void reloadFavorites() {
     fetchFavorites();
   }

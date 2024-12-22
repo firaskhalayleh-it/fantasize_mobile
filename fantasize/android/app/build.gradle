@@ -1,14 +1,13 @@
 plugins {
-    id "com.android.application"
-    id "kotlin-android"
-    id "dev.flutter.flutter-gradle-plugin"
+    id 'com.android.application'
+    id 'kotlin-android'
+    id 'dev.flutter.flutter-gradle-plugin'
+    id 'com.google.gms.google-services'
 }
-
 
 android {
     namespace "com.fantasize.fantasize"
-
-    compileSdk flutter.compileSdkVersion
+    compileSdkVersion flutter.compileSdkVersion
     ndkVersion flutter.ndkVersion
 
     compileOptions {
@@ -17,41 +16,32 @@ android {
     }
 
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = '1.8'
     }
 
     defaultConfig {
         applicationId "com.fantasize.fantasize"
-        
-        minSdk flutter.minSdkVersion
-        targetSdk flutter.targetSdkVersion
+        minSdkVersion 23
+        targetSdkVersion flutter.targetSdkVersion
         buildToolsVersion "35.0.0"
-        minSdkVersion 23                                                                          
         multiDexEnabled true
-
-        // Application versioning.
         versionCode flutter.versionCode
         versionName flutter.versionName
     }
 
     buildTypes {
         release {
-            // Signing configuration for the release build.
             signingConfig signingConfigs.debug
-
-            // Enable code shrinking and obfuscation for release builds.
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
         debug {
-            // Disable code shrinking for debug builds.
             minifyEnabled false
             shrinkResources false
         }
     }
 
-    // Optional: Resolve potential issues with duplicate resources.
     packagingOptions {
         resources {
             excludes += '/META-INF/{AL2.0,LGPL2.1}'
@@ -60,19 +50,13 @@ android {
 }
 
 flutter {
-    source "../.."
+    source '../..'
 }
 
 dependencies {
-    // Import the Firebase BoM
     implementation platform('com.google.firebase:firebase-bom:32.0.0')
     implementation 'androidx.multidex:multidex:2.0.1'
-
     implementation 'com.facebook.android:facebook-android-sdk:17.0.1'
-    // Add the Firebase Messaging dependency
     implementation 'com.google.firebase:firebase-messaging'
-    // Other dependencies...
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
 }
-
-// Apply the Google Services plugin at the bottom
-apply plugin: 'com.google.gms.google-services'

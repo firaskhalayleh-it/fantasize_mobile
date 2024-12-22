@@ -16,7 +16,7 @@ import '../../../data/models/user_model.dart' as userModel;
 import 'package:fantasize/app/global/strings.dart';
 
 class LoginController extends GetxController {
-  var formKey = GlobalKey<FormState>();
+  var loginFormKey = GlobalKey<FormState>();
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
 
@@ -369,7 +369,7 @@ class LoginController extends GetxController {
     print('Device Token from secureStorage: $deviceToken');
 
     if (email.isEmpty || password.isEmpty) {
-      formKey.currentState!.validate();
+      loginFormKey.currentState!.validate();
       errorMessage.value = 'Please fill out all fields.';
       Get.snackbar('Error', 'Please fill out all fields.');
       return;

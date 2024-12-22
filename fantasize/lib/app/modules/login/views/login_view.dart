@@ -65,7 +65,7 @@ class LoginView extends GetView<LoginController> {
             Devider().build(),
             SizedBox(height: screenHeight * 0.02),
             Form(
-                key: controller.formKey,
+                key: controller.loginFormKey,
                 child: Column(
                   children: [
                     Input().build(

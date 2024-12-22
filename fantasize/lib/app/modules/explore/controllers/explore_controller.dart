@@ -7,7 +7,7 @@ import 'package:video_player/video_player.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:jwt_decoder/jwt_decoder.dart';
+import 'package:flutter/material.dart';
 
 class ExploreController extends GetxController {
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
@@ -15,7 +15,7 @@ class ExploreController extends GetxController {
   var videos = <VideoModel>[].obs;
   var isLoading = true.obs;
 
-  // Initialize the lists with empty values to avoid null issues
+  // List of controllers for each video
   RxList<VideoPlayerController?> videoControllers =
       RxList<VideoPlayerController?>([]);
   RxList<bool> likedVideos = RxList<bool>([]);
@@ -25,52 +25,50 @@ class ExploreController extends GetxController {
   RxList<bool> likedProducts = RxList<bool>([]);
   RxList<bool> likedPackages = RxList<bool>([]);
 
-  int? previousIndex; // Track the previous video index
+  int? previousIndex; // Keep track of the last playing video
 
   @override
   void onInit() {
     super.onInit();
     fetchVideos();
-    checkIfLikedForAllVideos();
   }
 
-  // Fetch videos from the API and initialize controllers
+  /// Fetch videos from the server
   Future<void> fetchVideos() async {
     try {
       isLoading(true);
-      var response =
+      final response =
           await http.get(Uri.parse('${Strings().exploreUrl}/videos'));
 
       if (response.statusCode == 200) {
-        var jsonData = json.decode(response.body);
-        var videoList = jsonData['videoPaths'] as List;
-        videos.value =
-            videoList.map((video) => VideoModel.fromJson(video)).toList();
+        final jsonData = json.decode(response.body);
+        final videoList = jsonData['videoPaths'] as List;
+        videos.value = videoList.map((v) => VideoModel.fromJson(v)).toList();
 
-        // Initialize lists with default values
+        // Initialize controllers and liked states
         videoControllers.value =
             List<VideoPlayerController?>.filled(videos.length, null);
         likedVideos.value = List<bool>.filled(videos.length, false);
         showHeartAnimation.value = List<bool>.filled(videos.length, false);
 
-        // Initialize separate lists for products and packages
+        // Initialize separate lists for product/package likes
         likedProducts.value = List<bool>.filled(videos.length, false);
         likedPackages.value = List<bool>.filled(videos.length, false);
 
-        // Check liked status for all videos
+        // After loading all videos, check liked status
         await checkIfLikedForAllVideos();
       } else {
         Get.snackbar('Error', 'Failed to fetch videos');
       }
     } catch (e) {
-      print("Error fetching videos: $e");
+      debugPrint("Error fetching videos: $e");
       Get.snackbar('Error', 'An error occurred while fetching videos');
     } finally {
       isLoading(false);
     }
   }
 
-  // Initialize the video controller lazily when needed
+  /// Initialize a video controller at [index] if not yet initialized
   Future<void> initializeVideoController(int index) async {
     if (videoControllers[index] == null ||
         !(videoControllers[index]?.value.isInitialized ?? false)) {
@@ -81,182 +79,153 @@ class ExploreController extends GetxController {
 
         await controller.initialize();
         controller.setLooping(true);
-        controller.play(); // Start playing the video
+        controller.play();
 
-        videoControllers[index] = controller; // Save the controller
+        videoControllers[index] = controller;
       } catch (e) {
-        print("Error initializing video: $e");
+        debugPrint("Error initializing video: $e");
       }
     } else {
-      // If already initialized, just play the video
+      // If already initialized, just play
       videoControllers[index]?.play();
     }
   }
 
-  // Dispose video controllers when they go offscreen
+  /// Dispose of a video controller at [index] to free resources
   void disposeVideoController(int index) {
-    if (videoControllers[index] != null) {
-      videoControllers[index]?.pause();
-      videoControllers[index]?.dispose();
+    final vc = videoControllers[index];
+    if (vc != null) {
+      vc.pause();
+      vc.dispose();
       videoControllers[index] = null;
     }
   }
 
-  // Pause the video at the given index
+  /// Pause a video at [index]
   void pauseVideo(int index) {
     if (videoControllers[index]?.value.isInitialized ?? false) {
       videoControllers[index]?.pause();
     }
   }
 
-  // Handle pausing of the adjacent videos (previous and next)
+  /// Handle switching from one video to another
   void handleVideoSwitch(int index) {
     // Pause the previous video if available
     if (previousIndex != null && previousIndex != index) {
       pauseVideo(previousIndex!);
     }
 
-    // Pause the next video if it's initialized and active
+    // Pause neighbors if needed
     if (index + 1 < videoControllers.length) {
       pauseVideo(index + 1);
     }
-
-    // Pause the previous video if it's initialized and active
     if (index - 1 >= 0) {
       pauseVideo(index - 1);
     }
 
     // Play the current video
     initializeVideoController(index);
-
-    // Update the previous index
     previousIndex = index;
   }
 
-  // Like a video (toggle liked state and show heart animation)
+  /// Toggles the like status for video at [index], 
+  /// determines if it's a product or package, then calls toggleLikeStatus
   void likeVideo(int index) async {
-    var video = videos[index];
+    final video = videos[index];
+
     if (video.productId != null) {
-      // Video is associated with a Product
-      await toggleLikeStatus(index, isProduct: true, id: video.productId!);
+      // Video associated with a Product
+      await toggleLikeStatus(
+        index,
+        isProduct: true,
+        id: video.productId!,
+      );
     } else if (video.packageId != null) {
-      // Video is associated with a Package
-      await toggleLikeStatus(index, isProduct: false, id: video.packageId!);
+      // Video associated with a Package
+      await toggleLikeStatus(
+        index,
+        isProduct: false,
+        id: video.packageId!,
+      );
     } else {
-      print('No product or package associated with this video.');
+      debugPrint('No product or package associated with this video.');
     }
 
-    // Show heart animation for a short period
+    // Trigger heart animation
     showHeartAnimation[index] = true;
-    Future.delayed(Duration(seconds: 1), () {
+    Future.delayed(const Duration(seconds: 1), () {
       showHeartAnimation[index] = false;
     });
   }
 
-  // Toggle like status based on whether it's a product or package
-  Future<void> toggleLikeStatus(int index,
-      {required bool isProduct, required int id}) async {
+  /// Generic method to toggle like for either Product or Package
+  Future<void> toggleLikeStatus(
+    int index, {
+    required bool isProduct,
+    required int id,
+  }) async {
     try {
-      String? token = await _secureStorage.read(key: 'jwt_token');
+      final token = await _secureStorage.read(key: 'jwt_token');
       if (token == null) {
         Get.snackbar('Authorization Error', 'You need to log in first.');
         return;
       }
 
-      Uri url;
-      int statusCode;
+      final headers = {
+        'Content-Type': 'application/json',
+        'authorization': 'Bearer $token',
+        'Accept': 'application/json',
+        'cookie': 'authToken=$token',
+      };
 
       if (isProduct) {
-        // Toggle like for Product
+        // If product already liked, remove it
         if (likedProducts[index]) {
-          // Currently liked, so remove from favorites
-          url = Uri.parse('${Strings().apiUrl}/favorites/$id');
-          var response = await http.delete(
-            url,
-            headers: {
-              'Content-Type': 'application/json',
-              'authorization': 'Bearer $token',
-              'Accept': 'application/json',
-              'cookie': 'authToken=$token',
-            },
-          );
+          final url = Uri.parse('${Strings().apiUrl}/favorites/$id');
+          final response = await http.delete(url, headers: headers);
 
-          statusCode = response.statusCode;
-          if (statusCode == 200) {
+          if (response.statusCode == 200) {
             likedProducts[index] = false;
+            // Refresh favorites in FavoritesController
             Get.find<FavoritesController>().fetchFavorites();
-            Get.snackbar(
-              'Success',
-              'Product removed from favorites',
-            );
+            Get.snackbar('Success', 'Product removed from favorites');
           } else {
             Get.snackbar('Error', 'Failed to remove product from favorites');
           }
         } else {
-          // Not liked, so add to favorites
-          url = Uri.parse('${Strings().apiUrl}/product/$id/favorites');
-          var response = await http.post(
-            url,
-            headers: {
-              'Content-Type': 'application/json',
-              'authorization': 'Bearer $token',
-              'Accept': 'application/json',
-              'cookie': 'authToken=$token',
-            },
-          );
+          // Add it to favorites
+          final url = Uri.parse('${Strings().apiUrl}/favorites/$id');
+          final response = await http.post(url, headers: headers);
 
-          statusCode = response.statusCode;
-          if (statusCode == 200 || statusCode == 201) {
+          if (response.statusCode == 200 || response.statusCode == 201) {
             likedProducts[index] = true;
             Get.find<FavoritesController>().fetchFavorites();
-
             Get.snackbar('Success', 'Product added to favorites');
           } else {
             Get.snackbar('Error', 'Failed to add product to favorites');
           }
         }
       } else {
-        // Toggle like for Package
+        // If package already liked, remove it
         if (likedPackages[index]) {
-          // Currently liked, so remove from favorites
-          url = Uri.parse('${Strings().apiUrl}/favoritePackages/$id');
-          var response = await http.delete(
-            url,
-            headers: {
-              'Content-Type': 'application/json',
-              'authorization': 'Bearer $token',
-              'Accept': 'application/json',
-              'cookie': 'authToken=$token',
-            },
-          );
+          final url = Uri.parse('${Strings().apiUrl}/favoritePackages/$id');
+          final response = await http.delete(url, headers: headers);
 
-          statusCode = response.statusCode;
-          if (statusCode == 200) {
+          if (response.statusCode == 200) {
             likedPackages[index] = false;
             Get.find<FavoritesController>().fetchFavorites();
-
             Get.snackbar('Success', 'Package removed from favorites');
           } else {
             Get.snackbar('Error', 'Failed to remove package from favorites');
           }
         } else {
-          // Not liked, so add to favorites
-          url = Uri.parse('${Strings().apiUrl}/favoritePackages/$id');
-          var response = await http.post(
-            url,
-            headers: {
-              'Content-Type': 'application/json',
-              'authorization': 'Bearer $token',
-              'Accept': 'application/json',
-              'cookie': 'authToken=$token',
-            },
-          );
+          // Add it to favorites
+          final url = Uri.parse('${Strings().apiUrl}/favoritePackages/$id');
+          final response = await http.post(url, headers: headers);
 
-          statusCode = response.statusCode;
-          if (statusCode == 200 || statusCode == 201) {
+          if (response.statusCode == 200 || response.statusCode == 201) {
             likedPackages[index] = true;
             Get.find<FavoritesController>().fetchFavorites();
-
             Get.snackbar('Success', 'Package added to favorites');
           } else {
             Get.snackbar('Error', 'Failed to add package to favorites');
@@ -264,76 +233,68 @@ class ExploreController extends GetxController {
         }
       }
     } catch (e) {
-      print('Error toggling like status: $e');
+      debugPrint('Error toggling like status: $e');
       Get.snackbar('Error', 'An error occurred while updating favorites');
     }
   }
 
-  // Check if each video is liked by the user
+  /// Check if videos (either products or packages) are liked by the user
   Future<void> checkIfLikedForAllVideos() async {
     try {
-      String? token = await _secureStorage.read(key: 'jwt_token');
+      final token = await _secureStorage.read(key: 'jwt_token');
       if (token == null) {
-        print('No token found. Skipping like status check.');
+        debugPrint('No token found. Skipping like status check.');
         return;
       }
 
-      // Fetch all favorite products
-      var favoriteProductsUrl = Uri.parse('${Strings().apiUrl}/favorites');
-      var favoritePackagesUrl =
+      final headers = {
+        'Content-Type': 'application/json',
+        'authorization': 'Bearer $token',
+        'Accept': 'application/json',
+        'cookie': 'authToken=$token',
+      };
+
+      final favoriteProductsUrl = Uri.parse('${Strings().apiUrl}/favorites');
+      final favoritePackagesUrl =
           Uri.parse('${Strings().apiUrl}/favoritePackages');
 
-      var [productsResponse, packagesResponse] = await Future.wait([
-        http.get(
-          favoriteProductsUrl,
-          headers: {
-            'Content-Type': 'application/json',
-            'authorization': 'Bearer $token',
-            'Accept': 'application/json',
-            'cookie': 'authToken=$token',
-          },
-        ),
-        http.get(
-          favoritePackagesUrl,
-          headers: {
-            'Content-Type': 'application/json',
-            'authorization': 'Bearer $token',
-            'Accept': 'application/json',
-            'cookie': 'authToken=$token',
-          },
-        ),
+      final responses = await Future.wait([
+        http.get(favoriteProductsUrl, headers: headers),
+        http.get(favoritePackagesUrl, headers: headers),
       ]);
+
+      final productsResponse = responses[0];
+      final packagesResponse = responses[1];
 
       List<int> favoriteProductIds = [];
       List<int> favoritePackageIds = [];
 
+      // Process favorite products
       if (productsResponse.statusCode == 200) {
-        var jsonData = json.decode(productsResponse.body);
-        var favoriteProducts = jsonData as List<dynamic>;
-        favoriteProductIds = favoriteProducts.map((fav) {
-          return fav['Product']['ProductID'] as int;
-        }).toList();
-        print('Favorite products: $favoriteProductIds');
+        final jsonData = json.decode(productsResponse.body) as List;
+        favoriteProductIds = jsonData
+            .map((fav) => fav['Product']['ProductID'] as int)
+            .toList();
+        debugPrint('Favorite products: $favoriteProductIds');
       } else {
-        Get.snackbar('Error',
-            'Failed to fetch favorite products${productsResponse.body}');
+        // If needed, handle other status codes or errors
+        debugPrint('Failed to fetch favorite products: ${productsResponse.body}');
       }
 
+      // Process favorite packages
       if (packagesResponse.statusCode == 200) {
-        var jsonData = json.decode(packagesResponse.body);
-        var favoritePackagesData = jsonData as List<dynamic>;
-        favoritePackageIds = favoritePackagesData.map((fav) {
-          return fav['Package']['PackageID'] as int;
-        }).toList();
-        print('Favorite packages: $favoritePackageIds');
+        final jsonData = json.decode(packagesResponse.body) as List;
+        favoritePackageIds = jsonData
+            .map((fav) => fav['Package']['PackageID'] as int)
+            .toList();
+        debugPrint('Favorite packages: $favoritePackageIds');
       } else {
-        Get.snackbar('Error',
-            'Failed to fetch favorite packages${packagesResponse.body}');
+        debugPrint('Failed to fetch favorite packages: ${packagesResponse.body}');
       }
 
-      // Update likedProducts and likedPackages lists
+      // Update liked states
       for (int i = 0; i < videos.length; i++) {
-        var video = videos[i];
+        final video = videos[i];
         if (video.productId != null) {
           likedProducts[i] = favoriteProductIds.contains(video.productId);
         } else if (video.packageId != null) {
@@ -341,14 +302,14 @@ class ExploreController extends GetxController {
         }
       }
     } catch (e) {
-      print('Error checking liked status: $e');
-      Get.snackbar('Error', 'An error occurred while checking favorites$e');
+      debugPrint('Error checking liked status: $e');
+      Get.snackbar('Error', 'An error occurred while checking favorites');
     }
   }
 
-  // Check if the video is liked
+  /// Returns true if this video is liked (product or package).
   bool isLiked(int index) {
-    var video = videos[index];
+    final video = videos[index];
     if (video.productId != null) {
       return likedProducts[index];
     } else if (video.packageId != null) {
@@ -357,7 +318,7 @@ class ExploreController extends GetxController {
     return false;
   }
 
-  // Navigate to product or package page
+  /// Navigate to either the Product or Package details screen
   void goToProductOrPackagePage(int index) {
     final video = videos[index];
     if (video.productId != null) {
@@ -365,28 +326,38 @@ class ExploreController extends GetxController {
     } else if (video.packageId != null) {
       Get.toNamed('/package-details', arguments: video.packageId);
     } else {
-      print('No product or package associated with this video.');
+      debugPrint('No product or package associated with this video.');
       Get.snackbar('Error', 'No associated product or package found.');
     }
   }
 
-  @override
-  void onClose() {
-    // Dispose of all video controllers when the controller is destroyed
+  /// Pause all videos (used on page exit or disposal)
+  void pauseAllVideos() {
     for (var controller in videoControllers) {
-      if (controller?.value.isInitialized ?? false) {
+      if (controller?.value.isPlaying ?? false) {
         controller?.pause();
-        controller?.dispose();
       }
     }
-    super.onClose();
   }
 
-  toggleVideoPlayPause(int index) {
+  /// Play/Pause toggle for a specific video
+  void toggleVideoPlayPause(int index) {
     if (videoControllers[index]?.value.isPlaying ?? false) {
       videoControllers[index]?.pause();
     } else {
       videoControllers[index]?.play();
     }
+  }
+
+  @override
+  void onClose() {
+    // Dispose all video controllers
+    for (var controller in videoControllers) {
+      if (controller != null && controller.value.isInitialized) {
+        controller.pause();
+        controller.dispose();
+      }
+    }
+    super.onClose();
   }
 }
