@@ -1,5 +1,3 @@
-// lib/app/modules/order_history/controllers/order_history_controller.dart
-
 import 'package:fantasize/app/data/models/ordered_option.dart';
 import 'package:get/get.dart';
 import 'package:fantasize/app/data/models/order_model.dart';
@@ -34,7 +32,6 @@ class OrderHistoryController extends GetxController {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
-          'Accept': 'application/json',
           'cookie': 'authToken=$token',
         },
       );
@@ -49,7 +46,6 @@ class OrderHistoryController extends GetxController {
       }
     } catch (e) {
       print('Error fetching order history: $e');
-      Get.snackbar('Error', 'An error occurred while fetching orders');
     } finally {
       isLoading.value = false;
     }

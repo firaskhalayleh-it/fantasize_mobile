@@ -24,6 +24,7 @@ class HomeTabView extends StatelessWidget {
     final topPadding = MediaQuery.of(context).padding.top;
 
     return Scaffold(
+      
       backgroundColor: Colors.white,
       body: Stack(
         children: [

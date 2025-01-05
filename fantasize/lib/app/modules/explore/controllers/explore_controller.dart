@@ -18,12 +18,13 @@ class ExploreController extends GetxController {
   // List of controllers for each video
   RxList<VideoPlayerController?> videoControllers =
       RxList<VideoPlayerController?>([]);
-  RxList<bool> likedVideos = RxList<bool>([]);
-  RxList<bool> showHeartAnimation = RxList<bool>([]);
 
-  // Separate lists to track liked states for products and packages
+  // REMOVED: likedVideos = RxList<bool>([]); // No longer needed
+
+  // CHANGED: We'll keep separate arrays for product vs. package likes
   RxList<bool> likedProducts = RxList<bool>([]);
   RxList<bool> likedPackages = RxList<bool>([]);
+  RxList<bool> showHeartAnimation = RxList<bool>([]);
 
   int? previousIndex; // Keep track of the last playing video
 
@@ -37,23 +38,40 @@ class ExploreController extends GetxController {
   Future<void> fetchVideos() async {
     try {
       isLoading(true);
+
+      debugPrint('DEBUG: Fetching videos from: ${Strings().exploreUrl}/videos');
+
       final response =
           await http.get(Uri.parse('${Strings().exploreUrl}/videos'));
+
+      debugPrint('DEBUG: fetchVideos() -> statusCode: ${response.statusCode}');
+      debugPrint('DEBUG: fetchVideos() -> body: ${response.body}');
 
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
         final videoList = jsonData['videoPaths'] as List;
-        videos.value = videoList.map((v) => VideoModel.fromJson(v)).toList();
 
-        // Initialize controllers and liked states
+        debugPrint('DEBUG: Received videoList length: ${videoList.length}');
+
+        videos.value = videoList.map((v) {
+          final videoModel = VideoModel.fromJson(v);
+          debugPrint(
+              'DEBUG: Parsed Video => productId=${videoModel.productId}, '
+              'packageId=${videoModel.packageId}, '
+              'videoPath=${videoModel.videoPath}');
+          return videoModel;
+        }).toList();
+
+        // Initialize controllers and like states
         videoControllers.value =
             List<VideoPlayerController?>.filled(videos.length, null);
-        likedVideos.value = List<bool>.filled(videos.length, false);
-        showHeartAnimation.value = List<bool>.filled(videos.length, false);
 
-        // Initialize separate lists for product/package likes
+        // CHANGED: No more `likedVideos`, just separate lists:
         likedProducts.value = List<bool>.filled(videos.length, false);
         likedPackages.value = List<bool>.filled(videos.length, false);
+
+        // For the heart animation
+        showHeartAnimation.value = List<bool>.filled(videos.length, false);
 
         // After loading all videos, check liked status
         await checkIfLikedForAllVideos();
@@ -73,8 +91,13 @@ class ExploreController extends GetxController {
     if (videoControllers[index] == null ||
         !(videoControllers[index]?.value.isInitialized ?? false)) {
       try {
-        final videoUrl =
-            Uri.parse('${Strings().resourceUrl}/${videos[index].videoPath}');
+        final videoUrl = Uri.parse(
+          '${Strings().resourceUrl}/${videos[index].videoPath}',
+        );
+
+        debugPrint(
+            'DEBUG: Initializing VideoPlayerController for index=$index -> URL: $videoUrl');
+
         final controller = VideoPlayerController.networkUrl(videoUrl);
 
         await controller.initialize();
@@ -128,20 +151,22 @@ class ExploreController extends GetxController {
     previousIndex = index;
   }
 
-  /// Toggles the like status for video at [index], 
-  /// determines if it's a product or package, then calls toggleLikeStatus
+  /// Like/unlike the video at [index], depending on whether it's a product or package
   void likeVideo(int index) async {
     final video = videos[index];
 
+    debugPrint('DEBUG: likeVideo() -> index=$index, '
+        'productId=${video.productId}, packageId=${video.packageId}');
+
     if (video.productId != null) {
-      // Video associated with a Product
+      // Product
       await toggleLikeStatus(
         index,
         isProduct: true,
         id: video.productId!,
       );
     } else if (video.packageId != null) {
-      // Video associated with a Package
+      // Package
       await toggleLikeStatus(
         index,
         isProduct: false,
@@ -174,59 +199,89 @@ class ExploreController extends GetxController {
       final headers = {
         'Content-Type': 'application/json',
         'authorization': 'Bearer $token',
-        'Accept': 'application/json',
         'cookie': 'authToken=$token',
       };
 
       if (isProduct) {
-        // If product already liked, remove it
+        // Check current like state
         if (likedProducts[index]) {
+          // Remove from favorites
+          // CHANGED: Using same route for removing product: DELETE /favorites/:id
           final url = Uri.parse('${Strings().apiUrl}/favorites/$id');
           final response = await http.delete(url, headers: headers);
 
+          debugPrint('DEBUG: DELETE /favorites/$id -> '
+              'statusCode=${response.statusCode}, body=${response.body}');
+
           if (response.statusCode == 200) {
             likedProducts[index] = false;
-            // Refresh favorites in FavoritesController
-            Get.find<FavoritesController>().fetchFavorites();
             Get.snackbar('Success', 'Product removed from favorites');
+
+            // Refresh favorites
+            await Get.find<FavoritesController>().fetchFavorites();
+            await checkIfLikedForAllVideos();
           } else {
             Get.snackbar('Error', 'Failed to remove product from favorites');
           }
         } else {
-          // Add it to favorites
-          final url = Uri.parse('${Strings().apiUrl}/favorites/$id');
+          // Add to favorites
+          // CHANGED: Using same route for adding product: POST /product/:id/favorites
+          final url = Uri.parse('${Strings().apiUrl}/product/$id/favorites');
           final response = await http.post(url, headers: headers);
+
+          debugPrint('DEBUG: POST /favorites/$id -> '
+              'statusCode=${response.statusCode}, body=${response.body}');
 
           if (response.statusCode == 200 || response.statusCode == 201) {
             likedProducts[index] = true;
-            Get.find<FavoritesController>().fetchFavorites();
             Get.snackbar('Success', 'Product added to favorites');
+
+            // Refresh favorites
+            await Get.find<FavoritesController>().fetchFavorites();
+            await checkIfLikedForAllVideos();
           } else {
-            Get.snackbar('Error', 'Failed to add product to favorites');
+            if (response.statusCode == 404) {
+              Get.snackbar('Error', 'Product not found in favorites');
+            } else {
+              Get.snackbar("Error", response.body);
+            }
           }
         }
       } else {
-        // If package already liked, remove it
+        // Package
         if (likedPackages[index]) {
+          // Remove from favorites
           final url = Uri.parse('${Strings().apiUrl}/favoritePackages/$id');
           final response = await http.delete(url, headers: headers);
 
+          debugPrint('DEBUG: DELETE /favoritePackages/$id -> '
+              'statusCode=${response.statusCode}, body=${response.body}');
+
           if (response.statusCode == 200) {
             likedPackages[index] = false;
-            Get.find<FavoritesController>().fetchFavorites();
             Get.snackbar('Success', 'Package removed from favorites');
+
+            // Refresh favorites
+            await Get.find<FavoritesController>().fetchFavorites();
+            await checkIfLikedForAllVideos();
           } else {
             Get.snackbar('Error', 'Failed to remove package from favorites');
           }
         } else {
-          // Add it to favorites
+          // Add to favorites
           final url = Uri.parse('${Strings().apiUrl}/favoritePackages/$id');
           final response = await http.post(url, headers: headers);
 
+          debugPrint('DEBUG: POST /favoritePackages/$id -> '
+              'statusCode=${response.statusCode}, body=${response.body}');
+
           if (response.statusCode == 200 || response.statusCode == 201) {
             likedPackages[index] = true;
-            Get.find<FavoritesController>().fetchFavorites();
             Get.snackbar('Success', 'Package added to favorites');
+
+            // Refresh favorites
+            await Get.find<FavoritesController>().fetchFavorites();
+            await checkIfLikedForAllVideos();
           } else {
             Get.snackbar('Error', 'Failed to add package to favorites');
           }
@@ -238,7 +293,7 @@ class ExploreController extends GetxController {
     }
   }
 
-  /// Check if videos (either products or packages) are liked by the user
+  /// Fetch current favorites (products/packages) and update the local arrays
   Future<void> checkIfLikedForAllVideos() async {
     try {
       final token = await _secureStorage.read(key: 'jwt_token');
@@ -258,6 +313,8 @@ class ExploreController extends GetxController {
       final favoritePackagesUrl =
           Uri.parse('${Strings().apiUrl}/favoritePackages');
 
+      debugPrint('DEBUG: checkIfLikedForAllVideos -> fetching favorites...');
+
       final responses = await Future.wait([
         http.get(favoriteProductsUrl, headers: headers),
         http.get(favoritePackagesUrl, headers: headers),
@@ -272,24 +329,31 @@ class ExploreController extends GetxController {
       // Process favorite products
       if (productsResponse.statusCode == 200) {
         final jsonData = json.decode(productsResponse.body) as List;
+        debugPrint('DEBUG: /favorites -> ${productsResponse.body}');
+
         favoriteProductIds = jsonData
             .map((fav) => fav['Product']['ProductID'] as int)
             .toList();
-        debugPrint('Favorite products: $favoriteProductIds');
+        debugPrint('DEBUG: favoriteProductIds: $favoriteProductIds');
       } else {
-        // If needed, handle other status codes or errors
-        debugPrint('Failed to fetch favorite products: ${productsResponse.body}');
+        debugPrint(
+          'Failed to fetch favorite products: ${productsResponse.body}',
+        );
       }
 
       // Process favorite packages
       if (packagesResponse.statusCode == 200) {
         final jsonData = json.decode(packagesResponse.body) as List;
+        debugPrint('DEBUG: /favoritePackages -> ${packagesResponse.body}');
+
         favoritePackageIds = jsonData
             .map((fav) => fav['Package']['PackageID'] as int)
             .toList();
-        debugPrint('Favorite packages: $favoritePackageIds');
+        debugPrint('DEBUG: favoritePackageIds: $favoritePackageIds');
       } else {
-        debugPrint('Failed to fetch favorite packages: ${packagesResponse.body}');
+        debugPrint(
+          'Failed to fetch favorite packages: ${packagesResponse.body}',
+        );
       }
 
       // Update liked states
@@ -322,8 +386,12 @@ class ExploreController extends GetxController {
   void goToProductOrPackagePage(int index) {
     final video = videos[index];
     if (video.productId != null) {
+      debugPrint(
+          'DEBUG: Navigating to /product-details with ID=${video.productId}');
       Get.toNamed('/product-details', arguments: [video.productId]);
     } else if (video.packageId != null) {
+      debugPrint(
+          'DEBUG: Navigating to /package-details with ID=${video.packageId}');
       Get.toNamed('/package-details', arguments: video.packageId);
     } else {
       debugPrint('No product or package associated with this video.');
@@ -342,7 +410,10 @@ class ExploreController extends GetxController {
 
   /// Play/Pause toggle for a specific video
   void toggleVideoPlayPause(int index) {
-    if (videoControllers[index]?.value.isPlaying ?? false) {
+    final isPlaying = videoControllers[index]?.value.isPlaying ?? false;
+    debugPrint(
+        'DEBUG: toggleVideoPlayPause() -> index=$index, isPlaying=$isPlaying');
+    if (isPlaying) {
       videoControllers[index]?.pause();
     } else {
       videoControllers[index]?.play();

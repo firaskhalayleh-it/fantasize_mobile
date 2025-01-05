@@ -1,13 +1,13 @@
 class Strings {
-  final String _resourceUrl = 'http://35.234.135.60:80/resources';
+  final String _resourceUrl = 'http://35.234.135.60:5000/resources';
 
-  final String _apiUrl = 'http://35.234.135.60:80/api';
+  final String _apiUrl = 'http://35.234.135.60:5000/api';
 
-  final String _exploreUrl = 'http://35.234.135.60:80/explore';
+  final String _exploreUrl = 'http://35.234.135.60:5000/explore';
 
-  final String _homeUrl = 'http://35.234.135.60:80/home';
+  final String _homeUrl = 'http://35.234.135.60:5000/home';
 
-  final String _searchUrl = 'http://35.234.135.60:80/search';
+  final String _searchUrl = 'http://35.234.135.60:5000/search';
 
   String get resourceUrl => _resourceUrl;
 

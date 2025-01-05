@@ -9,14 +9,26 @@ import 'package:jwt_decoder/jwt_decoder.dart';
 import '../../../data/models/user_model.dart';
 
 class SignupController extends GetxController {
-  var emailController = TextEditingController();
-  var passwordController = TextEditingController();
-  var confirmPasswordController = TextEditingController();
-  var errorMessage = ''.obs;
-  // handle the obscure text for password
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+  final confirmPasswordController = TextEditingController();
+  final formKey = GlobalKey<FormState>();
+  
+  final errorMessage = ''.obs;
+  final isLoading = false.obs;
+  final isEmailValid = true.obs;
+  final isPasswordValid = true.obs;
+  final isConfirmPasswordValid = true.obs;
 
-  var obscureText = true.obs;
-  var confirmPasswordObscureText = true.obs;
+  // Password visibility controls
+  final obscureText = true.obs;
+  final confirmPasswordObscureText = true.obs;
+
+  // Instance of secure storage to store JWT
+  final FlutterSecureStorage secureStorage = const FlutterSecureStorage();
+
+  // User object to store the signed-up user data
+  final user = Rxn<User>();
 
   void toggleObscureText() {
     obscureText.value = !obscureText.value;
@@ -26,73 +38,155 @@ class SignupController extends GetxController {
     confirmPasswordObscureText.value = !confirmPasswordObscureText.value;
   }
 
-  // Instance of secure storage to store JWT
-  final FlutterSecureStorage secureStorage = const FlutterSecureStorage();
+  // Email validation
+  String? validateEmail(String? value) {
+    final email = value?.trim() ?? '';
+    
+    if (email.isEmpty) {
+      isEmailValid.value = false;
+      return 'Email is required';
+    }
+    
+    if (!GetUtils.isEmail(email)) {
+      isEmailValid.value = false;
+      return 'Please enter a valid email address';
+    }
+    
+    isEmailValid.value = true;
+    return null;
+  }
 
-  // User object to store the signed-up user data
-  var user = Rxn<User>();
+  // Password validation
+  String? validatePassword(String? value) {
+    final password = value?.trim() ?? '';
+    
+    if (password.isEmpty) {
+      isPasswordValid.value = false;
+      return 'Password is required';
+    }
+    
+    if (password.length < 8) {
+      isPasswordValid.value = false;
+      return 'Password must be at least 8 characters';
+    }
+    
+    if (!password.contains(RegExp(r'[A-Z]'))) {
+      isPasswordValid.value = false;
+      return 'Password must contain uppercase letter';
+    }
+    
+    if (!password.contains(RegExp(r'[a-z]'))) {
+      isPasswordValid.value = false;
+      return 'Password must contain lowercase letter';
+    }
+    
+    if (!password.contains(RegExp(r'[0-9]'))) {
+      isPasswordValid.value = false;
+      return 'Password must contain number';
+    }
+    
+    if (!password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'))) {
+      isPasswordValid.value = false;
+      return 'Password must contain special character';
+    }
+    
+    isPasswordValid.value = true;
+    return null;
+  }
+
+  // Confirm password validation
+  String? validateConfirmPassword(String? value) {
+    final confirmPassword = value?.trim() ?? '';
+    
+    if (confirmPassword.isEmpty) {
+      isConfirmPasswordValid.value = false;
+      return 'Please confirm your password';
+    }
+    
+    if (confirmPassword != passwordController.text.trim()) {
+      isConfirmPasswordValid.value = false;
+      return 'Passwords do not match';
+    }
+    
+    isConfirmPasswordValid.value = true;
+    return null;
+  }
+
+  bool validateForm() {
+    final isValid = formKey.currentState?.validate() ?? false;
+    return isValid && isEmailValid.value && isPasswordValid.value && isConfirmPasswordValid.value;
+  }
 
   // Signup API call logic
-  void signup() async {
-    final email = emailController.text.trim();
-    final password = passwordController.text.trim();
-    final confirmPassword = confirmPasswordController.text.trim();
-
-    // Validate form fields
-    if (email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
-      errorMessage.value = 'Please fill out all fields.';
+  Future<void> signup() async {
+    if (!validateForm()) {
+      Get.snackbar(
+        'Validation Error',
+        'Please check all fields and try again',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.withOpacity(0.1),
+        colorText: Colors.red,
+      );
       return;
     }
-
-    // Validate password confirmation
-    if (password != confirmPassword) {
-      errorMessage.value = 'Passwords do not match.';
-      return;
-    }
-    var url = Uri.parse('${Strings().apiUrl}/register');
-
-    // Send POST request to signup endpoint
-    var response = await http.post(
-      url,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'email': email,
-        'password': password,
-      }),
-    );
 
     try {
-      // Define the signup API endpoint
+      isLoading.value = true;
+      errorMessage.value = '';
+      
+      final email = emailController.text.trim();
+      final password = passwordController.text.trim();
 
-      print(response.body);
-      print(response.statusCode);
+      var url = Uri.parse('${Strings().apiUrl}/register');
 
-      // Check for successful signup (status code 200 or 201)
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'email': email,
+          'password': password,
+        }),
+      );
+
+      final responseData = jsonDecode(response.body);
+
       if (response.statusCode == 201 || response.statusCode == 200) {
-        // Decode the response body to get the JWT token
-        var responseData = jsonDecode(response.body);
-        String jwtToken =
-            responseData['token']; // Assuming token is returned on signup
-
-        // Decode the JWT token to get user details
+        String jwtToken = responseData['token'];
         Map<String, dynamic> decodedToken = JwtDecoder.decode(jwtToken);
-
-        // Create a User instance from the decoded token
         user.value = User.fromJson(decodedToken);
-
-        // Store the JWT token securely
+        
         await secureStorage.write(key: 'jwt_token', value: jwtToken);
-
-        // Navigate to the home screen after successful signup
+        
+        Get.snackbar(
+          'Success',
+          'Registration successful!',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.green.withOpacity(0.1),
+          colorText: Colors.green,
+        );
+        
         Get.offNamed('/home');
       } else {
-        // Display an error message if the signup failed
-        Get.snackbar('Error', response.body);
+        errorMessage.value = responseData['message'] ?? 'Registration failed';
+        Get.snackbar(
+          'Error',
+          errorMessage.value,
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red.withOpacity(0.1),
+          colorText: Colors.red,
+        );
       }
     } catch (e) {
-      // Handle error cases such as network issues
       errorMessage.value = 'An error occurred. Please try again later.';
-      Get.snackbar('Error', ' ${response.body}');
+      Get.snackbar(
+        'Error',
+        errorMessage.value,
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.withOpacity(0.1),
+        colorText: Colors.red,
+      );
+    } finally {
+      isLoading.value = false;
     }
   }
 
@@ -100,23 +194,33 @@ class SignupController extends GetxController {
     Get.offNamed('/login');
   }
 
-  // Function to retrieve the stored token
   Future<String?> getStoredToken() async {
     return await secureStorage.read(key: 'jwt_token');
   }
 
-  // Function to retrieve the logged-in user from the stored token
   Future<void> getUserFromStoredToken() async {
-    String? token = await getStoredToken();
-    if (token != null) {
-      Map<String, dynamic> decodedToken = JwtDecoder.decode(token);
-      user.value = User.fromJson(decodedToken);
+    try {
+      final token = await getStoredToken();
+      if (token != null) {
+        Map<String, dynamic> decodedToken = JwtDecoder.decode(token);
+        user.value = User.fromJson(decodedToken);
+      }
+    } catch (e) {
+      await deleteStoredToken();
+      Get.offNamed('/login');
     }
   }
 
-  // Function to delete the stored token (for logout or token expiration)
   Future<void> deleteStoredToken() async {
     await secureStorage.delete(key: 'jwt_token');
     user.value = null;
+  }
+
+  @override
+  void onClose() {
+    emailController.dispose();
+    passwordController.dispose();
+    confirmPasswordController.dispose();
+    super.onClose();
   }
 }

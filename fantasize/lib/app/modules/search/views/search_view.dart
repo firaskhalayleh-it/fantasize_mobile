@@ -16,7 +16,8 @@ class SearchView extends StatefulWidget {
 }
 
 class _SearchViewState extends State<SearchView> {
-  final custom.SearchController searchController = Get.put(custom.SearchController());
+  final custom.SearchController searchController =
+      Get.put(custom.SearchController());
   final TextEditingController nameController = TextEditingController();
   final TextEditingController categoryController = TextEditingController();
   final TextEditingController subCategoryController = TextEditingController();
@@ -151,14 +152,16 @@ class _SearchViewState extends State<SearchView> {
                   controller: categoryController,
                   label: 'Category',
                   icon: Icons.category,
-                  onChanged: (value) => searchController.categoryName.value = value,
+                  onChanged: (value) =>
+                      searchController.categoryName.value = value,
                 ),
                 SizedBox(height: 16),
                 _buildSearchField(
                   controller: subCategoryController,
                   label: 'Subcategory',
                   icon: Icons.subdirectory_arrow_right,
-                  onChanged: (value) => searchController.subCategoryName.value = value,
+                  onChanged: (value) =>
+                      searchController.subCategoryName.value = value,
                 ),
               ],
             ),
@@ -170,14 +173,16 @@ class _SearchViewState extends State<SearchView> {
                   controller: materialController,
                   label: 'Material',
                   icon: Icons.texture,
-                  onChanged: (value) => searchController.materialName.value = value,
+                  onChanged: (value) =>
+                      searchController.materialName.value = value,
                 ),
                 SizedBox(height: 16),
                 _buildSearchField(
                   controller: optionNameController,
                   label: 'Option Name',
                   icon: Icons.list_alt,
-                  onChanged: (value) => searchController.optionName.value = value,
+                  onChanged: (value) =>
+                      searchController.optionName.value = value,
                 ),
               ],
             ),
@@ -381,7 +386,8 @@ class _SearchViewState extends State<SearchView> {
           searchController.resetSearch();
           searchController.name.value = nameController.text.trim();
           searchController.categoryName.value = categoryController.text.trim();
-          searchController.subCategoryName.value = subCategoryController.text.trim();
+          searchController.subCategoryName.value =
+              subCategoryController.text.trim();
           searchController.materialName.value = materialController.text.trim();
           searchController.brand.value = brandController.text.trim();
           searchController.optionName.value = optionNameController.text.trim();
@@ -415,7 +421,6 @@ class _SearchViewState extends State<SearchView> {
       ),
     );
   }
-
 
   /// Builds the search results section
   Widget _buildSearchResults() {
@@ -480,325 +485,329 @@ class _SearchViewState extends State<SearchView> {
     });
   }
 
-
-Widget _buildProductItem(Product product) {
-  return Container(
-    margin: EdgeInsets.all(8.0),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(16.0),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withOpacity(0.08),
-          offset: Offset(0, 4),
-          blurRadius: 12,
-          spreadRadius: 0,
-        ),
-      ],
-    ),
-    child: ClipRRect(
-      borderRadius: BorderRadius.circular(16.0),
-      child: InkWell(
-        onTap: () {
-          // Navigate to product details
-        },
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Image Section with Offer Badge
-            Stack(
-              children: [
-                AspectRatio(
-                  aspectRatio: 1.0,
-                  child: Hero(
-                    tag: 'product-${product.productId}',
-                    child: Image.network(
-                      ImageHandler.getImageUrl(product.resources),
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => Container(
-                        color: Colors.grey[200],
-                        child: Icon(Icons.image_not_supported, color: Colors.grey),
-                      ),
-                    ),
-                  ),
-                ),
-                if (product.offer != null)
-                  Positioned(
-                    top: 12,
-                    left: 12,
-                    child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.red[600],
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        '${product.offer!.discount}% OFF',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
+  Widget _buildProductItem(Product product) {
+    return Container(
+      margin: EdgeInsets.all(8.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16.0),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            offset: Offset(0, 4),
+            blurRadius: 12,
+            spreadRadius: 0,
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16.0),
+        child: InkWell(
+          onTap: () {
+            Get.toNamed('product-details', arguments: [product.productId]);
+          },
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Image Section with Offer Badge
+              Stack(
+                children: [
+                  AspectRatio(
+                    aspectRatio: 1.0,
+                    child: Hero(
+                      tag: 'product-${product.productId}',
+                      child: Image.network(
+                        ImageHandler.getImageUrl(product.resources),
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Container(
+                          color: Colors.grey[200],
+                          child: Icon(Icons.image_not_supported,
+                              color: Colors.grey),
                         ),
                       ),
                     ),
                   ),
-              ],
-            ),
-            // Content Section with Gradient Overlay
-            Container(
-              padding: EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    product.name,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.3,
-                      color: Colors.black87,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  SizedBox(height: 8),
-                  Row(
-                    children: [
-                      if (product.discountPrice != null) ...[
-                        Text(
-                          '\$${product.discountPrice!.toStringAsFixed(2)}',
+                  if (product.offer != null)
+                    Positioned(
+                      top: 12,
+                      left: 12,
+                      child: Container(
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.red[600],
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          '${product.offer!.discount}% OFF',
                           style: TextStyle(
-                            fontSize: 18,
+                            color: Colors.white,
                             fontWeight: FontWeight.bold,
-                            color: Colors.green[700],
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              // Content Section with Gradient Overlay
+              Container(
+                padding: EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      product.name,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.3,
+                        color: Colors.black87,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    SizedBox(height: 8),
+                    Row(
+                      children: [
+                        if (product.discountPrice != null) ...[
+                          Text(
+                            '\$${product.discountPrice!.toStringAsFixed(2)}',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green[700],
+                            ),
+                          ),
+                          SizedBox(width: 8),
+                          Text(
+                            '\$${double.parse(product.price).toStringAsFixed(2)}',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[600],
+                              decoration: TextDecoration.lineThrough,
+                            ),
+                          ),
+                        ] else
+                          Text(
+                            '\$${double.parse(product.price).toStringAsFixed(2)}',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green[700],
+                            ),
+                          ),
+                      ],
+                    ),
+                    SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.star,
+                          size: 16,
+                          color: Colors.amber,
+                        ),
+                        SizedBox(width: 4),
+                        Text(
+                          product.avgRating.toStringAsFixed(1),
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[700],
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                         SizedBox(width: 8),
                         Text(
-                          '\$${double.parse(product.price).toStringAsFixed(2)}',
+                          '(${product.reviews.length})',
                           style: TextStyle(
                             fontSize: 14,
                             color: Colors.grey[600],
-                            decoration: TextDecoration.lineThrough,
                           ),
                         ),
-                      ] else
+                        Spacer(),
+                        Container(
+                          padding:
+                              EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: product.quantity > 0
+                                ? Colors.green[50]
+                                : Colors.red[50],
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            product.quantity > 0 ? 'In Stock' : 'Out of Stock',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: product.quantity > 0
+                                  ? Colors.green
+                                  : Colors.red,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPackageItem(Package package) {
+    return Container(
+      margin: EdgeInsets.all(8.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16.0),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            offset: Offset(0, 4),
+            blurRadius: 12,
+            spreadRadius: 0,
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16.0),
+        child: InkWell(
+          onTap: () {
+            // Navigate to package details
+
+            Get.toNamed('package-details', arguments: package.packageId);
+          },
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Image Section with Package Badge
+              Stack(
+                children: [
+                  AspectRatio(
+                    aspectRatio: 1.0,
+                    child: Hero(
+                      tag: 'package-${package.packageId}',
+                      child: Image.network(
+                        ImageHandler.getImageUrl(package.resources),
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Container(
+                          color: Colors.grey[200],
+                          child: Icon(Icons.image_not_supported,
+                              color: Colors.grey),
+                        ),
+                      ),
+                    ),
+                  ),
+                  if (package.offer != null)
+                    Positioned(
+                      top: 12,
+                      left: 12,
+                      child: Container(
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.red[600],
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          'SAVE ${package.offer!.discount}%',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              // Content Section
+              Container(
+                padding: EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      package.name,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.3,
+                        color: Colors.black87,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      '${package.packageProducts.length} Products Inside',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    Row(
+                      children: [
                         Text(
-                          '\$${double.parse(product.price).toStringAsFixed(2)}',
+                          '\$${package.price.toStringAsFixed(2)}',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                             color: Colors.green[700],
                           ),
                         ),
-                    ],
-                  ),
-                  SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.star,
-                        size: 16,
-                        color: Colors.amber,
+                        Spacer(),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.star,
+                              size: 16,
+                              color: Colors.amber,
+                            ),
+                            SizedBox(width: 4),
+                            Text(
+                              package.avgRating.toStringAsFixed(1),
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey[700],
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 8),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: package.quantity > 0
+                            ? Colors.green[50]
+                            : Colors.red[50],
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      SizedBox(width: 4),
-                      Text(
-                        product.avgRating.toStringAsFixed(1),
+                      child: Text(
+                        package.quantity > 0 ? 'In Stock' : 'Out of Stock',
                         style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[700],
+                          fontSize: 12,
+                          color:
+                              package.quantity > 0 ? Colors.green : Colors.red,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
-                      SizedBox(width: 8),
-                      Text(
-                        '(${product.reviews.length})',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                      Spacer(),
-                      Container(
-                        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: product.quantity > 0
-                              ? Colors.green[50]
-                              : Colors.red[50],
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          product.quantity > 0 ? 'In Stock' : 'Out of Stock',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color:
-                                product.quantity > 0 ? Colors.green : Colors.red,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    ),
-  );
-}
-
-Widget _buildPackageItem(Package package) {
-  return Container(
-    margin: EdgeInsets.all(8.0),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(16.0),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withOpacity(0.08),
-          offset: Offset(0, 4),
-          blurRadius: 12,
-          spreadRadius: 0,
-        ),
-      ],
-    ),
-    child: ClipRRect(
-      borderRadius: BorderRadius.circular(16.0),
-      child: InkWell(
-        onTap: () {
-          // Navigate to package details
-        },
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Image Section with Package Badge
-            Stack(
-              children: [
-                AspectRatio(
-                  aspectRatio: 1.0,
-                  child: Hero(
-                    tag: 'package-${package.packageId}',
-                    child: Image.network(
-                      ImageHandler.getImageUrl(package.resources),
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => Container(
-                        color: Colors.grey[200],
-                        child: Icon(Icons.image_not_supported, color: Colors.grey),
-                      ),
                     ),
-                  ),
+                  ],
                 ),
-               
-                  
-                 
-                if (package.offer != null)
-                  Positioned(
-                    top: 12,
-                    left: 12,
-                    child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.red[600],
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        'SAVE ${package.offer!.discount}%',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            // Content Section
-            Container(
-              padding: EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    package.name,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.3,
-                      color: Colors.black87,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    '${package.packageProducts.length} Products Inside',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[600],
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Text(
-                        '\$${package.price.toStringAsFixed(2)}',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.green[700],
-                        ),
-                      ),
-                      Spacer(),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.star,
-                            size: 16,
-                            color: Colors.amber,
-                          ),
-                          SizedBox(width: 4),
-                          Text(
-                            package.avgRating.toStringAsFixed(1),
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey[700],
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 8),
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: package.quantity > 0
-                          ? Colors.green[50]
-                          : Colors.red[50],
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      package.quantity > 0 ? 'In Stock' : 'Out of Stock',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: package.quantity > 0 ? Colors.green : Colors.red,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ],
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-    ),
-  );
-}
-
+    );
+  }
 }

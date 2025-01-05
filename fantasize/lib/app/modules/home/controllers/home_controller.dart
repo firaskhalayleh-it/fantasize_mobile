@@ -2,6 +2,7 @@
 
 import 'dart:async';
 import 'dart:convert';
+import 'package:fantasize/app/modules/login/controllers/login_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get/get.dart';
@@ -31,7 +32,8 @@ class HomeController extends GetxController with GetTickerProviderStateMixin {
 
   // Subcategory controllers
   final OffersController offersController = Get.put(OffersController());
-  final NewArrivalController newArrivalController = Get.put(NewArrivalController());
+  final NewArrivalController newArrivalController =
+      Get.put(NewArrivalController());
   final RecommendedForYouController recommendedForYouController =
       Get.put(RecommendedForYouController());
 
@@ -71,6 +73,10 @@ class HomeController extends GetxController with GetTickerProviderStateMixin {
     _setupAnimations();
     loadUserData();
     _setupNavigationBarListener();
+    Get.find<ExploreController>().pauseAllVideos();
+    if (Get.isRegistered<LoginController>()) {
+      Get.delete<LoginController>();
+    }
 
     // 1) Load offers/new-arrivals immediately so they show up first
     fetchOffers();
@@ -229,7 +235,6 @@ class HomeController extends GetxController with GetTickerProviderStateMixin {
         final updatedUser = User.fromJson(userData);
         user.value = updatedUser;
         await _storeUserData(userData);
-        
       } else {
         Get.snackbar('Error', 'Failed to load user data');
       }
@@ -377,51 +382,51 @@ class HomeController extends GetxController with GetTickerProviderStateMixin {
   }
 
   /// Disposes the video player in ExploreController
-  
+
   // ================== Helper Methods ==================
 
   /// Extracts the user ID from the JWT token
- Future<void> _extractUserIdFromToken() async {
-  final token = await secureStorage.read(key: 'jwt_token');
+  Future<void> _extractUserIdFromToken() async {
+    final token = await secureStorage.read(key: 'jwt_token');
 
-  if (token != null) {
-    final parts = token.split('.');
-    // A valid JWT usually consists of three parts (header, payload, signature)
-    if (parts.length != 3) return;
+    if (token != null) {
+      final parts = token.split('.');
+      // A valid JWT usually consists of three parts (header, payload, signature)
+      if (parts.length != 3) return;
 
-    final payloadBase64 = parts[1];
-    // Normalize base64 URL string before decoding
-    final normalized = base64Url.normalize(payloadBase64);
-    final decoded = utf8.decode(base64Url.decode(normalized));
+      final payloadBase64 = parts[1];
+      // Normalize base64 URL string before decoding
+      final normalized = base64Url.normalize(payloadBase64);
+      final decoded = utf8.decode(base64Url.decode(normalized));
 
-    // Convert the decoded JSON to a Dart Map
-    final data = json.decode(decoded);
+      // Convert the decoded JSON to a Dart Map
+      final data = json.decode(decoded);
 
-    // According to the new token structure, the token data is inside 'payload'
-    // e.g. { "payload": { "userId": "...", "userName": "..." }, "iat": ..., "exp": ... }
-    if (data.containsKey('payload')) {
-      final payloadData = data['payload'];
+      // According to the new token structure, the token data is inside 'payload'
+      // e.g. { "payload": { "userId": "...", "userName": "..." }, "iat": ..., "exp": ... }
+      if (data.containsKey('payload')) {
+        final payloadData = data['payload'];
 
-      // Check if 'userId' exists and is a String
-      if (payloadData.containsKey('userId') && payloadData['userId'] is String) {
-        userId.value = payloadData['userId'];
-        print('User ID: ${userId.value}');
+        // Check if 'userId' exists and is a String
+        if (payloadData.containsKey('userId') &&
+            payloadData['userId'] is String) {
+          userId.value = payloadData['userId'];
+          print('User ID: ${userId.value}');
+        } else {
+          userId.value = null;
+          print('User ID not found in token payload');
+        }
       } else {
         userId.value = null;
-        print('User ID not found in token payload');
+        print('Token payload not found');
       }
     } else {
       userId.value = null;
-      print('Token payload not found');
+      print('No token found');
     }
-  } else {
-    userId.value = null;
-    print('No token found');
+
+    return;
   }
-
-  return;
-}
-
 
   /// Stores user data securely
   Future<void> _storeUserData(Map<String, dynamic> userData) async {

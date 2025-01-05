@@ -220,121 +220,189 @@ class CartView extends StatelessWidget {
               scale: value,
               child: Opacity(
                 opacity: value,
-                child: Container(
-                  margin: EdgeInsets.only(bottom: 12),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Color(0xFFFF4C5E).withOpacity(0.1),
-                        blurRadius: 10,
-                        offset: Offset(0, 4),
-                      ),
-                    ],
+                child: Dismissible(
+                  // Add Dismissible widget for swipe to delete
+                  key: Key('product-${orderProduct.orderProductId}'),
+                  background: Container(
+                    alignment: Alignment.centerRight,
+                    padding: EdgeInsets.only(right: 20.0),
+                    color: Colors.red,
+                    child: Icon(Icons.delete, color: Colors.white),
                   ),
-                  child: Padding(
-                    padding: EdgeInsets.all(12),
-                    child: Row(
-                      children: [
-                        // Product Image
-                        Hero(
-                          tag: 'product-${orderProduct.orderProductId}',
-                          child: Container(
-                            width: 80,
-                            height: 80,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(12),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
-                                  blurRadius: 8,
-                                  offset: Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: Image.network(
-                                ImageHandler.getImageUrl(
-                                    orderProduct.product.resources),
-                                fit: BoxFit.cover,
-                              ),
-                            ),
+                  direction: DismissDirection.endToStart,
+                  onDismissed: (direction) {
+                    controller.deleteOrderProduct(orderProduct.orderProductId!);
+                  },
+                  confirmDismiss: (direction) async {
+                    return await Get.dialog(
+                      AlertDialog(
+                        title: Text('Remove Product'),
+                        content: Text(
+                            'Are you sure you want to remove this product from your cart?'),
+                        actions: [
+                          TextButton(
+                            child: Text('Cancel'),
+                            onPressed: () => Get.back(result: false),
                           ),
+                          TextButton(
+                            child: Text('Remove'),
+                            onPressed: () => Get.back(result: true),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                  child: Container(
+                    margin: EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Color(0xFFFF4C5E).withOpacity(0.1),
+                          blurRadius: 10,
+                          offset: Offset(0, 4),
                         ),
-                        SizedBox(width: 16),
-                        // Product Details
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                      ],
+                    ),
+                    child: Stack(
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.all(12),
+                          child: Row(
                             children: [
-                              Text(
-                                orderProduct.product.name,
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                  fontFamily: 'Poppins',
-                                  letterSpacing: 0.5,
+                              // Product Image (existing code...)
+                              Hero(
+                                tag: 'product-${orderProduct.orderProductId}',
+                                child: Container(
+                                  width: 80,
+                                  height: 80,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(12),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.1),
+                                        blurRadius: 8,
+                                        offset: Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Image.network(
+                                      ImageHandler.getImageUrl(
+                                          orderProduct.product.resources),
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
                                 ),
                               ),
-                              SizedBox(height: 4),
-                              Row(
-                                children: [
-                                  Container(
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 4,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color:
-                                          Color(0xFFFF4C5E).withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Text(
-                                      "${orderProduct.quantity}x",
+                              SizedBox(width: 16),
+                              // Product Details (existing code...)
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      orderProduct.product.name,
                                       style: TextStyle(
-                                        color: Color(0xFFFF4C5E),
+                                        fontSize: 16,
                                         fontWeight: FontWeight.w600,
-                                        fontSize: 14,
+                                        fontFamily: 'Poppins',
+                                        letterSpacing: 0.5,
                                       ),
                                     ),
-                                  ),
-                                  SizedBox(width: 8),
-                                  Text(
-                                    "\$${orderProduct.product.price}",
-                                    style: TextStyle(
-                                      color: Colors.grey[600],
-                                      fontSize: 14,
+                                    SizedBox(height: 4),
+                                    Row(
+                                      children: [
+                                        Container(
+                                          padding: EdgeInsets.symmetric(
+                                            horizontal: 8,
+                                            vertical: 4,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: Color(0xFFFF4C5E)
+                                                .withOpacity(0.1),
+                                            borderRadius:
+                                                BorderRadius.circular(8),
+                                          ),
+                                          child: Text(
+                                            "${orderProduct.quantity}x",
+                                            style: TextStyle(
+                                              color: Color(0xFFFF4C5E),
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                        ),
+                                        SizedBox(width: 8),
+                                        Text(
+                                          "\$${orderProduct.product.price}",
+                                          style: TextStyle(
+                                            color: Colors.grey[600],
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ],
                                     ),
+                                  ],
+                                ),
+                              ),
+                              // Delete button
+                              IconButton(
+                                icon: Icon(Icons.delete_outline,
+                                    color: Colors.red),
+                                onPressed: () async {
+                                  bool confirm = await Get.dialog(
+                                    AlertDialog(
+                                      title: Text('Remove Product'),
+                                      content: Text(
+                                          'Are you sure you want to remove this product from your cart?'),
+                                      actions: [
+                                        TextButton(
+                                          child: Text('Cancel'),
+                                          onPressed: () =>
+                                              Get.back(result: false),
+                                        ),
+                                        TextButton(
+                                          child: Text('Remove'),
+                                          onPressed: () =>
+                                              Get.back(result: true),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                  if (confirm) {
+                                    controller.deleteOrderProduct(
+                                        orderProduct.orderProductId!);
+                                  }
+                                },
+                              ),
+                              // Total Price
+                              Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Color(0xFFFF4C5E),
+                                      Color(0xFFFF8F9C),
+                                    ],
                                   ),
-                                ],
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  "\$${(double.parse(orderProduct.product.price) * orderProduct.quantity).toStringAsFixed(2)}",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 16,
+                                  ),
+                                ),
                               ),
                             ],
-                          ),
-                        ),
-                        // Total Price
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                Color(0xFFFF4C5E),
-                                Color(0xFFFF8F9C),
-                              ],
-                            ),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            "\$${(double.parse(orderProduct.product.price) * orderProduct.quantity).toStringAsFixed(2)}",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 16,
-                            ),
                           ),
                         ),
                       ],
@@ -361,149 +429,208 @@ class CartView extends StatelessWidget {
               scale: value,
               child: Opacity(
                 opacity: value,
-                child: Container(
-                  margin: EdgeInsets.only(bottom: 12),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Color(0xFFFF4C5E).withOpacity(0.1),
-                        blurRadius: 10,
-                        offset: Offset(0, 4),
-                      ),
-                    ],
+                child: Dismissible(
+                  key: Key('package-${orderPackage.orderPackageId}'),
+                  background: Container(
+                    alignment: Alignment.centerRight,
+                    padding: EdgeInsets.only(right: 20.0),
+                    color: Colors.red,
+                    child: Icon(Icons.delete, color: Colors.white),
                   ),
-                  child: Padding(
-                    padding: EdgeInsets.all(12),
-                    child: Row(
-                      children: [
-                        // Package Image
-                        Hero(
-                          tag: 'package-${orderPackage.orderPackageId}',
-                          child: Container(
-                            width: 80,
-                            height: 80,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(12),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
-                                  blurRadius: 8,
-                                  offset: Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: Image.network(
-                                ImageHandler.getImageUrl(
-                                    orderPackage.package.resources),
-                                fit: BoxFit.cover,
-                              ),
-                            ),
+                  direction: DismissDirection.endToStart,
+                  onDismissed: (direction) {
+                    controller.deleteOrderPackage(orderPackage.orderPackageId!);
+                  },
+                  confirmDismiss: (direction) async {
+                    return await Get.dialog(
+                      AlertDialog(
+                        title: Text('Remove Package'),
+                        content: Text(
+                            'Are you sure you want to remove this package from your cart?'),
+                        actions: [
+                          TextButton(
+                            child: Text('Cancel'),
+                            onPressed: () => Get.back(result: false),
                           ),
+                          TextButton(
+                            child: Text('Remove'),
+                            onPressed: () => Get.back(result: true),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                  child: Container(
+                    margin: EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Color(0xFFFF4C5E).withOpacity(0.1),
+                          blurRadius: 10,
+                          offset: Offset(0, 4),
                         ),
-                        SizedBox(width: 16),
-                        // Package Details
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Container(
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 4,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color:
-                                          Color(0xFFFF4C5E).withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Text(
-                                      "PACKAGE",
-                                      style: TextStyle(
-                                        color: Color(0xFFFF4C5E),
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 10,
-                                        letterSpacing: 0.5,
-                                      ),
-                                    ),
+                      ],
+                    ),
+                    child: Padding(
+                      padding: EdgeInsets.all(12),
+                      child: Row(
+                        children: [
+                          // Package Image
+                          Hero(
+                            tag: 'package-${orderPackage.orderPackageId}',
+                            child: Container(
+                              width: 80,
+                              height: 80,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.1),
+                                    blurRadius: 8,
+                                    offset: Offset(0, 2),
                                   ),
                                 ],
                               ),
-                              SizedBox(height: 4),
-                              Text(
-                                orderPackage.package.name,
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                  fontFamily: 'Poppins',
-                                  letterSpacing: 0.5,
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Image.network(
+                                  ImageHandler.getImageUrl(
+                                      orderPackage.package.resources),
+                                  fit: BoxFit.cover,
                                 ),
                               ),
-                              SizedBox(height: 4),
-                              Row(
-                                children: [
-                                  Container(
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 4,
+                            ),
+                          ),
+                          SizedBox(width: 16),
+                          // Package Details
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color:
+                                            Color(0xFFFF4C5E).withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Text(
+                                        "PACKAGE",
+                                        style: TextStyle(
+                                          color: Color(0xFFFF4C5E),
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 10,
+                                          letterSpacing: 0.5,
+                                        ),
+                                      ),
                                     ),
-                                    decoration: BoxDecoration(
-                                      color:
-                                          Color(0xFFFF4C5E).withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(8),
+                                  ],
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  orderPackage.package.name,
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    fontFamily: 'Poppins',
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                                SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color:
+                                            Color(0xFFFF4C5E).withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Text(
+                                        "${orderPackage.quantity}x",
+                                        style: TextStyle(
+                                          color: Color(0xFFFF4C5E),
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 14,
+                                        ),
+                                      ),
                                     ),
-                                    child: Text(
-                                      "${orderPackage.quantity}x",
+                                    SizedBox(width: 8),
+                                    Text(
+                                      "\$${orderPackage.package.price}",
                                       style: TextStyle(
-                                        color: Color(0xFFFF4C5E),
-                                        fontWeight: FontWeight.w600,
+                                        color: Colors.grey[600],
                                         fontSize: 14,
                                       ),
                                     ),
-                                  ),
-                                  SizedBox(width: 8),
-                                  Text(
-                                    "\$${orderPackage.package.price}",
-                                    style: TextStyle(
-                                      color: Colors.grey[600],
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                        // Total Price
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                Color(0xFFFF4C5E),
-                                Color(0xFFFF8F9C),
+                                  ],
+                                ),
                               ],
                             ),
-                            borderRadius: BorderRadius.circular(20),
                           ),
-                          child: Text(
-                            "\$${(orderPackage.package.price * orderPackage.quantity).toStringAsFixed(2)}",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 16,
+                          // Delete Icon
+                          IconButton(
+                            icon: Icon(Icons.delete_outline, color: Colors.red),
+                            onPressed: () async {
+                              bool confirm = await Get.dialog(
+                                AlertDialog(
+                                  title: Text('Remove Package'),
+                                  content: Text(
+                                      'Are you sure you want to remove this package from your cart?'),
+                                  actions: [
+                                    TextButton(
+                                      child: Text('Cancel'),
+                                      onPressed: () => Get.back(result: false),
+                                    ),
+                                    TextButton(
+                                      child: Text('Remove'),
+                                      onPressed: () => Get.back(result: true),
+                                    ),
+                                  ],
+                                ),
+                              );
+                              if (confirm) {
+                                controller.deleteOrderPackage(
+                                    orderPackage.orderPackageId!);
+                              }
+                            },
+                          ),
+                          // Total Price
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  Color(0xFFFF4C5E),
+                                  Color(0xFFFF8F9C),
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              "\$${(orderPackage.package.price * orderPackage.quantity).toStringAsFixed(2)}",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 16,
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -665,8 +792,8 @@ class CartView extends StatelessWidget {
                         bool isSelected = method.paymentMethodID ==
                             controller.selectedPaymentMethodId.value;
                         return InkWell(
-                          onTap: () => controller.selectedPaymentMethodId.value =
-                              method.paymentMethodID,
+                          onTap: () => controller.selectedPaymentMethodId
+                              .value = method.paymentMethodID,
                           child: Container(
                             margin: EdgeInsets.only(bottom: 8),
                             padding: EdgeInsets.all(16),
@@ -721,8 +848,7 @@ class CartView extends StatelessWidget {
                                   Container(
                                     padding: EdgeInsets.all(8),
                                     decoration: BoxDecoration(
-                                      color:
-                                          Color(0xFFFF4C5E).withOpacity(0.1),
+                                      color: Color(0xFFFF4C5E).withOpacity(0.1),
                                       shape: BoxShape.circle,
                                     ),
                                     child: Icon(
@@ -746,7 +872,8 @@ class CartView extends StatelessWidget {
 
   Widget _buildShippingInformationSection() {
     if (controller.paymentMethods.isEmpty) {
-      return SizedBox.shrink(); // Hide the shipping information if no payment methods
+      return SizedBox
+          .shrink(); // Hide the shipping information if no payment methods
     }
 
     return _buildSection(
@@ -846,11 +973,11 @@ class CartView extends StatelessWidget {
                   ? []
                   : [
                       ...controller.addresses.map((address) {
-                        bool isSelected =
-                            address.addressID == controller.selectedAddressId.value;
+                        bool isSelected = address.addressID ==
+                            controller.selectedAddressId.value;
                         return InkWell(
-                          onTap: () =>
-                              controller.selectedAddressId.value = address.addressID,
+                          onTap: () => controller.selectedAddressId.value =
+                              address.addressID,
                           child: Container(
                             margin: EdgeInsets.only(bottom: 8),
                             padding: EdgeInsets.all(16),
@@ -889,7 +1016,8 @@ class CartView extends StatelessWidget {
                                 SizedBox(width: 16),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         "${address.addressLine}",
@@ -916,8 +1044,7 @@ class CartView extends StatelessWidget {
                                   Container(
                                     padding: EdgeInsets.all(8),
                                     decoration: BoxDecoration(
-                                      color:
-                                          Color(0xFFFF4C5E).withOpacity(0.1),
+                                      color: Color(0xFFFF4C5E).withOpacity(0.1),
                                       shape: BoxShape.circle,
                                     ),
                                     child: Icon(
@@ -986,8 +1113,7 @@ class CartView extends StatelessWidget {
     );
   }
 
-  Widget _buildSummaryItem(String label, String value,
-      {bool isTotal = false}) {
+  Widget _buildSummaryItem(String label, String value, {bool isTotal = false}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [

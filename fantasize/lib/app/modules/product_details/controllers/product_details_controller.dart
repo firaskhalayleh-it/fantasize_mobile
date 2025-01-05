@@ -368,7 +368,10 @@ class ProductDetailsController extends GetxController {
                             child: SizedBox(
                               width: double.infinity,
                               child: ElevatedButton(
-                                onPressed: () => Get.toNamed('/cart'),
+                                onPressed: () => {
+                                  Get.back(),
+                                  Get.toNamed('/cart'),
+                                },
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.redAccent,
                                   elevation: 0,

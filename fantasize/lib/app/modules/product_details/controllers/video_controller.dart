@@ -1,6 +1,5 @@
-import 'package:video_player/video_player.dart';
 import 'package:get/get.dart';
-import 'package:fantasize/app/global/strings.dart';
+import 'package:video_player/video_player.dart';
 
 class CustomVideoPlayerController extends GetxController {
   late VideoPlayerController videoController;
@@ -12,7 +11,7 @@ class CustomVideoPlayerController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    videoController = VideoPlayerController.network('$videoUrl')
+    videoController = VideoPlayerController.network(videoUrl)
       ..initialize().then((_) {
         videoController.play(); // Autoplay the video after initialization
         update(); // Update the UI after initialization
@@ -21,7 +20,8 @@ class CustomVideoPlayerController extends GetxController {
 
   @override
   void onClose() {
-    videoController.dispose(); // Dispose the controller when not needed
+    videoController.pause(); // Pause the video
+    videoController.dispose(); // Dispose the controller
     super.onClose();
   }
 

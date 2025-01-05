@@ -6,6 +6,7 @@ import 'package:fantasize/app/data/models/reviews_model.dart';
 import 'package:fantasize/app/global/strings.dart';
 import 'package:fantasize/app/modules/cart/controllers/cart_controller.dart';
 import 'package:fantasize/app/modules/favorites/controllers/favorites_controller.dart';
+import 'package:fantasize/app/modules/package_details/controllers/custom_video_controller_package.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get/get.dart';
@@ -44,7 +45,9 @@ class PackageDetailsController extends GetxController {
     int packageId;
     if (arguments is int) {
       packageId = arguments;
-    } else if (arguments is List && arguments.isNotEmpty && arguments[0] is int) {
+    } else if (arguments is List &&
+        arguments.isNotEmpty &&
+        arguments[0] is int) {
       packageId = arguments[0];
     } else {
       Get.snackbar('Error', 'Invalid package ID provided.');
@@ -56,7 +59,7 @@ class PackageDetailsController extends GetxController {
   }
 
   void incrementQuantity() => quantity.value++;
-  
+
   void decrementQuantity() {
     if (quantity.value > 1) quantity.value--;
   }
@@ -153,8 +156,7 @@ class PackageDetailsController extends GetxController {
         print(response.statusCode);
 
         isLiked.value = true;
-        Get.snackbar('Success', 'Package added to favorites',
-            overlayBlur: 3.0);
+        Get.snackbar('Success', 'Package added to favorites', overlayBlur: 3.0);
       } else {
         // Remove package from favorites
         url = Uri.parse(
@@ -205,14 +207,12 @@ class PackageDetailsController extends GetxController {
           return favoritePackage != null &&
               favoritePackage['PackageID'] == packageId;
         });
-      } if (response.statusCode == 401) {
+      }
+      if (response.statusCode == 401) {
         Get.snackbar(
             'Unauthorized', 'Your session has expired. Please log in again.');
-      } 
-      if (response.statusCode == 404) {
       }
-
-
+      if (response.statusCode == 404) {}
     } catch (e) {
       Get.snackbar('Error', 'Failed to fetch favorite packages: $e');
     }
@@ -223,7 +223,8 @@ class PackageDetailsController extends GetxController {
     if (token != null) {
       Map<String, dynamic> decodedToken = JwtDecoder.decode(token);
       // Adjust according to your JWT structure
-      String username = decodedToken['userName'] ?? decodedToken['payload']['userName'] ?? '';
+      String username =
+          decodedToken['userName'] ?? decodedToken['payload']['userName'] ?? '';
       currentUsername.value = username;
     }
   }
@@ -288,8 +289,7 @@ class PackageDetailsController extends GetxController {
       await fetchPackageDetails(packageId);
 
       Get.snackbar(
-          'Success',
-          isEditing.value ? 'Review updated!' : 'Review added!',
+          'Success', isEditing.value ? 'Review updated!' : 'Review added!',
           overlayBlur: 2);
     } else {
       Get.snackbar('Error', 'Failed to add/update review');
@@ -487,7 +487,8 @@ class PackageDetailsController extends GetxController {
     // Use a Set to keep track of customization IDs we've already added
     final Set<int> seenCustomizationIds = {};
 
-    orderedCustomizations = package.value!.customizations.where((customization) {
+    orderedCustomizations =
+        package.value!.customizations.where((customization) {
       if (seenCustomizationIds.contains(customization.customizationId)) {
         return false; // If already seen, exclude it
       } else {
@@ -552,7 +553,8 @@ class PackageDetailsController extends GetxController {
             return {
               'name': option.name,
               'type': option.type,
-              'optionValues': option.optionValues.map((v) => v.toJson()).toList(),
+              'optionValues':
+                  option.optionValues.map((v) => v.toJson()).toList(),
             };
           }).toList(),
         };
@@ -618,7 +620,10 @@ class PackageDetailsController extends GetxController {
   }
 
   void navigateToCart() {
-    Get.toNamed('/cart');
+    if (Get.isRegistered<CustomVideoControllerPackage>()) {
+      Get.delete<CustomVideoControllerPackage>();
+    }
+    Get.offNamed('/cart');
   }
 
   // Updated showAddToCartDialog method with enhanced UI and animations

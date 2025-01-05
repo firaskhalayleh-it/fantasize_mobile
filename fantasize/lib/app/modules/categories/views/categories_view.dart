@@ -74,38 +74,33 @@ class CategoriesView extends StatelessWidget {
     );
   }
 
-  PreferredSizeWidget _buildAppBar() {
-    return AppBar(
-      backgroundColor: Colors.white,
-      elevation: 0,
-      leading: SizedBox(),
-      title: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.category_outlined,
-                color: Colors.redAccent,
-                size: 20,
-              ),
-              SizedBox(width: 8),
-              Text(
-                'Categories',
-                style: TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 24,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.redAccent ,
-                  letterSpacing: 0.5,
-                ),
-              ),
-            ],
+ PreferredSizeWidget _buildAppBar() {
+  return AppBar(
+    backgroundColor: Colors.white,
+    // Remove the leading property to remove the back arrow
+    automaticallyImplyLeading: false,
+    title: Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(
+          Icons.category_outlined,
+          color: Colors.redAccent,
+          size: 20,
+        ),
+        SizedBox(width: 8),
+        Text(
+          'Categories',
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 24,
+            fontWeight: FontWeight.w600,
+            color: Colors.redAccent,
+            letterSpacing: 0.5,
           ),
-        ],
-      ),
-      centerTitle: true,
-    );
-  }
+        ),
+      ],
+    ),
+    centerTitle: true,
+  );
+}
 }

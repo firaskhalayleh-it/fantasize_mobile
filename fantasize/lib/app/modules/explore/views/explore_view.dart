@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'widgets/video_player_widget.dart';
-import '../controllers/explore_controller.dart';
 import 'package:flutter/gestures.dart';
+
+import '../controllers/explore_controller.dart';
+import 'widgets/video_player_widget.dart';
 
 class ExploreView extends StatelessWidget {
   @override
@@ -22,6 +23,8 @@ class ExploreView extends StatelessWidget {
           return _buildEmptyState();
         }
 
+        // CHANGED: Removed `controller.likedVideos.length == controller.videos.length`
+        // since we no longer use likedVideos array.
         if (!_areListsInitialized(controller)) {
           return _buildLoadingState();
         }
@@ -31,10 +34,10 @@ class ExploreView extends StatelessWidget {
     );
   }
 
+  // CHANGED: Removed likedVideos from this check
   bool _areListsInitialized(ExploreController controller) {
     return controller.videoControllers.length == controller.videos.length &&
-        controller.likedVideos.length == controller.videos.length &&
-        controller.showHeartAnimation.length == controller.videos.length;
+           controller.showHeartAnimation.length == controller.videos.length;
   }
 
   PreferredSizeWidget _buildAppBar() {
@@ -176,7 +179,7 @@ class ExploreView extends StatelessWidget {
           scrollDirection: Axis.vertical,
           itemCount: controller.videos.length,
           onPageChanged: (index) {
-            print('Page changed to: $index'); // Debugging log
+            debugPrint('DEBUG: Page changed to $index');
             controller.handleVideoSwitch(index);
           },
           itemBuilder: (context, index) {
@@ -192,9 +195,9 @@ class ExploreView extends StatelessWidget {
   }
 
   bool _isValidIndex(ExploreController controller, int index) {
+    // CHANGED: Removed `index < controller.likedVideos.length` check
     return index < controller.videos.length &&
-        index < controller.likedVideos.length &&
-        index < controller.showHeartAnimation.length;
+           index < controller.showHeartAnimation.length;
   }
 
   Widget _buildErrorState() {
@@ -232,20 +235,22 @@ class ExploreView extends StatelessWidget {
   Widget _buildVideoItem(ExploreController controller, int index) {
     return RawGestureDetector(
       gestures: {
-        TapGestureRecognizer: GestureRecognizerFactoryWithHandlers<TapGestureRecognizer>(
+        TapGestureRecognizer:
+            GestureRecognizerFactoryWithHandlers<TapGestureRecognizer>(
           () => TapGestureRecognizer(),
           (TapGestureRecognizer instance) {
             instance.onTap = () => controller.toggleVideoPlayPause(index);
           },
         ),
-        DoubleTapGestureRecognizer: GestureRecognizerFactoryWithHandlers<DoubleTapGestureRecognizer>(
+        DoubleTapGestureRecognizer:
+            GestureRecognizerFactoryWithHandlers<DoubleTapGestureRecognizer>(
           () => DoubleTapGestureRecognizer(),
           (DoubleTapGestureRecognizer instance) {
             instance.onDoubleTap = () => controller.likeVideo(index);
           },
         ),
       },
-      behavior: HitTestBehavior.translucent, // Allow gestures to pass through
+      behavior: HitTestBehavior.translucent,
       child: Stack(
         children: [
           VideoPlayerWidget(videoIndex: index),
